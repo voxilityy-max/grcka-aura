@@ -1048,8 +1048,8 @@ export default function HostPanel({
                 </thead>
                 <tbody>
                   {users.map(u => {
-                    const isOwner = u.email === 'vlasnik.aura@gmail.com';
-                    const loggedInUserIsOwner = currentUser.email === 'vlasnik.aura@gmail.com';
+                    const isOwner = u.email === 'voxilityy@gmail.com';
+                    const loggedInUserIsOwner = currentUser.email === 'voxilityy@gmail.com';
                     
                     let roleLabel = '👥 Klijent (Gost)';
                     let roleStyle = {

@@ -186,7 +186,7 @@ const DEFAULT_USERS = [
     id: 1000,
     username: 'vlasnik_aura',
     fullName: 'Vlasnik Aura',
-    email: 'vlasnik.aura@gmail.com',
+    email: 'voxilityy@gmail.com',
     password: 'google-oauth-simulated',
     phone: '+381 60 111 2233',
     avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
@@ -261,7 +261,7 @@ export default function App() {
     const saved = localStorage.getItem('users');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map(u => (u.email === 'stefan@email.com' || u.email === 'stefan.petrovic@gmail.com' || u.email === 'vlasnik.aura@gmail.com') ? { ...u, isAdmin: true } : u);
+      return parsed.map(u => (u.email === 'stefan@email.com' || u.email === 'stefan.petrovic@gmail.com' || u.email === 'voxilityy@gmail.com') ? { ...u, isAdmin: true } : u);
     }
     return DEFAULT_USERS;
   });
@@ -271,7 +271,7 @@ export default function App() {
     const saved = localStorage.getItem('currentUser');
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (parsed.email === 'stefan@email.com' || parsed.email === 'stefan.petrovic@gmail.com' || parsed.email === 'vlasnik.aura@gmail.com') {
+      if (parsed.email === 'stefan@email.com' || parsed.email === 'stefan.petrovic@gmail.com' || parsed.email === 'voxilityy@gmail.com') {
         return { ...parsed, isAdmin: true };
       }
       return parsed;
@@ -563,7 +563,7 @@ export default function App() {
         throw err;
       }
     } else {
-      const isAdminEmail = newUser.email === 'stefan@email.com' || newUser.email === 'stefan.petrovic@gmail.com' || newUser.email === 'vlasnik.aura@gmail.com';
+      const isAdminEmail = newUser.email === 'stefan@email.com' || newUser.email === 'stefan.petrovic@gmail.com' || newUser.email === 'voxilityy@gmail.com';
       const updatedUser = isAdminEmail ? { ...newUser, isAdmin: true } : newUser;
       setUsers(prev => [...prev, updatedUser]);
       setCurrentUser(updatedUser);
@@ -757,7 +757,7 @@ export default function App() {
   const handleToggleAdminStatus = async (userId) => {
     const targetUser = users.find(u => u.id === userId);
     if (!targetUser) return;
-    if (targetUser.email === 'vlasnik.aura@gmail.com') {
+    if (targetUser.email === 'voxilityy@gmail.com') {
       alert('Nije moguće izmeniti ulogu glavnog vlasnika (Gazde).');
       return;
     }

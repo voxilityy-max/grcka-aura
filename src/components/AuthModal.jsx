@@ -35,7 +35,7 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
       onLogin(existingUser);
     } else {
       // Registruj novog korisnika automatski sa podacima iz Google-a
-      const isOwner = email.toLowerCase().trim() === 'vlasnik.aura@gmail.com';
+      const isOwner = email.toLowerCase().trim() === 'voxilityy@gmail.com';
       const newGoogleUser = {
         id: Date.now(),
         username: isOwner ? 'vlasnik_aura' : email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + Math.floor(10 + Math.random() * 90),

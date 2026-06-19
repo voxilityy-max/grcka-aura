@@ -64,7 +64,7 @@ export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, 
           <div className="profile-meta-item">
             <span>Tip profila: </span>
             <strong>
-              {currentUser.email === 'vlasnik.aura@gmail.com' ? '👑 Vlasnik (Gazda)' : currentUser.isAdmin ? '🛠️ Administrator' : '👥 Klijent (Gost)'}
+              {currentUser.email === 'voxilityy@gmail.com' ? '👑 Vlasnik (Gazda)' : currentUser.isAdmin ? '🛠️ Administrator' : '👥 Klijent (Gost)'}
             </strong>
           </div>
           <div className="profile-meta-item">
