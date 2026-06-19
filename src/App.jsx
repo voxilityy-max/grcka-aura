@@ -14,6 +14,8 @@ import TravelGuide from './components/TravelGuide';
 import InteractiveMap from './components/InteractiveMap';
 import './App.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
 // Initial Mock Data
 const INITIAL_PROPERTIES = [
   {
@@ -335,23 +337,23 @@ export default function App() {
 
   const handleRefreshDatabase = async () => {
     try {
-      const resProps = await fetch('http://localhost:5001/api/properties');
+      const resProps = await fetch(`${API_URL}/api/properties`);
       const dataProps = await resProps.json();
       setProperties(dataProps);
 
-      const resUsers = await fetch('http://localhost:5001/api/users');
+      const resUsers = await fetch(`${API_URL}/api/users`);
       const dataUsers = await resUsers.json();
       setUsers(dataUsers);
 
-      const resInqs = await fetch('http://localhost:5001/api/inquiries');
+      const resInqs = await fetch(`${API_URL}/api/inquiries`);
       const dataInqs = await resInqs.json();
       setInquiries(dataInqs);
 
-      const resLogs = await fetch('http://localhost:5001/api/activity-logs');
+      const resLogs = await fetch(`${API_URL}/api/activity-logs`);
       const dataLogs = await resLogs.json();
       setActivityLogs(dataLogs);
 
-      const resPosts = await fetch('http://localhost:5001/api/forum-posts');
+      const resPosts = await fetch(`${API_URL}/api/forum-posts`);
       const dataPosts = await resPosts.json();
       setForumPosts(dataPosts);
       
@@ -366,24 +368,24 @@ export default function App() {
     // Fetch initial data from backend
     const fetchData = async () => {
       try {
-        const resProps = await fetch('http://localhost:5001/api/properties');
+        const resProps = await fetch(`${API_URL}/api/properties`);
         if (!resProps.ok) throw new Error();
         const dataProps = await resProps.json();
         setProperties(dataProps);
 
-        const resUsers = await fetch('http://localhost:5001/api/users');
+        const resUsers = await fetch(`${API_URL}/api/users`);
         const dataUsers = await resUsers.json();
         setUsers(dataUsers);
 
-        const resInqs = await fetch('http://localhost:5001/api/inquiries');
+        const resInqs = await fetch(`${API_URL}/api/inquiries`);
         const dataInqs = await resInqs.json();
         setInquiries(dataInqs);
 
-        const resLogs = await fetch('http://localhost:5001/api/activity-logs');
+        const resLogs = await fetch(`${API_URL}/api/activity-logs`);
         const dataLogs = await resLogs.json();
         setActivityLogs(dataLogs);
 
-        const resPosts = await fetch('http://localhost:5001/api/forum-posts');
+        const resPosts = await fetch(`${API_URL}/api/forum-posts`);
         const dataPosts = await resPosts.json();
         setForumPosts(dataPosts);
 
@@ -521,7 +523,7 @@ export default function App() {
 
     if (backendActive) {
       try {
-        const res = await fetch('http://localhost:5001/api/activity-logs', {
+        const res = await fetch(`${API_URL}/api/activity-logs`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newLog)
@@ -540,7 +542,7 @@ export default function App() {
   const handleRegister = async (newUser) => {
     if (backendActive) {
       try {
-        const res = await fetch('http://localhost:5001/api/auth/register', {
+        const res = await fetch(`${API_URL}/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newUser)
@@ -574,7 +576,7 @@ export default function App() {
   const handleLogin = async (loginData) => {
     if (backendActive) {
       try {
-        const res = await fetch('http://localhost:5001/api/auth/login', {
+        const res = await fetch(`${API_URL}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: loginData.email, password: loginData.password })
@@ -633,7 +635,7 @@ export default function App() {
   const handleUpdateUser = async (updatedUser) => {
     if (backendActive) {
       try {
-        const res = await fetch(`http://localhost:5001/api/users/${updatedUser.id}`, {
+        const res = await fetch(`${API_URL}/api/users/${updatedUser.id}`, {
           method: 'PATCH',
           headers: { 
             'Content-Type': 'application/json',
@@ -659,7 +661,7 @@ export default function App() {
   const handleAddInquiry = async (newInquiry) => {
     if (backendActive) {
       try {
-        const res = await fetch('http://localhost:5001/api/inquiries', {
+        const res = await fetch(`${API_URL}/api/inquiries`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newInquiry)
@@ -687,7 +689,7 @@ export default function App() {
     
     if (backendActive) {
       try {
-        await fetch(`http://localhost:5001/api/inquiries/${inquiryId}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/api/inquiries/${inquiryId}`, { method: 'DELETE' });
         setInquiries(prev => prev.filter(inq => inq.id !== inquiryId));
         logActivity(currentUser, `Otkazan upit za smeštaj "${propTitle}" (${inq.dates}) - SQLite.`, 'delete');
       } catch (err) {
@@ -705,7 +707,7 @@ export default function App() {
   const handleAddProperty = async (newProperty) => {
     if (backendActive) {
       try {
-        const res = await fetch('http://localhost:5001/api/properties', {
+        const res = await fetch(`${API_URL}/api/properties`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -734,7 +736,7 @@ export default function App() {
 
     if (backendActive) {
       try {
-        await fetch(`http://localhost:5001/api/properties/${propertyId}`, { 
+        await fetch(`${API_URL}/api/properties/${propertyId}`, { 
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -763,7 +765,7 @@ export default function App() {
     if (backendActive) {
       try {
         const newRole = !targetUser.isAdmin;
-        await fetch(`http://localhost:5001/api/users/${userId}/role`, {
+        await fetch(`${API_URL}/api/users/${userId}/role`, {
           method: 'PATCH',
           headers: { 
             'Content-Type': 'application/json',
@@ -804,7 +806,7 @@ export default function App() {
   const handleUpdateInquiryStatus = async (inquiryId, status) => {
     if (backendActive) {
       try {
-        await fetch(`http://localhost:5001/api/inquiries/${inquiryId}`, {
+        await fetch(`${API_URL}/api/inquiries/${inquiryId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status })
@@ -848,7 +850,7 @@ export default function App() {
 
     if (backendActive) {
       try {
-        const res = await fetch(`http://localhost:5001/api/inquiries/${inquiryId}/chat`, {
+        const res = await fetch(`${API_URL}/api/inquiries/${inquiryId}/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sender, text, timestamp: formattedTime })
@@ -886,12 +888,10 @@ export default function App() {
       }));
     }
   };
-
-  // Handle Add Forum Post
   const handleAddForumPost = async (newPost) => {
     if (backendActive) {
       try {
-        const res = await fetch('http://localhost:5001/api/forum-posts', {
+        const res = await fetch(`${API_URL}/api/forum-posts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newPost)
@@ -917,7 +917,7 @@ export default function App() {
 
     if (backendActive && reviewObj) {
       try {
-        const res = await fetch(`http://localhost:5001/api/properties/${propertyId}/reviews/${reviewObj.id}`, { 
+        const res = await fetch(`${API_URL}/api/properties/${propertyId}/reviews/${reviewObj.id}`, { 
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -966,7 +966,7 @@ export default function App() {
 
     if (backendActive) {
       try {
-        await fetch(`http://localhost:5001/api/forum-posts/${postId}`, { 
+        await fetch(`${API_URL}/api/forum-posts/${postId}`, { 
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -987,7 +987,7 @@ export default function App() {
   const handleAddReview = async (propertyId, newReview) => {
     if (backendActive) {
       try {
-        const res = await fetch(`http://localhost:5001/api/properties/${propertyId}/reviews`, {
+        const res = await fetch(`${API_URL}/api/properties/${propertyId}/reviews`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newReview)

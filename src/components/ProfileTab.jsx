@@ -7,6 +7,8 @@ const AVATAR_PRESETS = [
   'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80'
 ];
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
 export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, onCancelInquiry, onLogout, properties = [], onViewPropertyDetails, onSendChatMessage, onNavigate }) {
   const [formData, setFormData] = useState({
     fullName: currentUser.fullName,
@@ -158,7 +160,7 @@ export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, 
                     labelEl.innerText = "Otpremanje avatara...";
                     
                     try {
-                      const res = await fetch('http://localhost:5001/api/upload', {
+                      const res = await fetch(`${API_URL}/api/upload`, {
                         method: 'POST',
                         body: uploadData
                       });

@@ -7,6 +7,8 @@ const PRESET_IMAGES = [
   { id: 'traditional-1', url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80', label: 'Kamena kuća Lefkada' }
 ];
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
 export default function HostPanel({ 
   onAddProperty, 
   destinations, 
@@ -36,7 +38,7 @@ export default function HostPanel({
     setQueryLoading(true);
     setQueryResults({ rows: [], columns: [], message: '', error: '' });
     try {
-      const response = await fetch('http://localhost:5001/api/admin/query', {
+      const response = await fetch(`${API_URL}/api/admin/query`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -75,7 +77,7 @@ export default function HostPanel({
     }
     setDbResetMessage('Resetovanje baze u toku...');
     try {
-      const response = await fetch('http://localhost:5001/api/admin/reset-db', {
+      const response = await fetch(`${API_URL}/api/admin/reset-db`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -140,7 +142,7 @@ export default function HostPanel({
       
       const query = `UPDATE ${activeTable} SET ${sets.join(', ')} WHERE id = ${parsed.id};`;
       
-      const response = await fetch('http://localhost:5001/api/admin/query', {
+      const response = await fetch(`${API_URL}/api/admin/query`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -168,7 +170,7 @@ export default function HostPanel({
     }
     const query = `DELETE FROM ${activeTable} WHERE id = ${id};`;
     try {
-      const response = await fetch('http://localhost:5001/api/admin/query', {
+      const response = await fetch(`${API_URL}/api/admin/query`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -771,7 +773,7 @@ export default function HostPanel({
                         labelEl.innerText = "Otpremanje slike...";
                         
                         try {
-                          const res = await fetch('http://localhost:5001/api/upload', {
+                          const res = await fetch(`${API_URL}/api/upload`, {
                             method: 'POST',
                             body: uploadData
                           });
