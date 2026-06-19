@@ -285,13 +285,13 @@ async function seedDatabase() {
       }
 
       // 4. Seed Inquiries (with checkIn and checkOut)
-      await dbHelper.run('INSERT OR REPLACE INTO inquiries (id, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message) VALUES (888, 999, 2, "2026-07-15", "2026-07-25", "15. Jul - 25. Jul", 10, 4, 580, "Odobreno", "Dobar dan, slali smo upit za apartman, radujemo se dolasku!")');
+      await dbHelper.run("INSERT OR REPLACE INTO inquiries (id, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message) VALUES (888, 999, 2, '2026-07-15', '2026-07-25', '15. Jul - 25. Jul', 10, 4, 580, 'Odobreno', 'Dobar dan, slali smo upit za apartman, radujemo se dolasku!')");
 
       // 5. Seed Chat Messages
-      await dbHelper.run('INSERT INTO chat_messages (inquiryId, sender, text, timestamp) VALUES (888, "client", "Dobar dan, slali smo upit za apartman, radujemo se dolasku!", "15. Jul u 12:00")');
+      await dbHelper.run("INSERT INTO chat_messages (inquiryId, sender, text, timestamp) VALUES (888, 'client', 'Dobar dan, slali smo upit za apartman, radujemo se dolasku!', '15. Jul u 12:00')");
 
       // 6. Seed Activity Logs
-      await dbHelper.run('INSERT INTO activity_logs (timestamp, user, action, type) VALUES ("19.06.2026. u 20:00", "Sistem", "Inicijalizovana SQLite baza podataka sa fabričkim podacima.", "create")');
+      await dbHelper.run("INSERT INTO activity_logs (timestamp, user, action, type) VALUES ('19.06.2026. u 20:00', 'Sistem', 'Inicijalizovana SQLite baza podataka sa fabričkim podacima.', 'create')");
 
       // 7. Seed Forum Posts
       const seedForum = [
