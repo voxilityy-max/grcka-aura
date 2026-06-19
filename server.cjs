@@ -270,7 +270,7 @@ async function seedDatabase() {
 
       const seedUsers = [
         [999, 'stefan', 'Stefan Petrović', 'stefan@email.com', hashedPassword, '+381 60 123 4567', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', 1],
-        [1000, 'vlasnik_aura', 'Vlasnik Aura', 'voxilityy@gmail.com', hashedOwnerPassword, '+381 60 111 2233', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', 1]
+        [1000, 'vlasnik_aura', 'Vlasnik Aura', 'voxilityy@gmail.com', hashedPassword, '+381 60 111 2233', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', 1]
       ];
 
       for (const u of seedUsers) {
