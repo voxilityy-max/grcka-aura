@@ -37,16 +37,39 @@ if (useTurso) {
     authToken: process.env.TURSO_AUTH_TOKEN
   });
 } else {
-  sqlite3 = require('sqlite3').verbose();
-  const dbPath = path.join(__dirname, 'database.sqlite');
-  console.log('Spajam se na lokalnu SQLite bazu podataka:', dbPath);
-  db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('Greška pri povezivanju sa SQLite bazom:', err.message);
-    } else {
-      checkAndInitializeSchema();
-    }
-  });
+  // Ako smo na Renderu (ili produkciji), Turso je obavezan jer lokalni SQLite nije perzistentan i sqlite3 drajver puca zbog GLIBC verzije.
+  if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+    console.error('\n========================================================================');
+    console.error('Kritična greška: Pokušavate da pokrenete aplikaciju na produkciji/Renderu bez Turso baze.');
+    console.error('Lokalna SQLite baza (sqlite3) ne može biti učitana zbog GLIBC nekompatibilnosti.');
+    console.error('Molimo vas da dodate sledeće Environment Variables u vašem Render Dashboard-u:');
+    console.error('  1. TURSO_DATABASE_URL (npr. libsql://grcka-aura...)');
+    console.error('  2. TURSO_AUTH_TOKEN (vaš Turso JWT token)');
+    console.error('========================================================================\n');
+    process.exit(1);
+  }
+
+  try {
+    sqlite3 = require('sqlite3').verbose();
+    const dbPath = path.join(__dirname, 'database.sqlite');
+    console.log('Spajam se na lokalnu SQLite baju podataka:', dbPath);
+    db = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        console.error('Greška pri povezivanju sa SQLite bazom:', err.message);
+      } else {
+        checkAndInitializeSchema();
+      }
+    });
+  } catch (err) {
+    console.error('\n========================================================================');
+    console.error('Kritična greška: Neuspešno učitavanje sqlite3 drajvera.');
+    console.error('Detalji greške:', err.message);
+    console.error('Ako pokrećete na cloud serveru (Render, Heroku, itd.), MORATE podesiti:');
+    console.error('  TURSO_DATABASE_URL i TURSO_AUTH_TOKEN');
+    console.error('kako bi aplikacija koristila Turso Cloud bazu podataka umesto lokalne.');
+    console.error('========================================================================\n');
+    process.exit(1);
+  }
 }
 
 // Database Helper (Abstraction Layer)
