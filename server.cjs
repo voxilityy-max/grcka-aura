@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+let sqlite3;
 const { createClient } = require('@libsql/client');
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -37,6 +37,7 @@ if (useTurso) {
     authToken: process.env.TURSO_AUTH_TOKEN
   });
 } else {
+  sqlite3 = require('sqlite3').verbose();
   const dbPath = path.join(__dirname, 'database.sqlite');
   console.log('Spajam se na lokalnu SQLite bazu podataka:', dbPath);
   db = new sqlite3.Database(dbPath, (err) => {
