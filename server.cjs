@@ -1,0 +1,806 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const sqlite3 = require('sqlite3').verbose();
+const { createClient } = require('@libsql/client');
+const path = require('path');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+
+const app = express();
+const PORT = process.env.PORT || 5001;
+const JWT_SECRET = process.env.JWT_SECRET || 'aura_jwt_secret_key_2026';
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Setup local uploads dir if local fallback is used
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
+
+// Database connection logic
+const useTurso = !!(process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
+let db;
+let client;
+
+if (useTurso) {
+  console.log('Spajam se na Turso Cloud bazu podataka:', process.env.TURSO_DATABASE_URL);
+  client = createClient({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN
+  });
+} else {
+  const dbPath = path.join(__dirname, 'database.sqlite');
+  console.log('Spajam se na lokalnu SQLite bazu podataka:', dbPath);
+  db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('Greška pri povezivanju sa SQLite bazom:', err.message);
+    } else {
+      checkAndInitializeSchema();
+    }
+  });
+}
+
+// Database Helper (Abstraction Layer)
+const dbHelper = {
+  run: (sql, params = []) => {
+    if (useTurso) {
+      return client.execute({ sql, args: params }).then(res => ({
+        lastID: res.lastInsertRowid !== undefined ? Number(res.lastInsertRowid) : null,
+        changes: res.rowsAffected
+      }));
+    } else {
+      return new Promise((resolve, reject) => {
+        db.run(sql, params, function(err) {
+          if (err) reject(err);
+          else resolve({ lastID: this.lastID, changes: this.changes });
+        });
+      });
+    }
+  },
+  get: (sql, params = []) => {
+    if (useTurso) {
+      return client.execute({ sql, args: params }).then(res => res.rows[0] || null);
+    } else {
+      return new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        });
+      });
+    }
+  },
+  all: (sql, params = []) => {
+    if (useTurso) {
+      return client.execute({ sql, args: params }).then(res => res.rows);
+    } else {
+      return new Promise((resolve, reject) => {
+        db.all(sql, params, (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        });
+      });
+    }
+  },
+  serialize: async (fn) => {
+    if (useTurso) {
+      await fn();
+    } else {
+      await new Promise((resolve) => {
+        db.serialize(() => {
+          fn().then(resolve);
+        });
+      });
+    }
+  }
+};
+
+async function checkAndInitializeSchema() {
+  await dbHelper.serialize(async () => {
+    // Enable Foreign Keys if supported
+    await dbHelper.run('PRAGMA foreign_keys = ON');
+    
+    // Check if checkIn column exists in inquiries table
+    try {
+      const columns = await dbHelper.all("PRAGMA table_info(inquiries)");
+      if (columns && columns.length > 0) {
+        const hasCheckIn = columns.some(c => c.name === 'checkIn');
+        if (!hasCheckIn) {
+          console.log('Detektovana stara struktura tabele inquiries. Resetujem bazu...');
+          await dbHelper.run('DROP TABLE IF EXISTS chat_messages');
+          await dbHelper.run('DROP TABLE IF EXISTS inquiries');
+          await dbHelper.run('DROP TABLE IF EXISTS reviews');
+          await dbHelper.run('DROP TABLE IF EXISTS properties');
+          await dbHelper.run('DROP TABLE IF EXISTS users');
+          await dbHelper.run('DROP TABLE IF EXISTS activity_logs');
+          await dbHelper.run('DROP TABLE IF EXISTS forum_posts');
+        }
+      }
+    } catch (err) {
+      // In remote Turso / some setups PRAGMA info might fail, we just catch and proceed
+    }
+    
+    await initializeSchema();
+  });
+}
+
+// Start connection & initialize schema if Turso is used
+if (useTurso) {
+  checkAndInitializeSchema();
+}
+
+// Database Schema Initialization
+async function initializeSchema() {
+  // 1. Users Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    fullName TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    phone TEXT,
+    avatar TEXT,
+    isAdmin INTEGER DEFAULT 0
+  )`);
+
+  // 2. Properties Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS properties (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    type TEXT NOT NULL,
+    location TEXT NOT NULL,
+    price INTEGER NOT NULL,
+    rating REAL NOT NULL,
+    distanceToBeach INTEGER NOT NULL,
+    image TEXT NOT NULL,
+    guests INTEGER NOT NULL,
+    bedrooms INTEGER NOT NULL,
+    description TEXT,
+    wifi INTEGER DEFAULT 0,
+    pool INTEGER DEFAULT 0,
+    beachfront INTEGER DEFAULT 0,
+    parking INTEGER DEFAULT 0,
+    airConditioning INTEGER DEFAULT 0,
+    pets INTEGER DEFAULT 0
+  )`);
+
+  // 3. Reviews Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    propertyId INTEGER NOT NULL,
+    author TEXT NOT NULL,
+    rating REAL NOT NULL,
+    comment TEXT NOT NULL,
+    FOREIGN KEY (propertyId) REFERENCES properties(id) ON DELETE CASCADE
+  )`);
+
+  // 4. Inquiries Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS inquiries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    propertyId INTEGER NOT NULL,
+    checkIn TEXT NOT NULL,
+    checkOut TEXT NOT NULL,
+    dates TEXT,
+    nights INTEGER NOT NULL,
+    guests INTEGER NOT NULL,
+    totalPrice INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    message TEXT,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (propertyId) REFERENCES properties(id) ON DELETE CASCADE
+  )`);
+
+  // 5. Chat Messages Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inquiryId INTEGER NOT NULL,
+    sender TEXT NOT NULL,
+    text TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    FOREIGN KEY (inquiryId) REFERENCES inquiries(id) ON DELETE CASCADE
+  )`);
+
+  // 6. Activity Logs Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS activity_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    user TEXT NOT NULL,
+    action TEXT NOT NULL,
+    type TEXT NOT NULL
+  )`);
+
+  // 7. Forum Posts Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS forum_posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL,
+    content TEXT NOT NULL,
+    repliesCount INTEGER DEFAULT 0,
+    timestamp TEXT NOT NULL
+  )`);
+
+  // Seed database if empty
+  await seedDatabase();
+}
+
+// Database Seeding Logic
+async function seedDatabase() {
+  try {
+    const row = await dbHelper.get('SELECT COUNT(*) as count FROM users');
+    if (!row || Number(row.count) > 0) return; // Already seeded
+
+    console.log('Baza je prazna. Pokrećem popunjavanje inicijalnim podacima (seeding)...');
+
+    await dbHelper.serialize(async () => {
+      // 1. Seed Users (with hashed passwords)
+      const hashedPassword = bcrypt.hashSync('password', 10);
+      const hashedOwnerPassword = bcrypt.hashSync('google-oauth-simulated', 10);
+
+      const seedUsers = [
+        [999, 'stefan', 'Stefan Petrović', 'stefan@email.com', hashedPassword, '+381 60 123 4567', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', 1],
+        [1000, 'vlasnik_aura', 'Vlasnik Aura', 'vlasnik.aura@gmail.com', hashedOwnerPassword, '+381 60 111 2233', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', 1]
+      ];
+
+      for (const u of seedUsers) {
+        await dbHelper.run('INSERT OR REPLACE INTO users (id, username, fullName, email, password, phone, avatar, isAdmin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', u);
+      }
+
+      // 2. Seed Properties
+      const seedProperties = [
+        [1, 'Kamena Vila Horizon Lefkada', 'Vila', 'Lefkada', 125, 4.9, 150, 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80', 6, 3, 'Tradicionalna kamena vila sa privatnim bazenom, modernim enterijerom i panoramskim pogledom na Jonsko more. Smeštena je u mirnom brdovitom predelu, na samo 3 minuta vožnje od poznate plaže Katizma. Vila ima prostranu terasu, spoljni roštilj i potpuno opremljenu kuhinju.', 1, 1, 0, 1, 1, 1],
+        [2, 'Apartmani Golden Beach Thassos', 'Apartman', 'Tasos', 55, 4.7, 20, 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80', 4, 1, 'Moderno opremljeni apartmani na samoj obali mora na čuvenoj Zlatnoj plaži na Tasosu. Zakoračite direktno iz dvorišta na pesak. Svaki apartman poseduje privatni balkon sa pogledom na more, čajnu kuhinju i besplatne ležaljke na plaži ispred objekta.', 1, 0, 1, 1, 1, 0],
+        [3, 'Aegean Pearl Premium Resort', 'Hotel', 'Krit', 195, 4.8, 50, 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80', 3, 1, 'Luksuzni hotel sa 5 zvezdica, bogatim doručkom, sopstvenom privatnom plažom i velikim infinity bazenom. Nalazi se na pešačelom udaljenosti od šarmantnog starog grada. Nudimo spa centar, teretanu i vrhunski restoran mediteranske kuhinje.', 1, 1, 1, 1, 1, 1],
+        [4, 'Porodični Apartman Maria Kassandra', 'Apartman', 'Kasandra', 45, 4.5, 450, 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80', 4, 2, 'Komforan i povoljan porodični apartman u mirnom delu Pefkohorija, idealan za porodice sa decom. Poseduje veliku ograđenu terasu u hladovini, kompletno opremljenu kuhinju sa velikim frižiderom i privatno parking mesto.', 1, 0, 0, 1, 1, 0],
+        [5, 'Vila Blue Wave Nikiti Sitonija', 'Vila', 'Sitonija', 155, 4.9, 80, 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80', 8, 4, 'Luksuzna i prostrana vila za veće grupe i porodice, na samo par koraka od prelepe peščane plaže u Nikitiju. Vila ima lepo uređeno travnato dvorište, spoljni tuš, garnituru za sedenje i ležaljke. Sve sobe su klimatizovane.', 1, 0, 1, 1, 1, 1],
+        [6, 'Hotel Paradise View Athos', 'Hotel', 'Halkidiki', 90, 4.6, 300, 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80', 2, 1, 'Udoban hotel u blizini Svete Gore i grada Uranopolisa sa prelepim panoramskim pogledom na ostrvo Amuljani. Nudi bogat doručak na bazi švedskog stola, bazen u sklopu hotela i bar pored bazena sa osvežavajućim koktelima.', 1, 1, 0, 1, 1, 0]
+      ];
+
+      for (const p of seedProperties) {
+        await dbHelper.run('INSERT OR REPLACE INTO properties (id, title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', p);
+      }
+
+      // 3. Seed Reviews
+      const seedReviews = [
+        [1, 'Nikola M.', 5.0, 'Pogled sa terase je nestvaran! Bazen je izuzetno čist, a domaćin nas je sačekao sa domaćim vinom.'],
+        [1, 'Jelena K.', 4.8, 'Predivna i prostrana vila. Tiho i mirno okruženje, idealno za odmor sa porodicom.'],
+        [2, 'Marko S.', 5.0, 'Lokacija je bez premca! Doručak na balkonu uz šum talasa je nešto neprocenjivo.'],
+        [2, 'Milica P.', 4.4, 'Veoma uredno i čisto. Blizu su restorani i supermarketi. Topla preporuka!'],
+        [3, 'Petar Z.', 5.0, 'Vrhunska usluga i neverovatno osoblje. Spa centar je odličan.'],
+        [3, 'Anja V.', 4.6, 'Hrana u restoranu je fantastična. Sobe su prostrane i luksuzne.'],
+        [4, 'Dragan D.', 4.5, 'Odličan odnos cene i kvaliteta. Domaćica Maria je izuzetno prijatna žena.'],
+        [5, 'Jovan J.', 5.0, 'Kuća je savršena za dve porodice sa decom. Dvorište je bezbedno i prelepo.'],
+        [6, 'Stefan R.', 4.6, 'Jako lepe i čiste sobe, pogled na more sa terase oduzima dah.']
+      ];
+
+      for (const r of seedReviews) {
+        await dbHelper.run('INSERT INTO reviews (propertyId, author, rating, comment) VALUES (?, ?, ?, ?)', r);
+      }
+
+      // 4. Seed Inquiries (with checkIn and checkOut)
+      await dbHelper.run('INSERT OR REPLACE INTO inquiries (id, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message) VALUES (888, 999, 2, "2026-07-15", "2026-07-25", "15. Jul - 25. Jul", 10, 4, 580, "Odobreno", "Dobar dan, slali smo upit za apartman, radujemo se dolasku!")');
+
+      // 5. Seed Chat Messages
+      await dbHelper.run('INSERT INTO chat_messages (inquiryId, sender, text, timestamp) VALUES (888, "client", "Dobar dan, slali smo upit za apartman, radujemo se dolasku!", "15. Jul u 12:00")');
+
+      // 6. Seed Activity Logs
+      await dbHelper.run('INSERT INTO activity_logs (timestamp, user, action, type) VALUES ("19.06.2026. u 20:00", "Sistem", "Inicijalizovana SQLite baza podataka sa fabričkim podacima.", "create")');
+
+      // 7. Seed Forum Posts
+      const seedForum = [
+        ['Koji put izabrati za Tasos?', 'Nikola K.', 'Pozdrav svima, planiram put na Tasos u julu. Koja je preporuka za trasu - preko Bugarske ili Severne Makedonije? Gde je bolji kolovoz i manje gužve na granicama?', 1, 'Pre 2 dana u 14:32'],
+        ['Cene ležaljki u Nikitiju - Sitonija', 'Jelena S.', 'Može li neko ko je trenutno u Nikitiju da napiše kakve su cene na plažama? Da li se ležaljke dobijaju uz naručeno piće ili se plaćaju posebno, i koliki je minimalni ceh?', 0, 'Pre 4 dana u 09:15']
+      ];
+
+      for (const f of seedForum) {
+        await dbHelper.run('INSERT INTO forum_posts (title, author, content, repliesCount, timestamp) VALUES (?, ?, ?, ?, ?)', f);
+      }
+
+      console.log('Popunjavanje baze inicijalnim podacima je uspešno završeno.');
+    });
+  } catch (err) {
+    console.error('Greška pri seeding-u baze:', err.message);
+  }
+}
+
+// JWT Token Middlewares
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) return res.status(401).json({ error: 'Pristup odbijen. Token nedostaje.' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Nevažeći token.' });
+    req.user = user;
+    next();
+  });
+}
+
+function requireAdmin(req, res, next) {
+  authenticateToken(req, res, () => {
+    if (!req.user || !req.user.isAdmin) {
+      return res.status(403).json({ error: 'Pristup odbijen. Potrebna su administratorska prava.' });
+    }
+    next();
+  });
+}
+
+// ----------------------------------------------------
+// REST API ROUTES (Promise-based & Unified)
+// ----------------------------------------------------
+
+// 1. Auth Login
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await dbHelper.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase().trim()]);
+    if (!user) return res.status(401).json({ error: 'Korisnik sa ovim e-mailom ne postoji.' });
+    
+    // Compare bcrypt password
+    const passwordMatch = bcrypt.compareSync(password, user.password);
+    if (!passwordMatch) return res.status(401).json({ error: 'Pogrešna lozinka.' });
+    
+    user.isAdmin = !!user.isAdmin;
+    
+    // Sign JWT
+    const token = jwt.sign(
+      { id: user.id, username: user.username, isAdmin: user.isAdmin },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    res.json({ user, token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Auth Register
+app.post('/api/auth/register', async (req, res) => {
+  const { username, fullName, email, password, phone, avatar, isAdmin } = req.body;
+  const adminFlag = isAdmin ? 1 : 0;
+  
+  // Hash password
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  
+  try {
+    const result = await dbHelper.run(
+      'INSERT INTO users (username, fullName, email, password, phone, avatar, isAdmin) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [username, fullName, email.toLowerCase().trim(), hashedPassword, phone, avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', adminFlag]
+    );
+    
+    const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [result.lastID]);
+    user.isAdmin = !!user.isAdmin;
+    
+    // Sign JWT
+    const token = jwt.sign(
+      { id: user.id, username: user.username, isAdmin: user.isAdmin },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    res.json({ user, token });
+  } catch (err) {
+    if (err.message.includes('UNIQUE')) {
+      return res.status(400).json({ error: 'Korisničko ime ili e-mail adresa je već u upotrebi.' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Get All Properties (along with reviews)
+app.get('/api/properties', async (req, res) => {
+  try {
+    const properties = await dbHelper.all('SELECT * FROM properties');
+    const reviews = await dbHelper.all('SELECT * FROM reviews');
+
+    // Group reviews by propertyId
+    const populated = properties.map(p => {
+      p.amenities = {
+        wifi: !!p.wifi,
+        pool: !!p.pool,
+        beachfront: !!p.beachfront,
+        parking: !!p.parking,
+        airConditioning: !!p.airConditioning,
+        pets: !!p.pets
+      };
+      p.reviews = reviews.filter(r => r.propertyId === p.id);
+      return p;
+    });
+    res.json(populated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. Create Property
+app.post('/api/properties', requireAdmin, async (req, res) => {
+  const { title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, amenities } = req.body;
+  
+  try {
+    const result = await dbHelper.run(
+      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        title, type, location, price, rating || 5.0, distanceToBeach, image, guests, bedrooms, description,
+        amenities.wifi ? 1 : 0, amenities.pool ? 1 : 0, amenities.beachfront ? 1 : 0, amenities.parking ? 1 : 0, amenities.airConditioning ? 1 : 0, amenities.pets ? 1 : 0
+      ]
+    );
+    
+    const prop = await dbHelper.get('SELECT * FROM properties WHERE id = ?', [result.lastID]);
+    prop.amenities = amenities;
+    prop.reviews = [];
+    res.json(prop);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. Delete Property
+app.delete('/api/properties/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await dbHelper.run('DELETE FROM properties WHERE id = ?', [id]);
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. Add Review to Property
+app.post('/api/properties/:id/reviews', async (req, res) => {
+  const propertyId = req.params.id;
+  const { author, rating, comment } = req.body;
+  
+  try {
+    const result = await dbHelper.run(
+      'INSERT INTO reviews (propertyId, author, rating, comment) VALUES (?, ?, ?, ?)',
+      [propertyId, author, rating, comment]
+    );
+    const reviewId = result.lastID;
+    
+    // Recalculate property average rating
+    const rows = await dbHelper.all('SELECT rating FROM reviews WHERE propertyId = ?', [propertyId]);
+    const sum = rows.reduce((acc, r) => acc + r.rating, 0);
+    const avg = parseFloat((sum / rows.length).toFixed(1));
+    
+    await dbHelper.run('UPDATE properties SET rating = ? WHERE id = ?', [avg, propertyId]);
+    res.json({ id: reviewId, propertyId: parseInt(propertyId, 10), author, rating, comment, newAverageRating: avg });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 7. Delete Review
+app.delete('/api/properties/:propertyId/reviews/:reviewId', requireAdmin, async (req, res) => {
+  const { propertyId, reviewId } = req.params;
+  try {
+    await dbHelper.run('DELETE FROM reviews WHERE id = ?', [reviewId]);
+    
+    // Recalculate average rating
+    const rows = await dbHelper.all('SELECT rating FROM reviews WHERE propertyId = ?', [propertyId]);
+    const avg = rows.length > 0 
+      ? parseFloat((rows.reduce((acc, r) => acc + r.rating, 0) / rows.length).toFixed(1)) 
+      : 5.0;
+    
+    await dbHelper.run('UPDATE properties SET rating = ? WHERE id = ?', [avg, propertyId]);
+    res.json({ success: true, newRating: avg });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8. Get All Inquiries (with chat messages)
+app.get('/api/inquiries', async (req, res) => {
+  try {
+    const inquiries = await dbHelper.all('SELECT * FROM inquiries');
+    const messages = await dbHelper.all('SELECT * FROM chat_messages');
+
+    const populated = inquiries.map(inq => {
+      inq.chat = messages
+        .filter(m => m.inquiryId === inq.id)
+        .map(m => ({
+          id: m.id,
+          sender: m.sender,
+          text: m.text,
+          timestamp: m.timestamp
+        }));
+      return inq;
+    });
+    res.json(populated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 9. Add Inquiry
+app.post('/api/inquiries', async (req, res) => {
+  const { userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message } = req.body;
+  
+  try {
+    const result = await dbHelper.run(
+      `INSERT INTO inquiries (userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status || 'Poslato', message]
+    );
+    const inquiryId = result.lastID;
+    
+    if (message) {
+      await dbHelper.run(
+        'INSERT INTO chat_messages (inquiryId, sender, text, timestamp) VALUES (?, ?, ?, ?)',
+        [inquiryId, 'client', message, dates.split(' - ')[0]]
+      );
+      res.json({ id: inquiryId, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status: status || 'Poslato', message, chat: [{ sender: 'client', text: message, timestamp: dates.split(' - ')[0] }] });
+    } else {
+      res.json({ id: inquiryId, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status: status || 'Poslato', message, chat: [] });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 10. Update Inquiry Status (Approve/Reject)
+app.patch('/api/inquiries/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  
+  try {
+    const result = await dbHelper.run('UPDATE inquiries SET status = ? WHERE id = ?', [status, id]);
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 11. Delete/Cancel Inquiry
+app.delete('/api/inquiries/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await dbHelper.run('DELETE FROM inquiries WHERE id = ?', [id]);
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 12. Send Chat Message
+app.post('/api/inquiries/:id/chat', async (req, res) => {
+  const inquiryId = req.params.id;
+  const { sender, text, timestamp } = req.body;
+  
+  try {
+    const result = await dbHelper.run(
+      'INSERT INTO chat_messages (inquiryId, sender, text, timestamp) VALUES (?, ?, ?, ?)',
+      [inquiryId, sender, text, timestamp]
+    );
+    res.json({ id: result.lastID, inquiryId: parseInt(inquiryId, 10), sender, text, timestamp });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 13. Get Activity Logs
+app.get('/api/activity-logs', async (req, res) => {
+  try {
+    const rows = await dbHelper.all('SELECT * FROM activity_logs ORDER BY id DESC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 14. Create Activity Log
+app.post('/api/activity-logs', async (req, res) => {
+  const { timestamp, user, action, type } = req.body;
+  try {
+    const result = await dbHelper.run(
+      'INSERT INTO activity_logs (timestamp, user, action, type) VALUES (?, ?, ?, ?)',
+      [timestamp, user, action, type]
+    );
+    res.json({ id: result.lastID, timestamp, user, action, type });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 15. Get Forum Posts
+app.get('/api/forum-posts', async (req, res) => {
+  try {
+    const rows = await dbHelper.all('SELECT * FROM forum_posts ORDER BY id DESC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 16. Create Forum Post
+app.post('/api/forum-posts', async (req, res) => {
+  const { title, author, content, timestamp } = req.body;
+  try {
+    const result = await dbHelper.run(
+      'INSERT INTO forum_posts (title, author, content, repliesCount, timestamp) VALUES (?, ?, ?, 0, ?)',
+      [title, author, content, timestamp]
+    );
+    res.json({ id: result.lastID, title, author, content, repliesCount: 0, timestamp });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 17. Delete Forum Post
+app.delete('/api/forum-posts/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await dbHelper.run('DELETE FROM forum_posts WHERE id = ?', [id]);
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 18. Toggle User Admin Status
+app.patch('/api/users/:id/role', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { isAdmin } = req.body;
+  const adminFlag = isAdmin ? 1 : 0;
+  
+  try {
+    const result = await dbHelper.run('UPDATE users SET isAdmin = ? WHERE id = ?', [adminFlag, id]);
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 19. Get Users List
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await dbHelper.all('SELECT * FROM users');
+    const mapped = users.map(u => {
+      u.isAdmin = !!u.isAdmin;
+      return u;
+    });
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 20. Update User Info
+app.patch('/api/users/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { fullName, phone, avatar } = req.body;
+  
+  if (parseInt(id, 10) !== req.user.id && !req.user.isAdmin) {
+    return res.status(403).json({ error: 'Nemate ovlašćenje da menjate tuđi profil.' });
+  }
+  
+  try {
+    await dbHelper.run(
+      'UPDATE users SET fullName = ?, phone = ?, avatar = ? WHERE id = ?',
+      [fullName, phone, avatar, id]
+    );
+    const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [id]);
+    user.isAdmin = !!user.isAdmin;
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 21. Real SQLite SQL Query Terminal Endpoint
+app.post('/api/admin/query', requireAdmin, async (req, res) => {
+  const { query } = req.body;
+  if (!query || !query.trim()) {
+    return res.status(400).json({ error: 'Nije unet SQL upit.' });
+  }
+
+  const trimmed = query.trim().toUpperCase();
+  
+  try {
+    if (trimmed.startsWith('SELECT') || trimmed.startsWith('PRAGMA') || trimmed.startsWith('EXPLAIN')) {
+      const rows = await dbHelper.all(query);
+      const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+      res.json({ rows, columns, message: `Upit uspešno izvršen. Vraćeno redova: ${rows.length}.` });
+    } else {
+      const result = await dbHelper.run(query);
+      res.json({
+        rows: [],
+        columns: [],
+        message: `Upit uspešno izvršen. Modifikovano redova (changes): ${result.changes}. Poslednji ID (lastID): ${result.lastID || 'Nema'}.`
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 22. Database Reset Endpoint (Repopulates with fresh seeds)
+app.post('/api/admin/reset-db', requireAdmin, async (req, res) => {
+  try {
+    await dbHelper.serialize(async () => {
+      await dbHelper.run('DROP TABLE IF EXISTS chat_messages');
+      await dbHelper.run('DROP TABLE IF EXISTS inquiries');
+      await dbHelper.run('DROP TABLE IF EXISTS reviews');
+      await dbHelper.run('DROP TABLE IF EXISTS properties');
+      await dbHelper.run('DROP TABLE IF EXISTS users');
+      await dbHelper.run('DROP TABLE IF EXISTS activity_logs');
+      await dbHelper.run('DROP TABLE IF EXISTS forum_posts');
+    });
+
+    console.log('Tabele obrisane na zahtev administratora.');
+    await initializeSchema();
+    res.json({ success: true, message: 'Baza podataka je uspešno resetovana na fabrička podešavanja.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 23. File Upload Endpoint with Cloudinary Support
+const storage = process.env.CLOUDINARY_CLOUD_NAME
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+      }
+    });
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
+
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Fajl nije otpremljen.' });
+  }
+
+  if (process.env.CLOUDINARY_CLOUD_NAME) {
+    try {
+      const uploadPromise = new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'grcka_aura' },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+
+      const result = await uploadPromise;
+      res.json({ url: result.secure_url });
+    } catch (err) {
+      console.error('Cloudinary upload error:', err);
+      res.status(500).json({ error: 'Greška pri otpremanju na Cloudinary: ' + err.message });
+    }
+  } else {
+    const fileUrl = `http://localhost:${PORT}/uploads/${req.file.filename}`;
+    res.json({ url: fileUrl });
+  }
+});
+
+// Start Server
+app.listen(PORT, () => {
+  console.log(`Pravi Aura Backend Server radi na adresi: http://localhost:${PORT}`);
+});

@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Rubik:wght@300;400;500;600;700;900&display=swap');
+
+:root {
+  /* Colors */
+  --primary: #0a4f70;
+  --primary-dark: #073a52;
+  --primary-light: #0d6e9c;
+  --accent: #00b4d8;
+  --accent-light: #90e0ef;
+  --accent-rgb: 0, 180, 216;
+  --secondary: #ffb703;
+  --success: #2ec4b6;
+  --danger: #e63946;
+  
+  /* Light Mode Colors */
+  --bg-main: #f8fafd;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --border: #e1e8ed;
+  --text-main: #2b3a4a;
+  --text-muted: #6c7a89;
+  --text-light: #ffffff;
+  --shadow: 0 10px 30px -10px rgba(10, 79, 112, 0.08), 0 1px 3px rgba(10, 79, 112, 0.03);
+  --shadow-hover: 0 20px 40px -15px rgba(10, 79, 112, 0.15), 0 4px 6px -2px rgba(10, 79, 112, 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.4);
+
+  /* Fonts */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Rubik', sans-serif;
+  
+  /* Layout */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  /* Dark Mode Colors */
+  --bg-main: #0b131a;
+  --bg-card: #13222f;
+  --bg-input: #1a2d3e;
+  --border: #233c53;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --shadow-hover: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+  --glass-bg: rgba(19, 34, 47, 0.8);
+  --glass-border: rgba(35, 60, 83, 0.4);
+}
+
+/* Resets */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--primary);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--accent-light);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: var(--transition);
+}
+
+/* Utility Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade {
+  animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-scale {
+  animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
