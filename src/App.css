@@ -4223,3 +4223,397 @@ g:hover > .pin-hover-label {
   font-weight: 600;
   pointer-events: none;
 }
+
+/* ==========================================
+   Host Panel Premium Redesign Styles
+   ========================================== */
+
+/* Expand Host Panel Container for a spacious dashboard layout */
+.host-panel-container {
+  max-width: 1250px !important;
+  padding: 2.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--bg-card);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+/* Premium Dashboard Grid for Statistics */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat-card {
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent);
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+  opacity: 0.8;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 180, 216, 0.1);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.stat-card:nth-child(2) .stat-icon {
+  background: rgba(241, 165, 63, 0.1);
+  color: #f59e0b;
+}
+
+.stat-card:nth-child(3) .stat-icon {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.stat-card:nth-child(4) .stat-icon {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-title {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.stat-subtext {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Premium segmented navigation bar */
+.dashboard-nav-container {
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 2.5rem;
+  overflow-x: auto;
+}
+
+.dashboard-nav {
+  display: flex;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.dashboard-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.2rem;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dashboard-nav-item:hover {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+
+.dashboard-nav-item.active {
+  background-color: rgba(0, 180, 216, 0.08);
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+/* Timeline Layout for Activity logs */
+.premium-timeline {
+  position: relative;
+  padding-left: 2rem;
+  margin-top: 1.5rem;
+}
+
+.premium-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 7px;
+  width: 2px;
+  background-color: var(--border);
+}
+
+.timeline-card {
+  position: relative;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+  transition: border-color 0.2s ease;
+}
+
+.timeline-card:hover {
+  border-color: var(--accent);
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -2rem;
+  top: 1.2rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--bg-card);
+  border: 3px solid var(--border);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.timeline-card:hover .timeline-dot {
+  border-color: var(--accent);
+  background-color: var(--accent);
+}
+
+.timeline-dot.create { border-color: #10b981; }
+.timeline-dot.delete { border-color: #ef4444; }
+.timeline-dot.update { border-color: #3b82f6; }
+.timeline-dot.auth { border-color: #8b5cf6; }
+.timeline-dot.inquiry { border-color: #f59e0b; }
+
+.timeline-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.timeline-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.2rem;
+}
+
+.timeline-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* User Roster Grid styling */
+.user-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.user-roster-card {
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.user-roster-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.roster-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.user-roster-card:hover .roster-avatar {
+  border-color: var(--accent);
+}
+
+.roster-role-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  margin-bottom: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.roster-role-badge.admin {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.roster-role-badge.owner {
+  background-color: rgba(241, 165, 63, 0.1);
+  color: #d97706;
+}
+
+.roster-role-badge.user {
+  background-color: rgba(0, 180, 216, 0.1);
+  color: var(--accent);
+}
+
+/* SQL terminal panel styling */
+.sql-terminal-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1.5rem;
+  min-height: 500px;
+}
+
+.sql-sidebar {
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.2rem;
+}
+
+.sql-sidebar-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+
+.sql-table-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sql-table-item:hover {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+
+.sql-table-item.active {
+  background-color: rgba(0, 180, 216, 0.08);
+  color: var(--accent);
+}
+
+.sql-main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.sql-console {
+  background-color: #1e1e24;
+  border-radius: var(--radius-sm);
+  padding: 1.2rem;
+  border: 1px solid #2d2d38;
+}
+
+.sql-textarea {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #a78bfa;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 120px;
+  outline: none;
+  line-height: 1.5;
+}
+
+.sql-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+  justify-content: flex-end;
+}
+
+.sql-quick-queries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.btn-quick-query {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-quick-query:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background-color: rgba(0, 180, 216, 0.03);
+}

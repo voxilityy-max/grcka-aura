@@ -9,6 +9,16 @@ const PRESET_IMAGES = [
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
+const DB_SCHEMAS = {
+  users: ['id (INTEGER PRIMARY KEY)', 'email (TEXT UNIQUE)', 'fullName (TEXT)', 'password (TEXT)', 'phone (TEXT)', 'isAdmin (INTEGER)', 'avatar (TEXT)'],
+  properties: ['id (INTEGER PRIMARY KEY)', 'title (TEXT)', 'location (TEXT)', 'type (TEXT)', 'price (REAL)', 'distanceToBeach (INTEGER)', 'guests (INTEGER)', 'bedrooms (INTEGER)', 'description (TEXT)', 'image (TEXT)', 'amenities (TEXT)'],
+  reviews: ['id (INTEGER PRIMARY KEY)', 'propertyId (INTEGER REFERENCES properties)', 'userName (TEXT)', 'rating (REAL)', 'comment (TEXT)', 'date (TEXT)'],
+  inquiries: ['id (INTEGER PRIMARY KEY)', 'propertyId (INTEGER REFERENCES properties)', 'userId (INTEGER REFERENCES users)', 'guests (INTEGER)', 'checkIn (TEXT)', 'checkOut (TEXT)', 'totalPrice (REAL)', 'status (TEXT)', 'message (TEXT)'],
+  chat_messages: ['id (INTEGER PRIMARY KEY)', 'inquiryId (INTEGER REFERENCES inquiries)', 'sender (TEXT)', 'text (TEXT)', 'timestamp (TEXT)'],
+  activity_logs: ['id (INTEGER PRIMARY KEY)', 'user (TEXT)', 'action (TEXT)', 'timestamp (TEXT)'],
+  forum_posts: ['id (INTEGER PRIMARY KEY)', 'userEmail (TEXT)', 'userName (TEXT)', 'avatar (TEXT)', 'content (TEXT)', 'timestamp (TEXT)']
+};
+
 export default function HostPanel({ 
   onAddProperty, 
   destinations, 
@@ -551,43 +561,45 @@ export default function HostPanel({
       </div>
 
       {/* 2. Inner Tabs Selection */}
-      <div className="forum-filters-bar" style={{ marginBottom: '2rem' }}>
-        <button 
-          className={`btn-filter-item ${panelTab === 'add' ? 'active' : ''}`}
-          onClick={() => setPanelTab('add')}
-        >
-          ➕ Dodaj Novi Smeštaj
-        </button>
-        <button 
-          className={`btn-filter-item ${panelTab === 'manage' ? 'active' : ''}`}
-          onClick={() => setPanelTab('manage')}
-        >
-          📂 Svi Smeštaji ({totalProperties})
-        </button>
-        <button 
-          className={`btn-filter-item ${panelTab === 'inquiries' ? 'active' : ''}`}
-          onClick={() => setPanelTab('inquiries')}
-        >
-          📩 Rezervacije ({inquiries.length})
-        </button>
-        <button 
-          className={`btn-filter-item ${panelTab === 'logs' ? 'active' : ''}`}
-          onClick={() => setPanelTab('logs')}
-        >
-          📋 Istorija Aktivnosti ({activityLogs.length})
-        </button>
-        <button 
-          className={`btn-filter-item ${panelTab === 'users' ? 'active' : ''}`}
-          onClick={() => setPanelTab('users')}
-        >
-          👥 Korisnici ({users.length})
-        </button>
-        <button 
-          className={`btn-filter-item ${panelTab === 'database' ? 'active' : ''}`}
-          onClick={() => setPanelTab('database')}
-        >
-          🗄️ Baza Podataka
-        </button>
+      <div className="dashboard-nav-container">
+        <div className="dashboard-nav">
+          <button 
+            className={`dashboard-nav-item ${panelTab === 'add' ? 'active' : ''}`}
+            onClick={() => setPanelTab('add')}
+          >
+            ➕ Dodaj Smeštaj
+          </button>
+          <button 
+            className={`dashboard-nav-item ${panelTab === 'manage' ? 'active' : ''}`}
+            onClick={() => setPanelTab('manage')}
+          >
+            📂 Objekti ({totalProperties})
+          </button>
+          <button 
+            className={`dashboard-nav-item ${panelTab === 'inquiries' ? 'active' : ''}`}
+            onClick={() => setPanelTab('inquiries')}
+          >
+            📩 Rezervacije ({inquiries.length})
+          </button>
+          <button 
+            className={`dashboard-nav-item ${panelTab === 'logs' ? 'active' : ''}`}
+            onClick={() => setPanelTab('logs')}
+          >
+            📋 Aktivnosti ({activityLogs.length})
+          </button>
+          <button 
+            className={`dashboard-nav-item ${panelTab === 'users' ? 'active' : ''}`}
+            onClick={() => setPanelTab('users')}
+          >
+            👥 Korisnici ({users.length})
+          </button>
+          <button 
+            className={`dashboard-nav-item ${panelTab === 'database' ? 'active' : ''}`}
+            onClick={() => setPanelTab('database')}
+          >
+            🗄️ SQL Terminal
+          </button>
+        </div>
       </div>
 
       {/* 3. Tab contents */}
@@ -967,57 +979,39 @@ export default function HostPanel({
           </div>
 
           {filteredLogs.length > 0 ? (
-            <div className="inquiries-table-wrapper" style={{ maxHeight: '500px', overflowY: 'auto' }}>
-              <table className="inquiries-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '170px' }}>Vreme</th>
-                    <th style={{ width: '220px' }}>Korisnik</th>
-                    <th>Zabeležena Aktivnost</th>
-                    <th style={{ width: '110px' }}>Tip</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLogs.map(log => (
-                    <tr key={log.id}>
-                      <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{log.timestamp}</td>
-                      <td style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: '600' }}>{log.user}</td>
-                      <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{log.action}</td>
-                      <td>
-                        <span className={`status-badge ${
-                          log.type === 'create' ? 'green' : 
-                          log.type === 'delete' ? 'orange' : 
-                          log.type === 'auth' ? 'green' : 
-                          log.type === 'update' ? 'orange' : 'orange'
-                        }`} style={{ 
-                          fontSize: '0.72rem', 
-                          padding: '0.15rem 0.5rem',
-                          backgroundColor: 
-                            log.type === 'create' ? 'rgba(52, 168, 83, 0.08)' :
-                            log.type === 'delete' ? 'rgba(230, 57, 70, 0.08)' :
-                            log.type === 'auth' ? 'rgba(26, 115, 232, 0.08)' :
-                            log.type === 'update' ? 'rgba(241, 165, 63, 0.08)' : 'rgba(241, 165, 63, 0.08)',
-                          color:
-                            log.type === 'create' ? '#16a34a' :
-                            log.type === 'delete' ? '#dc2626' :
-                            log.type === 'auth' ? '#1d4ed8' :
-                            log.type === 'update' ? '#d97706' : '#d97706',
-                          border:
-                            log.type === 'create' ? '1px solid #86efac' :
-                            log.type === 'delete' ? '1px solid #fca5a5' :
-                            log.type === 'auth' ? '1px solid #93c5fd' :
-                            log.type === 'update' ? '1px solid #fde047' : '1px solid #fde047'
-                        }}>
-                          {log.type === 'create' ? 'Kreirano' : 
-                           log.type === 'delete' ? 'Obrisano' : 
-                           log.type === 'auth' ? 'Pristup' : 
-                           log.type === 'update' ? 'Izmena' : 'Upit'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="premium-timeline" style={{ maxHeight: '550px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+              {filteredLogs.map(log => (
+                <div key={log.id} className="timeline-card">
+                  <div className={`timeline-dot ${log.type}`} />
+                  <div className="timeline-time">{log.timestamp}</div>
+                  <div className="timeline-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontWeight: '800', color: 'var(--text-main)' }}>{log.user}</span>
+                    <span style={{ 
+                      fontSize: '0.62rem', 
+                      padding: '0.1rem 0.4rem', 
+                      borderRadius: '10px',
+                      textTransform: 'uppercase',
+                      fontWeight: '700',
+                      backgroundColor: 
+                        log.type === 'create' ? 'rgba(52, 168, 83, 0.08)' :
+                        log.type === 'delete' ? 'rgba(230, 57, 70, 0.08)' :
+                        log.type === 'auth' ? 'rgba(26, 115, 232, 0.08)' :
+                        log.type === 'update' ? 'rgba(241, 165, 63, 0.08)' : 'rgba(241, 165, 63, 0.08)',
+                      color:
+                        log.type === 'create' ? '#16a34a' :
+                        log.type === 'delete' ? '#dc2626' :
+                        log.type === 'auth' ? '#1d4ed8' :
+                        log.type === 'update' ? '#d97706' : '#d97706'
+                    }}>
+                      {log.type === 'create' ? 'Kreirano' : 
+                       log.type === 'delete' ? 'Obrisano' : 
+                       log.type === 'auth' ? 'Pristup' : 
+                       log.type === 'update' ? 'Izmena' : 'Upit'}
+                    </span>
+                  </div>
+                  <div className="timeline-desc" style={{ marginTop: '0.3rem', color: 'var(--text-muted)' }}>{log.action}</div>
+                </div>
+              ))}
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
@@ -1030,116 +1024,81 @@ export default function HostPanel({
       {/* Tab: USERS MANAGEMENT */}
       {panelTab === 'users' && (
         <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
             Upravljanje Korisnicima i Ulogama
           </h3>
 
           {users.length > 0 ? (
-            <div className="inquiries-table-wrapper">
-              <table className="inquiries-table">
-                <thead>
-                  <tr>
-                    <th>Korisnik</th>
-                    <th>E-mail</th>
-                    <th>Telefon</th>
-                    <th>Trenutna Uloga</th>
-                    <th>Akcija</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(u => {
-                    const isOwner = u.email === 'voxilityy@gmail.com';
-                    const loggedInUserIsOwner = currentUser.email === 'voxilityy@gmail.com';
-                    
-                    let roleLabel = '👥 Klijent (Gost)';
-                    let roleStyle = {
-                      fontSize: '0.72rem',
-                      padding: '0.15rem 0.5rem',
-                      backgroundColor: 'rgba(241, 165, 63, 0.08)',
-                      color: '#d97706',
-                      border: '1px solid #fde047',
-                      borderRadius: '4px',
-                      display: 'inline-block'
-                    };
+            <div className="user-roster-grid">
+              {users.map(u => {
+                const isOwner = u.email === 'voxilityy@gmail.com';
+                const loggedInUserIsOwner = currentUser.email === 'voxilityy@gmail.com';
+                
+                let roleClass = 'user';
+                let roleLabel = '👥 Klijent (Gost)';
+                if (isOwner) {
+                  roleClass = 'owner';
+                  roleLabel = '👑 Vlasnik';
+                } else if (u.isAdmin) {
+                  roleClass = 'admin';
+                  roleLabel = '🛠️ Admin';
+                }
 
-                    if (isOwner) {
-                      roleLabel = '👑 Vlasnik (Gazda)';
-                      roleStyle = {
-                        fontSize: '0.72rem',
-                        padding: '0.15rem 0.5rem',
-                        backgroundColor: 'rgba(26, 115, 232, 0.08)',
-                        color: '#1d4ed8',
-                        border: '1px solid #93c5fd',
-                        borderRadius: '4px',
-                        display: 'inline-block'
-                      };
-                    } else if (u.isAdmin) {
-                      roleLabel = '🛠️ Administrator';
-                      roleStyle = {
-                        fontSize: '0.72rem',
-                        padding: '0.15rem 0.5rem',
-                        backgroundColor: 'rgba(52, 168, 83, 0.08)',
-                        color: '#16a34a',
-                        border: '1px solid #86efac',
-                        borderRadius: '4px',
-                        display: 'inline-block'
-                      };
-                    }
-
-                    return (
-                      <tr key={u.id}>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                            <img 
-                              src={u.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'} 
-                              alt={u.fullName} 
-                              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} 
-                            />
-                            <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{u.fullName}</div>
-                          </div>
-                        </td>
-                        <td>{u.email}</td>
-                        <td>{u.phone || '/'}</td>
-                        <td>
-                          <span style={roleStyle}>{roleLabel}</span>
-                        </td>
-                        <td>
-                          {isOwner ? (
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Fiksna uloga</span>
-                          ) : loggedInUserIsOwner ? (
-                            <button
-                              className="btn-compare-action"
-                              style={{ 
-                                padding: '0.4rem 0.8rem', 
-                                fontSize: '0.8rem', 
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                backgroundColor: u.isAdmin ? 'var(--danger)' : 'var(--success)',
-                                borderColor: u.isAdmin ? 'var(--danger)' : 'var(--success)',
-                                color: '#ffffff'
-                              }}
-                              onClick={() => {
-                                const confirmMsg = u.isAdmin 
-                                  ? `Da li ste sigurni da želite da oduzmete administratorska prava korisniku ${u.fullName}?` 
-                                  : `Da li ste sigurni da želite da dodelite administratorska prava korisniku ${u.fullName}?`;
-                                if (confirm(confirmMsg)) {
-                                  onToggleAdminStatus(u.id);
-                                }
-                              }}
-                            >
-                              {u.isAdmin ? 'Oduzmi Admin Prava' : 'Dodeli Admin Prava'}
-                            </button>
-                          ) : (
-                            <span style={{ fontSize: '0.8rem', color: 'var(--danger)', fontWeight: '600' }}>
-                              Samo Gazda može menjati prava
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                return (
+                  <div key={u.id} className="user-roster-card">
+                    <img 
+                      src={u.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'} 
+                      alt={u.fullName} 
+                      className="roster-avatar" 
+                    />
+                    <div style={{ fontWeight: '700', fontSize: '1.1rem', color: 'var(--text-main)', marginBottom: '0.2rem' }}>
+                      {u.fullName}
+                    </div>
+                    <div className={`roster-role-badge ${roleClass}`}>
+                      {roleLabel}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                      📧 {u.email}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.2rem' }}>
+                      📞 {u.phone || '/'}
+                    </div>
+                    <div style={{ marginTop: 'auto', width: '100%' }}>
+                      {isOwner ? (
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Glavni Vlasnik</span>
+                      ) : loggedInUserIsOwner ? (
+                        <button
+                          className="btn-compare-action"
+                          style={{ 
+                            padding: '0.5rem 1rem', 
+                            fontSize: '0.8rem', 
+                            borderRadius: 'var(--radius-sm)',
+                            cursor: 'pointer',
+                            width: '100%',
+                            backgroundColor: u.isAdmin ? 'var(--danger)' : 'var(--success)',
+                            borderColor: u.isAdmin ? 'var(--danger)' : 'var(--success)',
+                            color: '#ffffff'
+                          }}
+                          onClick={() => {
+                            const confirmMsg = u.isAdmin 
+                              ? `Da li ste sigurni da želite da oduzmete administratorska prava korisniku ${u.fullName}?` 
+                              : `Da li ste sigurni da želite da dodelite administratorska prava korisniku ${u.fullName}?`;
+                            if (confirm(confirmMsg)) {
+                              onToggleAdminStatus(u.id);
+                            }
+                          }}
+                        >
+                          {u.isAdmin ? 'Oduzmi Admin Prava' : 'Dodeli Admin Prava'}
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', color: 'var(--danger)', fontWeight: '600' }}>
+                          Samo Gazda može menjati uloge
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
@@ -1380,211 +1339,212 @@ export default function HostPanel({
             </div>
           )}
 
-          {/* Quick Table Selector Buttons */}
-          <div className="table-selector-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem', padding: '0.8rem', backgroundColor: 'var(--bg-card-dark, rgba(0, 0, 0, 0.03))', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border)' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: '700', alignSelf: 'center', marginRight: '0.5rem', color: 'var(--text-main)' }}>Brze tabele:</span>
-            {['users', 'properties', 'reviews', 'inquiries', 'chat_messages', 'activity_logs', 'forum_posts'].map(tbl => (
-              <button
-                key={tbl}
-                className={`table-select-btn ${activeTable === tbl ? 'active' : ''}`}
-                onClick={() => handleTableChange(tbl)}
-                style={{
-                  padding: '0.35rem 0.75rem',
-                  fontSize: '0.8rem',
-                  borderRadius: '15px',
-                  border: '1px solid',
-                  borderColor: activeTable === tbl ? 'var(--primary)' : 'var(--border)',
-                  backgroundColor: activeTable === tbl ? 'var(--primary)' : 'var(--bg-card)',
-                  color: activeTable === tbl ? '#ffffff' : 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontWeight: activeTable === tbl ? '700' : '500',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                📁 {tbl}
-              </button>
-            ))}
-          </div>
-
-          {/* SQL terminal Editor */}
-          <div className="sql-terminal-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)' }}>
-                💻 SQL Terminal:
-              </label>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                PRAGMA foreign_keys = ON;
-              </span>
-            </div>
-            <textarea
-              value={sqlQuery}
-              onChange={e => setSqlQuery(e.target.value)}
-              placeholder="Napišite SQL upit ovde... (npr. SELECT * FROM users;)"
-              style={{
-                width: '100%',
-                height: '110px',
-                fontFamily: 'Consolas, Monaco, monospace',
-                fontSize: '0.92rem',
-                padding: '0.8rem',
-                borderRadius: 'var(--radius-sm)',
-                border: '1.5px solid var(--border)',
-                backgroundColor: '#1e1e1e',
-                color: '#9cdcfe',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)',
-                lineHeight: '1.4',
-                resize: 'vertical'
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '0.8rem' }}>
-              <button
-                className="btn-search"
-                onClick={() => executeQuery()}
-                disabled={queryLoading}
-                style={{
-                  margin: 0,
-                  padding: '0.55rem 1.4rem',
-                  fontSize: '0.88rem',
-                  fontWeight: '700',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: queryLoading ? 'not-allowed' : 'pointer',
-                  opacity: queryLoading ? 0.7 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem'
-                }}
-              >
-                ⚡ {queryLoading ? 'Izvršavanje...' : 'Izvrši SQL Upit'}
-              </button>
-              <button
-                onClick={() => setSqlQuery(`SELECT * FROM ${activeTable};`)}
-                style={{
-                  border: '1px solid var(--border)',
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.8rem',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '0.4rem 0.8rem',
-                  cursor: 'pointer'
-                }}
-              >
-                Poništi upit
-              </button>
-            </div>
-          </div>
-
-          {/* SQLite Execution Results Grid */}
-          <div className="query-output-panel" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-card)', overflow: 'hidden' }}>
-            <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-card-dark, rgba(0,0,0,0.02))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
-                🖥️ Izlazni prozor rezultata
-              </span>
-              {queryResults.message && (
-                <span style={{ fontSize: '0.78rem', color: 'var(--success)', fontWeight: '600' }}>
-                  {queryResults.message}
-                </span>
-              )}
-            </div>
-
-            {queryResults.error && (
-              <div style={{ padding: '1rem', color: 'var(--danger)', backgroundColor: 'rgba(230, 57, 70, 0.05)', borderBottom: '1px solid rgba(230, 57, 70, 0.2)', fontSize: '0.88rem', fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
-                ❌ SQLite Error: {queryResults.error}
-              </div>
-            )}
-
-            {!queryResults.error && queryResults.rows.length === 0 && !queryLoading && (
-              <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                Nema vraćenih zapisa. Unesite SELECT upit ili proverite selektovanu tabelu.
-              </div>
-            )}
-
-            {queryLoading && (
-              <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--primary)', fontSize: '0.88rem', fontWeight: '600' }}>
-                Učitavanje rezultata sa SQLite baze podataka...
-              </div>
-            )}
-
-            {!queryLoading && !queryResults.error && queryResults.rows.length > 0 && (
-              <div className="inquiries-table-wrapper" style={{ maxHeight: '420px', overflowY: 'auto' }}>
-                <table className="inquiries-table sqlite-data-table" style={{ border: 'none', margin: 0 }}>
-                  <thead>
-                    <tr style={{ backgroundColor: 'var(--bg-card-dark, rgba(0,0,0,0.03))' }}>
-                      <th style={{ width: '85px', textAlign: 'center' }}>Akcija</th>
-                      {queryResults.columns.map(col => (
-                        <th key={col} style={{ fontSize: '0.82rem', padding: '0.65rem 0.8rem', textTransform: 'none', letterSpacing: 0 }}>
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {queryResults.rows.map((row, index) => (
-                      <tr key={row.id || index} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '0.4rem' }}>
-                          <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
-                            <button
-                              onClick={() => openEditRow(row)}
-                              title="Izmeni JSON"
-                              style={{
-                                padding: '0.25rem 0.45rem',
-                                fontSize: '0.72rem',
-                                borderRadius: '3px',
-                                backgroundColor: 'var(--primary)',
-                                color: '#ffffff',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontWeight: '600'
-                              }}
-                            >
-                              📝 JSON
-                            </button>
-                            <button
-                              onClick={() => deleteRow(row.id)}
-                              title="Obriši red"
-                              disabled={!row.id}
-                              style={{
-                                padding: '0.25rem 0.45rem',
-                                fontSize: '0.72rem',
-                                borderRadius: '3px',
-                                backgroundColor: 'var(--danger)',
-                                color: '#ffffff',
-                                border: 'none',
-                                cursor: row.id ? 'pointer' : 'not-allowed',
-                                opacity: row.id ? 1 : 0.5
-                              }}
-                            >
-                              🗑️
-                            </button>
+          <div className="sql-terminal-layout">
+            {/* Left Sidebar: Schema navigator */}
+            <div className="sql-sidebar">
+              <div className="sql-sidebar-title">📂 SQLite Shema</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {Object.entries(DB_SCHEMAS).map(([tableName, columns]) => (
+                  <div key={tableName} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+                    <div 
+                      className={`sql-table-item ${activeTable === tableName ? 'active' : ''}`}
+                      onClick={() => handleTableChange(tableName)}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <span>📁 {tableName}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({columns.length})</span>
+                    </div>
+                    {activeTable === tableName && (
+                      <div style={{ paddingLeft: '0.8rem', marginTop: '0.3rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        {columns.map(col => (
+                          <div key={col} style={{ fontSize: '0.72rem', fontFamily: 'monospace', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={col}>
+                            🔑 {col}
                           </div>
-                        </td>
-                        {queryResults.columns.map(col => {
-                          const val = row[col];
-                          let cellText = val === null ? 'NULL' : String(val);
-                          const isNull = val === null;
-                          return (
-                            <td 
-                              key={col} 
-                              style={{ 
-                                fontSize: '0.82rem', 
-                                fontFamily: 'monospace',
-                                color: isNull ? 'var(--text-muted)' : 'var(--text-main)',
-                                fontStyle: isNull ? 'italic' : 'normal',
-                                maxWidth: '280px',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                              title={cellText}
-                            >
-                              {cellText}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+
+            {/* Right Main Panel: SQL Console & Output */}
+            <div className="sql-main-panel">
+              {/* Quick Query buttons */}
+              <div className="sql-quick-queries">
+                <button className="btn-quick-query" onClick={() => { setSqlQuery('SELECT * FROM users WHERE isAdmin = 1;'); executeQuery('SELECT * FROM users WHERE isAdmin = 1;'); }}>👑 Svi admini</button>
+                <button className="btn-quick-query" onClick={() => { setSqlQuery('SELECT * FROM inquiries WHERE status = \'Odobreno\';'); executeQuery('SELECT * FROM inquiries WHERE status = \'Odobreno\';'); }}>✅ Odobrene rezervacije</button>
+                <button className="btn-quick-query" onClick={() => { setSqlQuery('SELECT * FROM properties ORDER BY price DESC;'); executeQuery('SELECT * FROM properties ORDER BY price DESC;'); }}>💰 Najskuplji smeštaji</button>
+                <button className="btn-quick-query" onClick={() => { setSqlQuery('SELECT * FROM activity_logs ORDER BY id DESC LIMIT 10;'); executeQuery('SELECT * FROM activity_logs ORDER BY id DESC LIMIT 10;'); }}>⏳ Poslednjih 10 logova</button>
+              </div>
+
+              {/* SQLite Console Editor */}
+              <div className="sql-console">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', borderBottom: '1px solid #2d2d38', paddingBottom: '0.4rem' }}>
+                  <span style={{ color: '#6ee7b7', fontSize: '0.8rem', fontFamily: 'monospace', fontWeight: 'bold' }}>{'sqlite> shell'}</span>
+                  <span style={{ color: '#9ca3af', fontSize: '0.75rem', fontFamily: 'monospace' }}>PRAGMA foreign_keys = ON;</span>
+                </div>
+                <textarea
+                  value={sqlQuery}
+                  onChange={e => setSqlQuery(e.target.value)}
+                  className="sql-textarea"
+                  placeholder="Napišite SQL upit ovde... (npr. SELECT * FROM users;)"
+                />
+              </div>
+
+              {/* Console Action buttons */}
+              <div className="sql-actions">
+                <button
+                  onClick={() => setSqlQuery(`SELECT * FROM ${activeTable};`)}
+                  style={{
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.82rem',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.5rem 1rem',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Poništi
+                </button>
+                <button
+                  className="btn-search"
+                  onClick={() => executeQuery()}
+                  disabled={queryLoading}
+                  style={{
+                    margin: 0,
+                    padding: '0.5rem 1.5rem',
+                    fontSize: '0.88rem',
+                    fontWeight: '700',
+                    borderRadius: 'var(--radius-sm)',
+                    cursor: queryLoading ? 'not-allowed' : 'pointer',
+                    opacity: queryLoading ? 0.7 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  ⚡ {queryLoading ? 'Izvršavanje...' : 'Izvrši SQL Upit'}
+                </button>
+              </div>
+
+              {/* SQLite Execution Results Grid */}
+              <div className="query-output-panel" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-card)', overflow: 'hidden' }}>
+                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-card-dark, rgba(0,0,0,0.02))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+                    🖥️ Izlazni prozor rezultata ({queryResults.rows.length} redova)
+                  </span>
+                  {queryResults.message && (
+                    <span style={{ fontSize: '0.78rem', color: 'var(--success)', fontWeight: '600' }}>
+                      {queryResults.message}
+                    </span>
+                  )}
+                </div>
+
+                {queryResults.error && (
+                  <div style={{ padding: '1rem', color: 'var(--danger)', backgroundColor: 'rgba(230, 57, 70, 0.05)', borderBottom: '1px solid rgba(230, 57, 70, 0.2)', fontSize: '0.88rem', fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                    ❌ SQLite Error: {queryResults.error}
+                  </div>
+                )}
+
+                {!queryResults.error && queryResults.rows.length === 0 && !queryLoading && (
+                  <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+                    Nema vraćenih zapisa. Unesite SELECT upit ili proverite selektovanu tabelu.
+                  </div>
+                )}
+
+                {queryLoading && (
+                  <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--primary)', fontSize: '0.88rem', fontWeight: '600' }}>
+                    Učitavanje rezultata sa SQLite baze podataka...
+                  </div>
+                )}
+
+                {!queryLoading && !queryResults.error && queryResults.rows.length > 0 && (
+                  <div className="inquiries-table-wrapper" style={{ maxHeight: '420px', overflowY: 'auto' }}>
+                    <table className="inquiries-table sqlite-data-table" style={{ border: 'none', margin: 0 }}>
+                      <thead>
+                        <tr style={{ backgroundColor: 'var(--bg-card-dark, rgba(0,0,0,0.03))' }}>
+                          <th style={{ width: '85px', textAlign: 'center' }}>Akcija</th>
+                          {queryResults.columns.map(col => (
+                            <th key={col} style={{ fontSize: '0.82rem', padding: '0.65rem 0.8rem', textTransform: 'none', letterSpacing: 0 }}>
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {queryResults.rows.map((row, index) => (
+                          <tr key={row.id || index} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '0.4rem' }}>
+                              <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                                <button
+                                  onClick={() => openEditRow(row)}
+                                  title="Izmeni JSON"
+                                  style={{
+                                    padding: '0.25rem 0.45rem',
+                                    fontSize: '0.72rem',
+                                    borderRadius: '3px',
+                                    backgroundColor: 'var(--primary)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                  }}
+                                >
+                                  📝 JSON
+                                </button>
+                                <button
+                                  onClick={() => deleteRow(row.id)}
+                                  title="Obriši red"
+                                  disabled={!row.id}
+                                  style={{
+                                    padding: '0.25rem 0.45rem',
+                                    fontSize: '0.72rem',
+                                    borderRadius: '3px',
+                                    backgroundColor: 'var(--danger)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    cursor: row.id ? 'pointer' : 'not-allowed',
+                                    opacity: row.id ? 1 : 0.5
+                                  }}
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </td>
+                            {queryResults.columns.map(col => {
+                              const val = row[col];
+                              let cellText = val === null ? 'NULL' : String(val);
+                              const isNull = val === null;
+                              return (
+                                <td 
+                                  key={col} 
+                                  style={{ 
+                                    fontSize: '0.82rem', 
+                                    fontFamily: 'monospace',
+                                    color: isNull ? 'var(--text-muted)' : 'var(--text-main)',
+                                    fontStyle: isNull ? 'italic' : 'normal',
+                                    maxWidth: '280px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  title={cellText}
+                                >
+                                  {cellText}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
