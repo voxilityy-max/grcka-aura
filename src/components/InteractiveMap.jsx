@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function InteractiveMap({ properties = [], processedProperties = [], onViewPropertyDetails }) {
   const [leafletLoaded, setLeafletLoaded] = useState(false);
@@ -15,7 +15,7 @@ export default function InteractiveMap({ properties = [], processedProperties = 
       case 4: return [39.9882, 23.6148]; // Kasandra - Pefkohori
       case 5: return [40.2185, 23.6677]; // Sitonija - Nikiti
       case 6: return [40.3292, 23.9798]; // Halkidiki - Athos
-      default:
+      default: {
         const loc = locName.toLowerCase();
         if (loc.includes('lefkada')) return [38.7778, 20.6009];
         if (loc.includes('tasos') || loc.includes('thassos')) return [40.7288, 24.7578];
@@ -24,8 +24,10 @@ export default function InteractiveMap({ properties = [], processedProperties = 
         if (loc.includes('sitonij') || loc.includes('sithon')) return [40.2185, 23.6677];
         if (loc.includes('halkidiki') || loc.includes('athos') || loc.includes('atos')) return [40.3292, 23.9798];
         return [37.9838, 23.7275]; // Athens fallback
+      }
     }
   };
+
 
   // Expose detail click to global window for Leaflet HTML popups
   useEffect(() => {

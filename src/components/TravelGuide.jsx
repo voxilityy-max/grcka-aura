@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const TRIP_DATA = {
   distances: {
@@ -137,7 +137,7 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
     const tollSrb = roundTrip ? tollSrbOneWay * 2 : tollSrbOneWay;
 
     // Macedonia Tolls / Bulgaria Vignette
-    let transitionToll = 0;
+    let transitionToll;
     if (route === 'mkd') {
       transitionToll = 6.50; // roughly 380 Denars one way
       if (roundTrip) transitionToll *= 2;

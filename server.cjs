@@ -341,6 +341,54 @@ async function initializeSchema() {
     console.warn("Nije uspelo automatsko dodavanje kolone lastSynced u properties:", err.message);
   }
 
+  // Add monthlyPrices column to properties table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(properties)");
+    const hasMonthlyPrices = columns.some(c => c.name === 'monthlyPrices');
+    if (!hasMonthlyPrices) {
+      await dbHelper.run("ALTER TABLE properties ADD COLUMN monthlyPrices TEXT");
+      console.log("Dodata kolona 'monthlyPrices' u tabelu properties.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone monthlyPrices u properties:", err.message);
+  }
+
+  // Add ownerEmail column to properties table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(properties)");
+    const hasOwnerEmail = columns.some(c => c.name === 'ownerEmail');
+    if (!hasOwnerEmail) {
+      await dbHelper.run("ALTER TABLE properties ADD COLUMN ownerEmail TEXT");
+      console.log("Dodata kolona 'ownerEmail' u tabelu properties.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone ownerEmail u properties:", err.message);
+  }
+
+  // Add ownerPhone column to properties table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(properties)");
+    const hasOwnerPhone = columns.some(c => c.name === 'ownerPhone');
+    if (!hasOwnerPhone) {
+      await dbHelper.run("ALTER TABLE properties ADD COLUMN ownerPhone TEXT");
+      console.log("Dodata kolona 'ownerPhone' u tabelu properties.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone ownerPhone u properties:", err.message);
+  }
+
+  // Add monthlyPrices column to rooms table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(rooms)");
+    const hasMonthlyPrices = columns.some(c => c.name === 'monthlyPrices');
+    if (!hasMonthlyPrices) {
+      await dbHelper.run("ALTER TABLE rooms ADD COLUMN monthlyPrices TEXT");
+      console.log("Dodata kolona 'monthlyPrices' u tabelu rooms.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone monthlyPrices u rooms:", err.message);
+  }
+
   // Create calendar_blocks table
   await dbHelper.run(`CREATE TABLE IF NOT EXISTS calendar_blocks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -598,16 +646,19 @@ app.get('/api/properties', async (req, res) => {
 });
 
 app.post('/api/properties', requireAdmin, async (req, res) => {
-  const { title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, icalUrl, amenities } = req.body;
+  const { title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, icalUrl, amenities, monthlyPrices, ownerEmail, ownerPhone } = req.body;
   
   try {
     const result = await dbHelper.run(
-      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets, icalUrl)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets, icalUrl, monthlyPrices, ownerEmail, ownerPhone)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title, type, location, price, rating || 5.0, distanceToBeach, image, guests, bedrooms, description,
         amenities.wifi ? 1 : 0, amenities.pool ? 1 : 0, amenities.beachfront ? 1 : 0, amenities.parking ? 1 : 0, amenities.airConditioning ? 1 : 0, amenities.pets ? 1 : 0,
-        icalUrl || null
+        icalUrl || null,
+        monthlyPrices ? (typeof monthlyPrices === 'object' ? JSON.stringify(monthlyPrices) : monthlyPrices) : null,
+        ownerEmail || null,
+        ownerPhone || null
       ]
     );
     

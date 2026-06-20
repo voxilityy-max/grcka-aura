@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 
 const PRESET_IMAGES = [
   { id: 'villa-1', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80', label: 'Moderna Vila sa bazenom' },
@@ -9,6 +9,7 @@ const PRESET_IMAGES = [
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
+/*
 const DB_SCHEMAS = {
   users: ['id (INTEGER PRIMARY KEY)', 'email (TEXT UNIQUE)', 'fullName (TEXT)', 'password (TEXT)', 'phone (TEXT)', 'isAdmin (INTEGER)', 'avatar (TEXT)'],
   properties: ['id (INTEGER PRIMARY KEY)', 'title (TEXT)', 'location (TEXT)', 'type (TEXT)', 'price (REAL)', 'distanceToBeach (INTEGER)', 'guests (INTEGER)', 'bedrooms (INTEGER)', 'description (TEXT)', 'image (TEXT)', 'amenities (TEXT)'],
@@ -26,6 +27,17 @@ const DEFAULT_SQL_SNIPPETS = [
   { name: '⏳ Poslednjih 10 logova', sql: "SELECT * FROM activity_logs ORDER BY id DESC LIMIT 10;" },
   { name: '🏝️ Smeštaji na Lefkadi', sql: "SELECT * FROM properties WHERE location = 'Lefkada';" }
 ];
+*/
+
+const parseMonthlyPrices = (value) => {
+  if (!value) return { may: '', june: '', july: '', august: '', september: '', october: '' };
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return { may: '', june: '', july: '', august: '', september: '', october: '' };
+  }
+};
 
 export default function HostPanel({ 
   onAddProperty, 
@@ -45,9 +57,10 @@ export default function HostPanel({
   // Navigation & View States
   const [panelTab, setPanelTab] = useState('dashboard'); // 'dashboard', 'add', 'manage', 'inquiries', 'users', 'logs', 'database'
   const [wizardStep, setWizardStep] = useState(1); // For property adding wizard: 1, 2, 3
+  const [selectedOwnerFilter, setSelectedOwnerFilter] = useState('all');
   const [previewMode, setPreviewMode] = useState('card'); // 'card' or 'detail'
 
-  // SQL Terminal & Console States
+  /* SQL Terminal & Console States (Commented out to resolve unused warnings)
   const [activeTable, setActiveTable] = useState('users');
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM users;');
   const [queryResults, setQueryResults] = useState({ rows: [], columns: [], message: '', error: '' });
@@ -66,6 +79,7 @@ export default function HostPanel({
   const [editingRow, setEditingRow] = useState(null);
   const [editedJson, setEditedJson] = useState('');
   const [dbResetMessage, setDbResetMessage] = useState('');
+  */
 
   // Inline editing in Properties table
   const [editingPropId, setEditingPropId] = useState(null);
@@ -76,7 +90,7 @@ export default function HostPanel({
   const [editingProperty, setEditingProperty] = useState(null);
 
   // Stats / Dashboard details
-  const [dbLatency, setDbLatency] = useState(null);
+  // const [dbLatency, setDbLatency] = useState(null); // Commented out to resolve unused warning
   const [adminNote, setAdminNote] = useState(() => {
     return localStorage.getItem('aura_admin_notepad') || 'Dobrodošli u administratorski panel GrčkaAura. Ovde možete beležiti brze zadatke i informacije...';
   });
@@ -111,6 +125,16 @@ export default function HostPanel({
     description: '',
     image: PRESET_IMAGES[0].url,
     icalUrl: '',
+    ownerEmail: '',
+    ownerPhone: '',
+    monthlyPrices: {
+      may: '',
+      june: '',
+      july: '',
+      august: '',
+      september: '',
+      october: ''
+    },
     amenities: {
       wifi: true,
       pool: false,
@@ -123,7 +147,8 @@ export default function HostPanel({
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  // Measure Latency Simulator on page load
+  // Measure Latency Simulator on page load (Commented out as dbLatency state is inactive)
+  /*
   useEffect(() => {
     const start = performance.now();
     fetch(`${API_URL}/api/admin/query`, {
@@ -142,6 +167,7 @@ export default function HostPanel({
         setDbLatency(45); // Fake placeholder on fail/offline fallback
       });
   }, []);
+  */
 
   // Save notepad
   const handleSaveNotepad = (val) => {
@@ -149,7 +175,7 @@ export default function HostPanel({
     localStorage.setItem('aura_admin_notepad', val);
   };
 
-  // Run SQL console query
+  /* Run SQL console query (Commented out to resolve unused warnings)
   const executeQuery = async (queryToRun = sqlQuery) => {
     setQueryLoading(true);
     setQueryResults({ rows: [], columns: [], message: '', error: '' });
@@ -358,6 +384,7 @@ export default function HostPanel({
       alert('Greška pri povezivanju sa serverom.');
     }
   };
+  */
 
   // Seasonal Multiplier Trigger
   const handleApplySeasonalMultiplier = async (percentStr) => {
@@ -457,6 +484,9 @@ export default function HostPanel({
     const descEsc = editingProperty.description.replace(/'/g, "''");
     const amenitiesStr = JSON.stringify(editingProperty.amenities).replace(/'/g, "''");
     const icalUrlEsc = (editingProperty.icalUrl || '').replace(/'/g, "''");
+    const ownerEmailEsc = (editingProperty.ownerEmail || '').replace(/'/g, "''");
+    const ownerPhoneEsc = (editingProperty.ownerPhone || '').replace(/'/g, "''");
+    const monthlyPricesStr = JSON.stringify(editingProperty.monthlyPrices || {}).replace(/'/g, "''");
     
     const query = `UPDATE properties SET 
       title = '${titleEsc}', 
@@ -469,7 +499,10 @@ export default function HostPanel({
       description = '${descEsc}', 
       image = '${editingProperty.image}', 
       amenities = '${amenitiesStr}',
-      icalUrl = '${icalUrlEsc}'
+      icalUrl = '${icalUrlEsc}',
+      ownerEmail = '${ownerEmailEsc}',
+      ownerPhone = '${ownerPhoneEsc}',
+      monthlyPrices = '${monthlyPricesStr}'
       WHERE id = ${editingProperty.id};`;
 
     try {
@@ -503,7 +536,15 @@ export default function HostPanel({
     description: '',
     icalUrl: '',
     bedStructure: '',
-    kitchenType: ''
+    kitchenType: '',
+    monthlyPrices: {
+      may: '',
+      june: '',
+      july: '',
+      august: '',
+      september: '',
+      october: ''
+    }
   });
 
   const handleAddRoom = async () => {
@@ -516,8 +557,9 @@ export default function HostPanel({
     const icalUrlEsc = (newRoomData.icalUrl || '').replace(/'/g, "''");
     const bedStructureEsc = (newRoomData.bedStructure || '').replace(/'/g, "''");
     const kitchenTypeEsc = (newRoomData.kitchenType || '').replace(/'/g, "''");
-    const query = `INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description, icalUrl, bedStructure, kitchenType)
-      VALUES (${editingProperty.id}, '${titleEsc}', ${parseFloat(newRoomData.price) || 0}, ${parseInt(newRoomData.guests, 10) || 1}, ${parseInt(newRoomData.bedrooms, 10) || 1}, '${newRoomData.image}', '${descEsc}', '${icalUrlEsc}', '${bedStructureEsc}', '${kitchenTypeEsc}');`;
+    const monthlyPricesStr = JSON.stringify(newRoomData.monthlyPrices || {}).replace(/'/g, "''");
+    const query = `INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description, icalUrl, bedStructure, kitchenType, monthlyPrices)
+      VALUES (${editingProperty.id}, '${titleEsc}', ${parseFloat(newRoomData.price) || 0}, ${parseInt(newRoomData.guests, 10) || 1}, ${parseInt(newRoomData.bedrooms, 10) || 1}, '${newRoomData.image}', '${descEsc}', '${icalUrlEsc}', '${bedStructureEsc}', '${kitchenTypeEsc}', '${monthlyPricesStr}');`;
       
     try {
       const response = await fetch(`${API_URL}/api/admin/query`, {
@@ -563,7 +605,15 @@ export default function HostPanel({
           description: '',
           icalUrl: '',
           bedStructure: '',
-          kitchenType: ''
+          kitchenType: '',
+          monthlyPrices: {
+            may: '',
+            june: '',
+            july: '',
+            august: '',
+            september: '',
+            october: ''
+          }
         });
       } else {
         alert('Greška pri dodavanju sobe.');
@@ -714,6 +764,16 @@ export default function HostPanel({
         description: '',
         image: PRESET_IMAGES[0].url,
         icalUrl: '',
+        ownerEmail: '',
+        ownerPhone: '',
+        monthlyPrices: {
+          may: '',
+          june: '',
+          july: '',
+          august: '',
+          september: '',
+          october: ''
+        },
         amenities: {
           wifi: true,
           pool: false,
@@ -738,6 +798,29 @@ export default function HostPanel({
   const activeBookings = inquiries.filter(i => i.status === 'Odobreno').length;
   const totalBookingValue = inquiries.reduce((sum, i) => sum + i.totalPrice, 0);
   const averagePrice = Math.round(properties.reduce((sum, p) => sum + p.price, 0) / (totalProperties || 1));
+
+  const topProperties = useMemo(() => {
+    return properties
+      .map(p => {
+        const rev = inquiries
+          .filter(inq => inq.status === 'Odobreno' && inq.propertyId === p.id)
+          .reduce((sum, inq) => sum + inq.totalPrice, 0);
+        const count = inquiries.filter(inq => inq.propertyId === p.id).length;
+        return { ...p, revenue: rev, count };
+      })
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 3);
+  }, [properties, inquiries]);
+
+  const uniqueOwners = useMemo(() => {
+    const emails = properties.map(p => p.ownerEmail).filter(Boolean);
+    return ['all', ...Array.from(new Set(emails))];
+  }, [properties]);
+
+  const filteredPropertiesByOwner = useMemo(() => {
+    if (selectedOwnerFilter === 'all') return properties;
+    return properties.filter(p => p.ownerEmail === selectedOwnerFilter);
+  }, [properties, selectedOwnerFilter]);
 
   // Regional revenue stats
   const revenueByDest = destinations.reduce((acc, dest) => {
@@ -1052,6 +1135,88 @@ export default function HostPanel({
                     </linearGradient>
                   </defs>
                 </svg>
+              </div>
+            </div>
+
+            {/* Quick Actions & Top Performers */}
+            <div className="dashboard-analytics-grid" style={{ marginTop: '1.25rem', marginBottom: '1.25rem' }}>
+              {/* Card: Top Performers */}
+              <div className="analytics-card animate-fade">
+                <div className="analytics-card-title">🏆 Top 3 Smeštaja po Ostvarenom Prihodu</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '0.8rem' }}>
+                  {topProperties.length > 0 ? (
+                    topProperties.map((top, idx) => {
+                      const maxTopRev = Math.max(...topProperties.map(t => t.revenue), 1) || 100;
+                      const pct = Math.round((top.revenue / maxTopRev) * 100);
+                      const medals = ['🥇', '🥈', '🥉'];
+                      return (
+                        <div key={top.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                            <span style={{ fontWeight: '700', color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '180px' }}>
+                              {medals[idx]} {top.title}
+                            </span>
+                            <span style={{ fontWeight: '800', color: 'var(--success)' }}>
+                              {top.revenue}€ <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>({top.count} upita)</span>
+                            </span>
+                          </div>
+                          <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '10px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(to right, var(--accent), var(--success))', borderRadius: '10px' }}></div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nema odobrenih rezervacija za obračun.</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Card: Quick Controls */}
+              <div className="analytics-card animate-fade">
+                <div className="analytics-card-title">⚡ Centar za Brzo Upravljanje (Quick Actions)</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem', marginTop: '0.8rem' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => { setPanelTab('add'); setWizardStep(1); }}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', padding: '0.65rem', background: 'rgba(var(--accent-rgb), 0.08)', border: '1px solid rgba(var(--accent-rgb), 0.25)', borderRadius: '8px', cursor: 'pointer', transition: 'var(--transition)' }}
+                    className="btn-quick-dashboard"
+                  >
+                    <span style={{ fontSize: '1.25rem' }}>➕</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-main)' }}>Novi Smeštaj</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setPanelTab('manage')}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', padding: '0.65rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', transition: 'var(--transition)' }}
+                    className="btn-quick-dashboard"
+                  >
+                    <span style={{ fontSize: '1.25rem' }}>🏡</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-main)' }}>Upravljaj</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setPanelTab('inquiries')}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', padding: '0.65rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', transition: 'var(--transition)' }}
+                    className="btn-quick-dashboard"
+                  >
+                    <span style={{ fontSize: '1.25rem' }}>📩</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-main)' }}>Rezervacije</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={async () => {
+                      if (onRefreshDatabase) {
+                        await onRefreshDatabase();
+                        alert('Baza podataka osvežena!');
+                      }
+                    }}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', padding: '0.65rem', background: 'rgba(46,196,182,0.08)', border: '1px solid rgba(46,196,182,0.25)', borderRadius: '8px', cursor: 'pointer', transition: 'var(--transition)' }}
+                    className="btn-quick-dashboard"
+                  >
+                    <span style={{ fontSize: '1.25rem' }}>🔄</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-main)' }}>Osveži Bazu</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1381,6 +1546,139 @@ export default function HostPanel({
                                 min="0"
                                 required 
                               />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="host-form-grid" style={{ marginTop: '1rem' }}>
+                          <div className="form-field">
+                            <label htmlFor="ownerEmail">Email vlasnika smeštaja</label>
+                            <div className="input-with-icon-wrapper">
+                              <span className="input-icon">📧</span>
+                              <input 
+                                type="email" 
+                                id="ownerEmail" 
+                                name="ownerEmail" 
+                                value={formData.ownerEmail || ''} 
+                                onChange={handleChange}
+                                placeholder="npr. nikos.lefkada@gmail.com" 
+                              />
+                            </div>
+                          </div>
+                          <div className="form-field">
+                            <label htmlFor="ownerPhone">Telefon vlasnika (Viber/WhatsApp)</label>
+                            <div className="input-with-icon-wrapper">
+                              <span className="input-icon">📞</span>
+                              <input 
+                                type="text" 
+                                id="ownerPhone" 
+                                name="ownerPhone" 
+                                value={formData.ownerPhone || ''} 
+                                onChange={handleChange}
+                                placeholder="npr. +30 691 234 5678" 
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Seasonal Pricing Input Section */}
+                        <div style={{ marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                          <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            📊 Sezonski Cenovnik (Cene po mesecima)
+                          </h4>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                            Definišite cene po noćenju za mesece u sezoni. Prazna polja će koristiti osnovnu cenu ({formData.price || 0}€).
+                          </p>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.8rem', marginBottom: '1.2rem' }}>
+                            {['may', 'june', 'july', 'august', 'september', 'october'].map(month => {
+                              const monthLabels = {
+                                may: 'Maj',
+                                june: 'Jun',
+                                july: 'Jul',
+                                august: 'Avgust',
+                                september: 'Septembar',
+                                october: 'Oktobar'
+                              };
+                              return (
+                                <div key={month} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.6rem', textAlign: 'center' }}>
+                                  <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>
+                                    {monthLabels[month]}
+                                  </label>
+                                  <div className="pricing-input-wrapper">
+                                    <input 
+                                      type="number" 
+                                      value={formData.monthlyPrices?.[month] || ''} 
+                                      onChange={e => setFormData(p => ({
+                                        ...p,
+                                        monthlyPrices: {
+                                          ...p.monthlyPrices,
+                                          [month]: e.target.value ? parseFloat(e.target.value) : ''
+                                        }
+                                      }))}
+                                      placeholder={formData.price || '65'}
+                                      min="1"
+                                      className="pricing-input-field"
+                                    />
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>€</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Dynamic Bar Graph showing Price Curve */}
+                          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem 1.2rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>GRAFIK KRIVE CENA (Visual Curve)</span>
+                              <button 
+                                type="button" 
+                                onClick={() => {
+                                  const base = parseFloat(formData.price) || 0;
+                                  setFormData(p => ({
+                                    ...p,
+                                    monthlyPrices: {
+                                      may: base,
+                                      june: Math.round(base * 1.15),
+                                      july: Math.round(base * 1.45),
+                                      august: Math.round(base * 1.55),
+                                      september: Math.round(base * 1.2),
+                                      october: base
+                                    }
+                                  }));
+                                }}
+                                style={{ fontSize: '0.7rem', background: 'rgba(var(--accent-rgb),0.15)', border: '1px solid var(--accent)', color: 'var(--accent)', borderRadius: '4px', padding: '0.2rem 0.5rem', fontWeight: '700', cursor: 'pointer' }}
+                              >
+                                ⚡ Automatska kriva (Auto Fill)
+                              </button>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '80px', paddingBottom: '0.4rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                              {['may', 'june', 'july', 'august', 'september', 'october'].map(month => {
+                                const base = parseFloat(formData.price) || 0;
+                                const val = parseFloat(formData.monthlyPrices?.[month]) || base;
+                                const maxPrice = Math.max(
+                                  base,
+                                  ...['may', 'june', 'july', 'august', 'september', 'october'].map(m => parseFloat(formData.monthlyPrices?.[m]) || 0)
+                                ) || 100;
+                                const heightPercent = Math.min(100, Math.max(10, (val / maxPrice) * 100));
+                                
+                                return (
+                                  <div key={month} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, height: '100%', justifyContent: 'flex-end' }}>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.2rem' }}>{val}€</span>
+                                    <div style={{ 
+                                      width: '65%', 
+                                      height: `${heightPercent}%`, 
+                                      background: month === 'july' || month === 'august' ? 'linear-gradient(to top, var(--accent), var(--secondary))' : 'rgba(var(--accent-rgb), 0.65)',
+                                      borderRadius: '4px 4px 0 0',
+                                      boxShadow: '0 0 10px rgba(var(--accent-rgb), 0.25)',
+                                      transition: 'height 0.3s ease'
+                                    }}></div>
+                                    <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginTop: '0.3rem', fontWeight: '700' }}>
+                                      {month.substring(0,3)}
+                                    </span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
@@ -1892,21 +2190,53 @@ export default function HostPanel({
         {panelTab === 'manage' && (
           <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
-                Upravljanje Smeštajnim Jedinicama
-              </h3>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-                💡 Savet: Dvokliknite na cenu ili udaljenost od plaže za direktnu izmenu u tabeli.
-              </p>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
+                  Upravljanje Smeštajnim Jedinicama
+                </h3>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0, marginTop: '0.2rem' }}>
+                  💡 Savet: Dvokliknite na cenu ili udaljenost od plaže za direktnu izmenu u tabeli.
+                </p>
+              </div>
+
+              {/* Owner Filter Dropdown */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>🔍 Filtriraj po vlasniku:</span>
+                <select 
+                  value={selectedOwnerFilter} 
+                  onChange={e => setSelectedOwnerFilter(e.target.value)}
+                  style={{ 
+                    padding: '0.4rem 0.8rem', 
+                    borderRadius: 'var(--radius-sm)', 
+                    border: '1px solid var(--border)', 
+                    backgroundColor: 'var(--bg-card)', 
+                    color: 'var(--text-main)', 
+                    fontSize: '0.85rem',
+                    fontWeight: '600',
+                    cursor: 'pointer' 
+                  }}
+                >
+                  <option value="all">Svi vlasnici ({properties.length})</option>
+                  {uniqueOwners.filter(email => email !== 'all').map(email => {
+                    const count = properties.filter(p => p.ownerEmail === email).length;
+                    return (
+                      <option key={email} value={email}>
+                        {email} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
 
-            {properties.length > 0 ? (
+            {filteredPropertiesByOwner.length > 0 ? (
               <div className="inquiries-table-wrapper">
                 <table className="inquiries-table">
                   <thead>
                     <tr>
                       <th>Fotografija</th>
                       <th>Naziv smeštaja</th>
+                      <th>Kontakti Vlasnika</th>
                       <th>Lokacija</th>
                       <th>Tip</th>
                       <th>Cena / noć</th>
@@ -1916,12 +2246,74 @@ export default function HostPanel({
                     </tr>
                   </thead>
                   <tbody>
-                    {properties.map(p => (
+                    {filteredPropertiesByOwner.map(p => (
                       <tr key={p.id}>
                         <td>
                           <img src={p.image} alt={p.title} style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
                         </td>
-                        <td style={{ fontWeight: '700', color: 'var(--text-main)' }}>{p.title}</td>
+                        <td style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                            <span>{p.title}</span>
+                            <span style={{ fontSize: '0.65rem', alignSelf: 'flex-start', padding: '0.1rem 0.35rem', backgroundColor: 'rgba(var(--accent-rgb),0.15)', color: 'var(--accent)', borderRadius: '4px', fontWeight: 'bold' }}>
+                              ID: #{p.id}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '160px' }}>
+                            {p.ownerEmail ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <span style={{ fontSize: '0.78rem', color: 'var(--text-main)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '120px' }} title={p.ownerEmail}>
+                                  📧 {p.ownerEmail}
+                                </span>
+                                <a 
+                                  href={`mailto:${p.ownerEmail}?subject=Upit za smestaj ID %23${p.id} - GrckaAura`} 
+                                  className="btn-contact-quick email" 
+                                  title="Pošalji Email vlasniku"
+                                  style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                >
+                                  ✉️
+                                </a>
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nema email-a</span>
+                            )}
+                            
+                            {p.ownerPhone ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                  📞 {p.ownerPhone}
+                                </span>
+                                {p.ownerPhone.replace(/[^0-9+]/g, '') && (
+                                  <div style={{ display: 'flex', gap: '0.2rem' }}>
+                                    <a 
+                                      href={`https://wa.me/${p.ownerPhone.replace(/[^0-9]/g, '')}`} 
+                                      target="_blank" 
+                                      rel="noreferrer" 
+                                      className="btn-contact-quick whatsapp" 
+                                      title="WhatsApp chat sa vlasnikom"
+                                      style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                    >
+                                      💬
+                                    </a>
+                                    <a 
+                                      href={`viber://chat?number=%2B${p.ownerPhone.replace(/[^0-9]/g, '')}`} 
+                                      target="_blank" 
+                                      rel="noreferrer" 
+                                      className="btn-contact-quick viber" 
+                                      title="Viber chat sa vlasnikom"
+                                      style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                    >
+                                      💜
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nema telefona</span>
+                            )}
+                          </div>
+                        </td>
                         <td>{p.location}</td>
                         <td>
                           <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.4rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '4px' }}>
@@ -2009,7 +2401,7 @@ export default function HostPanel({
                               type="button"
                               className="btn-compare-action"
                               style={{ padding: '0.3rem 0.6rem', fontSize: '0.72rem', borderRadius: '4px', cursor: 'pointer' }}
-                              onClick={() => setEditingProperty({ ...p })}
+                              onClick={() => setEditingProperty({ ...p, monthlyPrices: parseMonthlyPrices(p.monthlyPrices) })}
                             >
                               Uredi
                             </button>
@@ -2410,6 +2802,134 @@ export default function HostPanel({
 
               <div className="host-form-grid" style={{ marginBottom: '1rem' }}>
                 <div className="form-field">
+                  <label>Email vlasnika smeštaja</label>
+                  <input 
+                    type="email" 
+                    value={editingProperty.ownerEmail || ''} 
+                    onChange={e => setEditingProperty(p => ({ ...p, ownerEmail: e.target.value }))}
+                    placeholder="npr. nikos.lefkada@gmail.com" 
+                  />
+                </div>
+                <div className="form-field">
+                  <label>Telefon vlasnika (Viber/WhatsApp)</label>
+                  <input 
+                    type="text" 
+                    value={editingProperty.ownerPhone || ''} 
+                    onChange={e => setEditingProperty(p => ({ ...p, ownerPhone: e.target.value }))}
+                    placeholder="npr. +30 691 234 5678" 
+                  />
+                </div>
+              </div>
+
+              {/* Edit Modal Seasonal Pricing Section */}
+              <div style={{ marginBottom: '1.25rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  📊 Sezonski Cenovnik (Cene po mesecima)
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                  Unesite cene po noćenju za pojedinačne mesece. Za prazna polja važi osnovna cena ({editingProperty.price || 0}€).
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.8rem', marginBottom: '1.2rem' }}>
+                  {['may', 'june', 'july', 'august', 'september', 'october'].map(month => {
+                    const monthLabels = {
+                      may: 'Maj',
+                      june: 'Jun',
+                      july: 'Jul',
+                      august: 'Avgust',
+                      september: 'Septembar',
+                      october: 'Oktobar'
+                    };
+                    const mPrices = editingProperty.monthlyPrices || {};
+                    return (
+                      <div key={month} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.6rem', textAlign: 'center' }}>
+                        <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>
+                          {monthLabels[month]}
+                        </label>
+                        <div className="pricing-input-wrapper">
+                          <input 
+                            type="number" 
+                            value={mPrices[month] || ''} 
+                            onChange={e => setEditingProperty(p => {
+                              const mp = p.monthlyPrices || {};
+                              return {
+                                ...p,
+                                monthlyPrices: {
+                                  ...mp,
+                                  [month]: e.target.value ? parseFloat(e.target.value) : ''
+                                }
+                              };
+                            })}
+                            placeholder={editingProperty.price || '65'}
+                            min="1"
+                            className="pricing-input-field"
+                          />
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>€</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Edit Modal Dynamic Bar Graph showing Price Curve */}
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.8rem 1.2rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>GRAFIK KRIVE CENA (Visual Curve)</span>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const base = parseFloat(editingProperty.price) || 0;
+                        setEditingProperty(p => ({
+                          ...p,
+                          monthlyPrices: {
+                            may: base,
+                            june: Math.round(base * 1.15),
+                            july: Math.round(base * 1.45),
+                            august: Math.round(base * 1.55),
+                            september: Math.round(base * 1.2),
+                            october: base
+                          }
+                        }));
+                      }}
+                      style={{ fontSize: '0.7rem', background: 'rgba(var(--accent-rgb),0.15)', border: '1px solid var(--accent)', color: 'var(--accent)', borderRadius: '4px', padding: '0.2rem 0.5rem', fontWeight: '700', cursor: 'pointer' }}
+                    >
+                      ⚡ Automatska kriva (Auto Fill)
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '80px', paddingBottom: '0.4rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    {['may', 'june', 'july', 'august', 'september', 'october'].map(month => {
+                      const base = parseFloat(editingProperty.price) || 0;
+                      const mPrices = editingProperty.monthlyPrices || {};
+                      const val = parseFloat(mPrices[month]) || base;
+                      const maxPrice = Math.max(
+                        base,
+                        ...['may', 'june', 'july', 'august', 'september', 'october'].map(m => parseFloat(mPrices[m]) || 0)
+                      ) || 100;
+                      const heightPercent = Math.min(100, Math.max(10, (val / maxPrice) * 100));
+                      
+                      return (
+                        <div key={month} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, height: '100%', justifyContent: 'flex-end' }}>
+                          <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.2rem' }}>{val}€</span>
+                          <div style={{ 
+                            width: '65%', 
+                            height: `${heightPercent}%`, 
+                            background: month === 'july' || month === 'august' ? 'linear-gradient(to top, var(--accent), var(--secondary))' : 'rgba(var(--accent-rgb), 0.65)',
+                            borderRadius: '4px 4px 0 0',
+                            boxShadow: '0 0 10px rgba(var(--accent-rgb), 0.25)',
+                            transition: 'height 0.3s ease'
+                          }}></div>
+                          <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginTop: '0.3rem', fontWeight: '700' }}>
+                            {month.substring(0,3)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="host-form-grid" style={{ marginBottom: '1rem' }}>
+                <div className="form-field">
                   <label>Maksimalan broj gostiju</label>
                   <input 
                     type="number" 
@@ -2555,6 +3075,31 @@ export default function HostPanel({
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
                             💰 Cena: {room.price}€/noć | 👥 Kapacitet: {room.guests} osobe | 🛏️ Spavaće sobe: {room.bedrooms}
                           </div>
+                          {/* Room Monthly Prices display */}
+                          {(() => {
+                            const rPrices = parseMonthlyPrices(room.monthlyPrices);
+                            const hasSeasonal = Object.values(rPrices).some(val => val !== '' && val !== null && val !== undefined);
+                            if (hasSeasonal) {
+                              const monthLabels = { may: 'Maj', june: 'Jun', july: 'Jul', august: 'Avg', september: 'Sep', october: 'Okt' };
+                              return (
+                                <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.3rem' }}>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--text-muted)' }}>Sezonske cene:</span>
+                                  {Object.keys(monthLabels).map(m => {
+                                    const val = rPrices[m];
+                                    if (val) {
+                                      return (
+                                        <span key={m} style={{ fontSize: '0.65rem', padding: '1px 4px', backgroundColor: 'rgba(var(--accent-rgb), 0.1)', color: 'var(--accent)', border: '1px solid rgba(var(--accent-rgb), 0.2)', borderRadius: '3px', fontWeight: 'bold' }}>
+                                          {monthLabels[m]}: {val}€
+                                        </span>
+                                      );
+                                    }
+                                    return null;
+                                  })}
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                           {room.icalUrl ? (
                             <div style={{ fontSize: '0.72rem', color: 'var(--success)', marginTop: '0.2rem', fontWeight: 'bold' }}>
                               ✅ Povezano sa Booking.com iCal
@@ -2624,6 +3169,42 @@ export default function HostPanel({
                         min="1"
                         style={{ padding: '0.4rem' }}
                       />
+                    </div>
+                  </div>
+
+                  {/* Room Seasonal Pricing */}
+                  <div style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: '8px', marginTop: '0.2rem' }}>
+                    <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>
+                      Sezonske cene za sobu (Maj - Oktobar) - Opciono:
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.4rem' }}>
+                      {['may', 'june', 'july', 'august', 'september', 'october'].map(month => {
+                        const monthLabels = { may: 'Maj', june: 'Jun', july: 'Jul', august: 'Avg', september: 'Sep', october: 'Okt' };
+                        return (
+                          <div key={month} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <span style={{ fontSize: '0.62rem', textAlign: 'center', color: 'var(--text-muted)', fontWeight: 'bold' }}>{monthLabels[month]}</span>
+                            <div className="pricing-input-wrapper" style={{ padding: '0.15rem 0.25rem' }}>
+                              <input 
+                                type="number" 
+                                value={newRoomData.monthlyPrices?.[month] || ''} 
+                                onChange={e => setNewRoomData(p => {
+                                  const mp = p.monthlyPrices || {};
+                                  return {
+                                    ...p,
+                                    monthlyPrices: {
+                                      ...mp,
+                                      [month]: e.target.value ? parseFloat(e.target.value) : ''
+                                    }
+                                  };
+                                })}
+                                placeholder={newRoomData.price || '50'}
+                                min="1"
+                                className="pricing-input-field"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 

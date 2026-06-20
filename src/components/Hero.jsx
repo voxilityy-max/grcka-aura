@@ -1,12 +1,50 @@
-import React from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export default function Hero({ searchFilters, setSearchFilters, destinations, propertyTypes }) {
+export default function Hero({ searchFilters, setSearchFilters, destinations, propertyTypes, onSearch }) {
+  const [isDestOpen, setIsDestOpen] = useState(false);
+  const [isTypeOpen, setIsTypeOpen] = useState(false);
+  
+  const destRef = useRef(null);
+  const typeRef = useRef(null);
+
+  // Close custom dropdowns if clicked outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (destRef.current && !destRef.current.contains(event.target)) {
+        setIsDestOpen(false);
+      }
+      if (typeRef.current && !typeRef.current.contains(event.target)) {
+        setIsTypeOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleSelectChange = (e) => {
     const { name, value } = e.target;
     setSearchFilters(prev => ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleSelectDest = (val) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      destination: val
+    }));
+    setIsDestOpen(false);
+  };
+
+  const handleSelectType = (val) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      type: val
+    }));
+    setIsTypeOpen(false);
   };
 
   return (
@@ -18,26 +56,41 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
       
       <div className="search-bar-gradient-wrapper animate-scale">
         <div className="search-bar-inner">
-          <div className="search-field-col">
-            <label htmlFor="destination">Destinacija</label>
-            <div className="select-wrapper-nikana">
-              <select 
-                id="destination" 
-                name="destination" 
-                value={searchFilters.destination}
-                onChange={handleSelectChange}
-              >
-                <option value="all">Unesite mesto, regiju ili smeštaj</option>
-                {destinations.map(dest => (
-                  <option key={dest} value={dest}>{dest}</option>
-                ))}
-              </select>
+          <div className="search-field-col dest-field-col" ref={destRef} onClick={() => setIsDestOpen(!isDestOpen)}>
+            <label>Destinacija</label>
+            <div className="custom-select-wrapper">
+              <div className="custom-select-trigger">
+                <span className="custom-select-value">
+                  {searchFilters.destination === 'all' ? 'Izaberite destinaciju' : searchFilters.destination}
+                </span>
+                <span className={`custom-select-arrow ${isDestOpen ? 'open' : ''}`}></span>
+              </div>
+              
+              {isDestOpen && (
+                <ul className="custom-dropdown-menu">
+                  <li 
+                    className={searchFilters.destination === 'all' ? 'active' : ''}
+                    onClick={(e) => { e.stopPropagation(); handleSelectDest('all'); }}
+                  >
+                    Izaberite destinaciju
+                  </li>
+                  {destinations.map(dest => (
+                    <li 
+                      key={dest} 
+                      className={searchFilters.destination === dest ? 'active' : ''}
+                      onClick={(e) => { e.stopPropagation(); handleSelectDest(dest); }}
+                    >
+                      {dest}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
           
           <div className="search-field-divider"></div>
           
-          <div className="search-field-col">
+          <div className="search-field-col date-field-col">
             <label>Dolazak / Odlazak</label>
             <div className="dates-wrapper-nikana">
               <input 
@@ -46,7 +99,7 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
                 name="checkIn" 
                 value={searchFilters.checkIn || ''}
                 onChange={handleSelectChange}
-                onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
+                onClick={(e) => { try { e.target.showPicker(); } catch { /* ignore */ } }}
                 min={new Date().toISOString().split('T')[0]}
                 className="date-input-nikana"
               />
@@ -57,7 +110,7 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
                 name="checkOut" 
                 value={searchFilters.checkOut || ''}
                 onChange={handleSelectChange}
-                onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
+                onClick={(e) => { try { e.target.showPicker(); } catch { /* ignore */ } }}
                 min={searchFilters.checkIn || new Date().toISOString().split('T')[0]}
                 className="date-input-nikana"
               />
@@ -66,20 +119,35 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
           
           <div className="search-field-divider"></div>
           
-          <div className="search-field-col">
-            <label htmlFor="type">Tip smeštaja</label>
-            <div className="select-wrapper-nikana">
-              <select 
-                id="type" 
-                name="type" 
-                value={searchFilters.type}
-                onChange={handleSelectChange}
-              >
-                <option value="all">Sve vrste smeštaja</option>
-                {propertyTypes.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+          <div className="search-field-col type-field-col" ref={typeRef} onClick={() => setIsTypeOpen(!isTypeOpen)}>
+            <label>Tip smeštaja</label>
+            <div className="custom-select-wrapper">
+              <div className="custom-select-trigger">
+                <span className="custom-select-value">
+                  {searchFilters.type === 'all' ? 'Sve vrste smeštaja' : searchFilters.type}
+                </span>
+                <span className={`custom-select-arrow ${isTypeOpen ? 'open' : ''}`}></span>
+              </div>
+              
+              {isTypeOpen && (
+                <ul className="custom-dropdown-menu">
+                  <li 
+                    className={searchFilters.type === 'all' ? 'active' : ''}
+                    onClick={(e) => { e.stopPropagation(); handleSelectType('all'); }}
+                  >
+                    Sve vrste smeštaja
+                  </li>
+                  {propertyTypes.map(t => (
+                    <li 
+                      key={t} 
+                      className={searchFilters.type === t ? 'active' : ''}
+                      onClick={(e) => { e.stopPropagation(); handleSelectType(t); }}
+                    >
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 
@@ -87,9 +155,13 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
             type="button" 
             className="btn-search-icon-nikana"
             onClick={() => {
-              const listingsEl = document.getElementById('listings-section');
-              if (listingsEl) {
-                listingsEl.scrollIntoView({ behavior: 'smooth' });
+              if (onSearch) {
+                onSearch();
+              } else {
+                const listingsEl = document.getElementById('listings-section');
+                if (listingsEl) {
+                  listingsEl.scrollIntoView({ behavior: 'smooth' });
+                }
               }
             }}
             aria-label="Pretraži"
@@ -104,3 +176,4 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
     </div>
   );
 }
+
