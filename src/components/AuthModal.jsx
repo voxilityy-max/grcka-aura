@@ -43,7 +43,7 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
         email: email.toLowerCase().trim(),
         password: 'google-oauth-simulated', // simulirana lozinka
         phone: '+381 60 111 2233', // podrazumevani simulirani broj telefona
-        avatar: isOwner ? 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80' : avatarUrl,
+        avatar: isOwner ? 'https://ui-avatars.com/api/?name=Vlasnik+Aura&background=00b4d8&color=fff' : avatarUrl,
         isGoogleUser: true,
         isAdmin: isOwner
       };
@@ -65,13 +65,7 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
       return;
     }
 
-    const randomAvatars = [
-      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80'
-    ];
-    const avatarUrl = randomAvatars[Math.floor(Math.random() * randomAvatars.length)];
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(customGmailName.trim())}&background=0a4f70&color=fff`;
 
     handleSelectGoogleAccount(customGmail, customGmailName.trim(), avatarUrl);
   };
@@ -102,7 +96,7 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
         email: formData.email.toLowerCase().trim(),
         password: formData.password,
         phone: formData.phone.trim(),
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' // default avatar
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.fullName.trim())}&background=0a4f70&color=fff`
       };
 
       Promise.resolve(onRegister(newUser)).catch(err => {
@@ -147,15 +141,15 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
             {!googleCustomEmail ? (
               <>
                 <div className="google-accounts-list">
-                  <div className="google-account-row" style={{ cursor: 'pointer' }} onClick={() => handleSelectGoogleAccount('stefan.petrovic@gmail.com', 'Stefan Petrović', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80')}>
-                    <img className="google-acc-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" alt="Stefan avatar" />
+                  <div className="google-account-row" style={{ cursor: 'pointer' }} onClick={() => handleSelectGoogleAccount('stefan.petrovic@gmail.com', 'Stefan Petrović', 'https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff')}>
+                    <img className="google-acc-avatar" src="https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff" alt="Stefan avatar" />
                     <div className="google-acc-info">
                       <span className="google-acc-name">Stefan Petrović</span>
                       <span className="google-acc-email">stefan.petrovic@gmail.com</span>
                     </div>
                   </div>
-                  <div className="google-account-row" style={{ cursor: 'pointer' }} onClick={() => handleSelectGoogleAccount('milica.kovacevic@gmail.com', 'Milica Kovačević', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80')}>
-                    <img className="google-acc-avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" alt="Milica avatar" />
+                  <div className="google-account-row" style={{ cursor: 'pointer' }} onClick={() => handleSelectGoogleAccount('milica.kovacevic@gmail.com', 'Milica Kovačević', 'https://ui-avatars.com/api/?name=Milica+Kovacevic&background=e76f51&color=fff')}>
+                    <img className="google-acc-avatar" src="https://ui-avatars.com/api/?name=Milica+Kovacevic&background=e76f51&color=fff" alt="Milica avatar" />
                     <div className="google-acc-info">
                       <span className="google-acc-name">Milica Kovačević</span>
                       <span className="google-acc-email">milica.kovacevic@gmail.com</span>

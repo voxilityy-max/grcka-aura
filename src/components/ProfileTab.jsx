@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
 const AVATAR_PRESETS = [
-  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-  'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80'
+  'https://ui-avatars.com/api/?name=G1&background=0a4f70&color=fff',
+  'https://ui-avatars.com/api/?name=G2&background=2a9d8f&color=fff',
+  'https://ui-avatars.com/api/?name=G3&background=e76f51&color=fff',
+  'https://ui-avatars.com/api/?name=G4&background=8338ec&color=fff'
 ];
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
@@ -257,10 +257,15 @@ export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, 
                         <td style={{ fontWeight: '600' }}>
                           <span 
                             onClick={() => prop && onViewPropertyDetails(prop)}
-                            style={{ cursor: 'pointer', color: 'var(--accent)' }}
+                            style={{ cursor: 'pointer', color: 'var(--accent)', display: 'block' }}
                           >
                             {propTitle}
                           </span>
+                          {inq.roomTitle && (
+                            <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 'normal', marginTop: '0.2rem' }}>
+                              🛋️ Soba: {inq.roomTitle}
+                            </span>
+                          )}
                         </td>
                         <td>{inq.dates}</td>
                         <td>{inq.nights} {inq.nights === 1 ? 'noć' : inq.nights < 5 ? 'noćenja' : 'noćenja'}</td>

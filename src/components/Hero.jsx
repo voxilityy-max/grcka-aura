@@ -13,7 +13,7 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
     <div className="hero-container">
       <div className="hero-content">
         <h1 className="hero-title animate-fade">Pronađite Vaš Savršen Smeštaj u Grčkoj</h1>
-        <p className="hero-subtitle animate-fade">Direktan kontakt sa vlasnicima smeštaja, bez posrednika i agencijske provizije.</p>
+        <p className="hero-subtitle animate-fade">Ulepšaj svoje letovanje uz najniže cene</p>
       </div>
       
       <div className="search-bar-container glass animate-scale">
@@ -43,8 +43,9 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
             <label htmlFor="priceCategory">Cenovni Rang</label>
             <div className="search-input-wrapper">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23"></line>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                <path d="M17 5H9.5a7 7 0 0 0 0 14H17"></path>
+                <line x1="5" y1="9" x2="14" y2="9"></line>
+                <line x1="5" y1="15" x2="14" y2="15"></line>
               </svg>
               <select 
                 id="priceCategory" 

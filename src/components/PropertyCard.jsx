@@ -1,4 +1,3 @@
-import React from 'react';
 
 export default function PropertyCard({ property, onViewDetails, isWishlisted, onToggleWishlist, isCompared, onToggleCompare }) {
   const { id, title, type, location, price, rating, distanceToBeach, image, guests, bedrooms } = property;
@@ -15,7 +14,11 @@ export default function PropertyCard({ property, onViewDetails, isWishlisted, on
 
   return (
     <article className="property-card animate-fade">
-      <div className="card-image-container">
+      <div 
+        className="card-image-container" 
+        onClick={onViewDetails}
+        style={{ cursor: 'pointer' }}
+      >
         <img 
           src={image} 
           alt={title} 

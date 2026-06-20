@@ -41,6 +41,11 @@ const INITIAL_PROPERTIES = [
     reviews: [
       { author: 'Nikola M.', rating: 5.0, comment: 'Pogled sa terase je nestvaran! Bazen je izuzetno čist, a domaćin nas je sačekao sa domaćim vinom.' },
       { author: 'Jelena K.', rating: 4.8, comment: 'Predivna i prostrana vila. Tiho i mirno okruženje, idealno za odmor sa porodicom.' }
+    ],
+    rooms: [
+      { id: 101, propertyId: 1, title: 'Standardna Trokrevetna Soba', price: 95, guests: 3, bedrooms: 1, image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80', description: 'Standardna soba sa pogledom na planinu i jednim francuskim krevetom.' },
+      { id: 102, propertyId: 1, title: 'Deluxe Apartman sa pogledom na more', price: 125, guests: 4, bedrooms: 2, image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80', description: 'Luksuzan dvosobni apartman sa sopstvenim balkonom i velikom kadom.' },
+      { id: 103, propertyId: 1, title: 'Predsednički Dupleks sa terasom', price: 180, guests: 6, bedrooms: 3, image: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80', description: 'Najekskluzivniji smeštaj u vili na dva nivoa sa đakuzijem na terasi.' }
     ]
   },
   {
@@ -66,6 +71,10 @@ const INITIAL_PROPERTIES = [
     reviews: [
       { author: 'Marko S.', rating: 5.0, comment: 'Lokacija je bez premca! Doručak na balkonu uz šum talasa je nešto neprocenjivo.' },
       { author: 'Milica P.', rating: 4.4, comment: 'Veoma uredno i čisto. Blizu su restorani i supermarketi. Topla preporuka!' }
+    ],
+    rooms: [
+      { id: 201, propertyId: 2, title: 'Jednosoban Apartman (Prizemlje)', price: 45, guests: 3, bedrooms: 1, image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80', description: 'Jednostavan porodični apartman u prizemlju sa direktnim izlazom u dvorište.' },
+      { id: 202, propertyId: 2, title: 'Studio sa pogledom na more (Sprat)', price: 55, guests: 2, bedrooms: 1, image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80', description: 'Romantičan studio za parove sa prelepim pogledom na more sa balkona.' }
     ]
   },
   {
@@ -91,6 +100,10 @@ const INITIAL_PROPERTIES = [
     reviews: [
       { author: 'Petar Z.', rating: 5.0, comment: 'Vrhunska usluga i neverovatno osoblje. Spa centar je odličan.' },
       { author: 'Anja V.', rating: 4.6, comment: 'Hrana u restoranu je fantastična. Sobe su prostrane i luksuzne.' }
+    ],
+    rooms: [
+      { id: 301, propertyId: 3, title: 'Standard Room (Bez balkona)', price: 140, guests: 2, bedrooms: 1, image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80', description: 'Udobna standardna soba, idealna za kraće boravke.' },
+      { id: 302, propertyId: 3, title: 'Superior Sea View Room', price: 195, guests: 3, bedrooms: 1, image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80', description: 'Komforna soba na višim spratovima sa frontalnim pogledom na Egejsko more.' }
     ]
   },
   {
@@ -115,6 +128,10 @@ const INITIAL_PROPERTIES = [
     },
     reviews: [
       { author: 'Dragan D.', rating: 4.5, comment: 'Odličan odnos cene i kvaliteta. Domaćica Maria je izuzetno prijatna žena.' }
+    ],
+    rooms: [
+      { id: 401, propertyId: 4, title: 'Apartman sa jednom spavaćom sobom', price: 35, guests: 3, bedrooms: 1, image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80', description: 'Povoljan apartman za manju porodicu, opremljen čajnom kuhinjom.' },
+      { id: 402, propertyId: 4, title: 'Porodični dvosobni apartman', price: 45, guests: 5, bedrooms: 2, image: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80', description: 'Veliki prostrani apartman sa dve spavaće sobe i terasom.' }
     ]
   },
   {
@@ -139,6 +156,10 @@ const INITIAL_PROPERTIES = [
     },
     reviews: [
       { author: 'Jovan J.', rating: 5.0, comment: 'Kuća je savršena za dve porodice sa decom. Dvorište je bezbedno i prelepo.' }
+    ],
+    rooms: [
+      { id: 501, propertyId: 5, title: 'Četvorokrevetni apartman', price: 120, guests: 4, bedrooms: 2, image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80', description: 'Komforan apartman sa dve spavaće sobe, idealan za dve porodice.' },
+      { id: 502, propertyId: 5, title: 'Deluxe Vila na plaži', price: 155, guests: 8, bedrooms: 4, image: 'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=800&q=80', description: 'Cela kuća sa sopstvenim dvorištem na samoj peščanoj plaži.' }
     ]
   },
   {
@@ -163,11 +184,15 @@ const INITIAL_PROPERTIES = [
     },
     reviews: [
       { author: 'Stefan R.', rating: 4.6, comment: 'Jako lepe i čiste sobe, pogled na more sa terase oduzima dah.' }
+    ],
+    rooms: [
+      { id: 601, propertyId: 6, title: 'Double Standard Room', price: 80, guests: 2, bedrooms: 1, image: 'https://images.unsplash.com/photo-1568495248636-6432b97bd949?auto=format&fit=crop&w=800&q=80', description: 'Dvokrevetna soba sa bračnim krevetom ili dva odvojena ležaja.' },
+      { id: 602, propertyId: 6, title: 'Triple Superior Room', price: 90, guests: 3, bedrooms: 1, image: 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80', description: 'Soba sa bračnim krevetom i jednim pomoćnim krevetom sa pogledom na bazen.' }
     ]
   }
 ];
 
-const DESTINATIONS = ['Lefkada', 'Tasos', 'Krit', 'Kasandra', 'Sitonija', 'Halkidiki'];
+const DEFAULT_DESTINATIONS = ['Lefkada', 'Tasos', 'Krit', 'Kasandra', 'Sitonija', 'Halkidiki'];
 const PROPERTY_TYPES = ['Apartman', 'Vila', 'Hotel'];
 
 // Default Registered Test User
@@ -179,7 +204,7 @@ const DEFAULT_USERS = [
     email: 'stefan@email.com',
     password: 'password',
     phone: '+381 60 123 4567',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+    avatar: 'https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff',
     isAdmin: true
   },
   {
@@ -189,7 +214,7 @@ const DEFAULT_USERS = [
     email: 'voxilityy@gmail.com',
     password: 'google-oauth-simulated',
     phone: '+381 60 111 2233',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+    avatar: 'https://ui-avatars.com/api/?name=Vlasnik+Aura&background=00b4d8&color=fff',
     isAdmin: true,
     isGoogleUser: true
   }
@@ -229,6 +254,11 @@ export default function App() {
     return 'listings';
   });
 
+  const handleTabChange = (tabName) => {
+    setSelectedProperty(null);
+    setActiveTab(tabName);
+  };
+
   // View Mode: 'list' (default) or 'map'
   const [viewMode, setViewMode] = useState('list');
 
@@ -249,6 +279,9 @@ export default function App() {
     const saved = localStorage.getItem('properties');
     return saved ? JSON.parse(saved) : INITIAL_PROPERTIES;
   });
+
+  // Set max price limit to 1000 for the filter slider
+  const maxPriceLimit = 1000;
 
   // Wishlist State (list of IDs)
   const [wishlist, setWishlist] = useState(() => {
@@ -304,6 +337,12 @@ export default function App() {
   const [comparedIds, setComparedIds] = useState([]);
   const [isCompareMatrixOpen, setIsCompareMatrixOpen] = useState(false);
 
+  // Derived unique destinations dynamically from properties currently in the system, plus default ones
+  const derivedDestinations = Array.from(new Set([
+    ...DEFAULT_DESTINATIONS,
+    ...properties.map(p => p.location)
+  ].filter(Boolean)));
+
   // Search Filters (from Hero)
   const [searchFilters, setSearchFilters] = useState({
     destination: 'all',
@@ -315,7 +354,7 @@ export default function App() {
 
   // Advanced Sidebar Filters
   const [filters, setFilters] = useState({
-    maxPrice: 250,
+    maxPrice: null, // null means "not set" (defaults to maxPriceLimit)
     maxDistance: 1200,
     amenities: {
       wifi: false,
@@ -358,7 +397,7 @@ export default function App() {
       setForumPosts(dataPosts);
       
       setBackendActive(true);
-      console.log('Ažurirani podaci sa SQLite backend servera!');
+      console.log('Ažurirani podaci sa backend servera!');
     } catch (err) {
       console.error('Greška pri osvežavanju baze:', err);
     }
@@ -390,7 +429,7 @@ export default function App() {
         setForumPosts(dataPosts);
 
         setBackendActive(true);
-        console.log('Uspostavljena veza sa pravim backend serverom i SQLite bazom!');
+        console.log('Uspostavljena veza sa pravim backend serverom!');
       } catch (err) {
         console.warn('Backend server nije aktivan. Aplikacija radi u lokalnom offline režimu (localStorage).');
         setBackendActive(false);
@@ -438,6 +477,7 @@ export default function App() {
   // Listen to popstate event (back/forward browser buttons)
   useEffect(() => {
     const handlePopState = () => {
+      setSelectedProperty(null);
       if (window.location.pathname === '/aura-vlasnik' || window.location.pathname === '/panel') {
         const savedUser = localStorage.getItem('currentUser');
         const parsedUser = savedUser ? JSON.parse(savedUser) : null;
@@ -557,8 +597,8 @@ export default function App() {
         setUsers(prev => [...prev, registered]);
         setCurrentUser(registered);
         setIsAuthModalOpen(false);
-        setActiveTab('profile');
-        logActivity(registered, `Registrovan novi nalog na portalu (SQLite).`, 'auth');
+        handleTabChange('profile');
+        logActivity(registered, `Registrovan novi nalog na portalu.`, 'auth');
       } catch (err) {
         throw err;
       }
@@ -568,7 +608,7 @@ export default function App() {
       setUsers(prev => [...prev, updatedUser]);
       setCurrentUser(updatedUser);
       setIsAuthModalOpen(false);
-      setActiveTab('profile');
+      handleTabChange('profile');
       logActivity(updatedUser, `Registrovan novi nalog na portalu.`, 'auth');
     }
   };
@@ -592,10 +632,10 @@ export default function App() {
         setIsAuthModalOpen(false);
         if (loggedInUser.isAdmin) {
           setIsFake404Active(false);
-          setActiveTab('host');
+          handleTabChange('host');
           logActivity(loggedInUser, `Administrator se prijavio na sistem (JWT).`, 'auth');
         } else {
-          setActiveTab('profile');
+          handleTabChange('profile');
           logActivity(loggedInUser, `Korisnik se prijavio na sistem (JWT).`, 'auth');
         }
       } catch (err) {
@@ -612,10 +652,10 @@ export default function App() {
       setIsAuthModalOpen(false);
       if (user.isAdmin) {
         setIsFake404Active(false);
-        setActiveTab('host');
+        handleTabChange('host');
         logActivity(user, `Administrator se prijavio na sistem.`, 'auth');
       } else {
-        setActiveTab('profile');
+        handleTabChange('profile');
         logActivity(user, `Korisnik se prijavio na sistem.`, 'auth');
       }
     }
@@ -626,7 +666,7 @@ export default function App() {
     setCurrentUser(null);
     localStorage.removeItem('authToken');
     setIsFake404Active(false);
-    setActiveTab('listings');
+    handleTabChange('listings');
     if (userSnapshot) {
       logActivity(userSnapshot, `Korisnik se odjavio sa sistema.`, 'auth');
     }
@@ -646,7 +686,7 @@ export default function App() {
         const saved = await res.json();
         setUsers(prev => prev.map(u => u.id === saved.id ? saved : u));
         setCurrentUser(saved);
-        logActivity(saved, `Korisnik je izmenio podatke na svom profilu (SQLite).`, 'update');
+        logActivity(saved, `Korisnik je izmenio podatke na svom profilu.`, 'update');
       } catch (err) {
         console.error('Greška pri ažuriranju korisnika:', err);
       }
@@ -670,7 +710,7 @@ export default function App() {
         setInquiries(prev => [saved, ...prev]);
         const prop = properties.find(p => p.id === saved.propertyId);
         const propTitle = prop ? prop.title : 'nepoznat smeštaj';
-        logActivity(currentUser, `Poslat novi rezervacioni upit za smeštaj "${propTitle}" (${saved.dates}, ukupna cena: ${saved.totalPrice}€) - SQLite.`, 'inquiry');
+        logActivity(currentUser, `Poslat novi rezervacioni upit za smeštaj "${propTitle}" (${saved.dates}, ukupna cena: ${saved.totalPrice}€).`, 'inquiry');
       } catch (err) {
         console.error(err);
       }
@@ -691,7 +731,7 @@ export default function App() {
       try {
         await fetch(`${API_URL}/api/inquiries/${inquiryId}`, { method: 'DELETE' });
         setInquiries(prev => prev.filter(inq => inq.id !== inquiryId));
-        logActivity(currentUser, `Otkazan upit za smeštaj "${propTitle}" (${inq.dates}) - SQLite.`, 'delete');
+        logActivity(currentUser, `Otkazan upit za smeštaj "${propTitle}" (${inq.dates}).`, 'delete');
       } catch (err) {
         console.error(err);
       }
@@ -717,14 +757,14 @@ export default function App() {
         });
         const saved = await res.json();
         setProperties(prev => [saved, ...prev]);
-        setActiveTab('listings');
-        logActivity(currentUser, `Dodat novi smeštaj u ponudu: ${saved.title} (SQLite).`, 'create');
+        handleTabChange('listings');
+        logActivity(currentUser, `Dodat novi smeštaj u ponudu: ${saved.title}.`, 'create');
       } catch (err) {
         console.error(err);
       }
     } else {
       setProperties(prev => [newProperty, ...prev]);
-      setActiveTab('listings');
+      handleTabChange('listings');
       logActivity(currentUser, `Dodat novi smeštaj u ponudu: ${newProperty.title} (${newProperty.location}).`, 'create');
     }
   };
@@ -743,7 +783,7 @@ export default function App() {
           }
         });
         setProperties(prev => prev.filter(p => p.id !== propertyId));
-        logActivity(currentUser, `Obrisan smeštaj iz baze: ${property.title} (SQLite).`, 'delete');
+        logActivity(currentUser, `Obrisan smeštaj iz baze: ${property.title}.`, 'delete');
       } catch (err) {
         console.error(err);
       }
@@ -776,7 +816,7 @@ export default function App() {
         setUsers(prev => prev.map(u => {
           if (u.id === userId) {
             const updated = { ...u, isAdmin: newRole };
-            logActivity(currentUser, `${updated.isAdmin ? 'Dodela' : 'Oduzimanje'} administratorskih prava korisniku ${updated.fullName} (SQLite).`, 'update');
+            logActivity(currentUser, `${updated.isAdmin ? 'Dodela' : 'Oduzimanje'} administratorskih prava korisniku ${updated.fullName}.`, 'update');
             if (currentUser && currentUser.id === userId) {
               setCurrentUser(updated);
             }
@@ -816,7 +856,7 @@ export default function App() {
             const updated = { ...inq, status: status };
             const prop = properties.find(p => p.id === inq.propertyId);
             const propTitle = prop ? prop.title : 'nepoznat smeštaj';
-            logActivity(currentUser, `${status === 'Odobreno' ? 'Odobren' : 'Odbijen'} upit za smeštaj "${propTitle}" (SQLite).`, 'update');
+            logActivity(currentUser, `${status === 'Odobreno' ? 'Odobren' : 'Odbijen'} upit za smeštaj "${propTitle}".`, 'update');
             return updated;
           }
           return inq;
@@ -860,7 +900,7 @@ export default function App() {
           if (inq.id === inquiryId) {
             const currentChat = inq.chat || [];
             const updated = { ...inq, chat: [...currentChat, savedMsg] };
-            logActivity(currentUser, `Poslata poruka u ćaskanju (SQLite).`, 'update');
+            logActivity(currentUser, `Poslata poruka u ćaskanju.`, 'update');
             return updated;
           }
           return inq;
@@ -898,7 +938,7 @@ export default function App() {
         });
         const saved = await res.json();
         setForumPosts(prev => [saved, ...prev]);
-        logActivity(currentUser, `Dodat novi post na forumu: "${saved.title}" (SQLite).`, 'create');
+        logActivity(currentUser, `Dodat novi post na forumu: "${saved.title}".`, 'create');
       } catch (err) {
         console.error(err);
       }
@@ -928,7 +968,7 @@ export default function App() {
           return prevProperties.map(property => {
             if (property.id === propertyId) {
               const updatedReviews = (property.reviews || []).filter(r => r.id !== reviewObj.id);
-              logActivity(currentUser, `Obrisana recenzija autora "${reviewObj.author}" (SQLite).`, 'delete');
+              logActivity(currentUser, `Obrisana recenzija autora "${reviewObj.author}".`, 'delete');
               return {
                 ...property,
                 reviews: updatedReviews,
@@ -973,7 +1013,7 @@ export default function App() {
           }
         });
         setForumPosts(prev => prev.filter(p => p.id !== postId));
-        logActivity(currentUser, `Obrisan post na forumu: "${postToDelete.title}" (SQLite).`, 'delete');
+        logActivity(currentUser, `Obrisan post na forumu: "${postToDelete.title}".`, 'delete');
       } catch (err) {
         console.error(err);
       }
@@ -997,7 +1037,7 @@ export default function App() {
           return prevProperties.map(property => {
             if (property.id === propertyId) {
               const updatedReviews = [...(property.reviews || []), savedRev];
-              logActivity(currentUser, `Dodata nova recenzija za smeštaj (SQLite).`, 'create');
+              logActivity(currentUser, `Dodata nova recenzija za smeštaj.`, 'create');
               return {
                 ...property,
                 reviews: updatedReviews,
@@ -1054,7 +1094,7 @@ export default function App() {
   // Clear Sidebar Filters
   const handleClearFilters = () => {
     setFilters({
-      maxPrice: 250,
+      maxPrice: null,
       maxDistance: 1200,
       amenities: {
         wifi: false,
@@ -1105,21 +1145,14 @@ export default function App() {
       }
     }
 
-    // Filter by Availability (Check-In & Check-Out)
-    if (searchFilters.checkIn && searchFilters.checkOut) {
-      items = items.filter(p => {
-        // Find if there is any approved reservation that overlaps with searched period
-        const hasOverlap = inquiries.some(inq => {
-          if (inq.propertyId !== p.id || inq.status !== 'Odobreno') return false;
-          // Overlap check: range1_start < range2_end && range2_start < range1_end
-          return (inq.checkIn < searchFilters.checkOut) && (searchFilters.checkIn < inq.checkOut);
-        });
-        return !hasOverlap;
-      });
-    }
+    // Filter by Availability (Check-In & Check-Out) is disabled to match Grčka Info behavior 
+    // where guests can always send inquiries and properties are not hidden by existing bookings.
 
     // Filter by Sidebar: Max Price
-    items = items.filter(p => p.price <= filters.maxPrice);
+    const activeMaxPrice = filters.maxPrice !== null && filters.maxPrice !== undefined ? filters.maxPrice : maxPriceLimit;
+    if (activeMaxPrice < 1000) {
+      items = items.filter(p => p.price <= activeMaxPrice);
+    }
 
     // Filter by Sidebar: Max Distance
     if (filters.maxDistance < 1200) {
@@ -1187,10 +1220,10 @@ export default function App() {
         );
       case 'host':
         return (
-          <div className="main-layout full-width">
+          <div className="admin-fullwidth-wrapper animate-fade">
             <HostPanel 
               onAddProperty={handleAddProperty}
-              destinations={DESTINATIONS}
+              destinations={derivedDestinations}
               propertyTypes={PROPERTY_TYPES}
               currentUser={currentUser}
               properties={properties}
@@ -1217,7 +1250,7 @@ export default function App() {
               properties={properties}
               onViewPropertyDetails={setSelectedProperty}
               onSendChatMessage={handleSendChatMessage}
-              onNavigate={setActiveTab}
+              onNavigate={handleTabChange}
             />
           </div>
         ) : (
@@ -1239,7 +1272,7 @@ export default function App() {
             <Filters 
               filters={filters} 
               setFilters={setFilters} 
-              maxPriceLimit={250}
+              maxPriceLimit={maxPriceLimit}
               clearFilters={handleClearFilters}
             />
 
@@ -1339,7 +1372,7 @@ export default function App() {
     <div className="app-wrapper">
       <Navbar 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={handleTabChange} 
         wishlistCount={wishlist.length}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
@@ -1347,18 +1380,32 @@ export default function App() {
         onOpenAuth={() => setIsAuthModalOpen(true)}
       />
 
-      {activeTab === 'listings' && (
+      {!selectedProperty && activeTab === 'listings' && (
         <Hero 
           searchFilters={searchFilters} 
           setSearchFilters={setSearchFilters}
-          destinations={DESTINATIONS}
+          destinations={derivedDestinations}
           propertyTypes={PROPERTY_TYPES}
         />
       )}
 
       {/* Main Content Sections */}
       <main id="listings-section">
-        {renderTabContent()}
+        {selectedProperty ? (
+          <PropertyDetails 
+            key={selectedProperty.id}
+            property={selectedProperty} 
+            onClose={() => setSelectedProperty(null)}
+            onAddReview={handleAddReview}
+            currentUser={currentUser}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+            onAddInquiry={handleAddInquiry}
+            onDeleteReview={handleDeleteReview}
+            inquiries={inquiries}
+          />
+        ) : (
+          renderTabContent()
+        )}
       </main>
 
       {/* Floating Comparison Drawer */}
@@ -1546,12 +1593,12 @@ export default function App() {
           <div className="footer-col">
             <h4>Brzi Linkovi</h4>
             <ul className="footer-links">
-              <li><a onClick={() => { setActiveTab('listings'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Svi Smeštaji</a></li>
-              <li><a onClick={() => { setActiveTab('guide'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Putni Vodič</a></li>
-              <li><a onClick={() => { setActiveTab('wishlist'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Sačuvani Smeštaj</a></li>
-              <li><a onClick={() => { setActiveTab('blog'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Vodiči i Saveti</a></li>
-              <li><a onClick={() => { setActiveTab('forum'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Iskustva Putnika</a></li>
-              <li><a onClick={() => { setActiveTab('alerts'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Stanje na Granici</a></li>
+              <li><a onClick={() => { handleTabChange('listings'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Svi Smeštaji</a></li>
+              <li><a onClick={() => { handleTabChange('guide'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Putni Vodič</a></li>
+              <li><a onClick={() => { handleTabChange('wishlist'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Sačuvani Smeštaj</a></li>
+              <li><a onClick={() => { handleTabChange('blog'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Vodiči i Saveti</a></li>
+              <li><a onClick={() => { handleTabChange('forum'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Iskustva Putnika</a></li>
+              <li><a onClick={() => { handleTabChange('alerts'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Stanje na Granici</a></li>
             </ul>
           </div>
           <div className="footer-col">
@@ -1568,19 +1615,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Property Details Modal */}
-      {selectedProperty && (
-        <PropertyDetails 
-          property={selectedProperty} 
-          onClose={() => setSelectedProperty(null)}
-          onAddReview={handleAddReview}
-          currentUser={currentUser}
-          onOpenAuth={() => setIsAuthModalOpen(true)}
-          onAddInquiry={handleAddInquiry}
-          onDeleteReview={handleDeleteReview}
-          inquiries={inquiries}
-        />
-      )}
+      {/* Property Details is now rendered inside the main tag as a dedicated page */}
 
       {/* Authentications Modal overlay */}
       {isAuthModalOpen && (

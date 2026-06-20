@@ -251,6 +251,31 @@ async function initializeSchema() {
     timestamp TEXT NOT NULL
   )`);
 
+  // 8. Rooms Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS rooms (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    propertyId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    price INTEGER NOT NULL,
+    guests INTEGER NOT NULL,
+    bedrooms INTEGER NOT NULL,
+    image TEXT,
+    description TEXT,
+    FOREIGN KEY (propertyId) REFERENCES properties(id) ON DELETE CASCADE
+  )`);
+
+  // Add roomTitle column to inquiries table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(inquiries)");
+    const hasRoomTitle = columns.some(c => c.name === 'roomTitle');
+    if (!hasRoomTitle) {
+      await dbHelper.run("ALTER TABLE inquiries ADD COLUMN roomTitle TEXT");
+      console.log("Dodata kolona 'roomTitle' u tabelu inquiries.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone roomTitle:", err.message);
+  }
+
   // Seed database if empty
   await seedDatabase();
 }
@@ -269,8 +294,8 @@ async function seedDatabase() {
       const hashedOwnerPassword = bcrypt.hashSync('pakovanje1337', 10);
 
       const seedUsers = [
-        [999, 'stefan', 'Stefan Petrović', 'stefan@email.com', hashedPassword, '+381 60 123 4567', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', 1],
-        [1000, 'vlasnik_aura', 'Vlasnik Aura', 'voxilityy@gmail.com', hashedOwnerPassword, '+381 60 111 2233', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', 1]
+        [999, 'stefan', 'Stefan Petrović', 'stefan@email.com', hashedPassword, '+381 60 123 4567', 'https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff', 1],
+        [1000, 'vlasnik_aura', 'Vlasnik Aura', 'voxilityy@gmail.com', hashedOwnerPassword, '+381 60 111 2233', 'https://ui-avatars.com/api/?name=Vlasnik+Aura&background=00b4d8&color=fff', 1]
       ];
 
       for (const u of seedUsers) {
@@ -315,7 +340,7 @@ async function seedDatabase() {
       await dbHelper.run("INSERT INTO chat_messages (inquiryId, sender, text, timestamp) VALUES (888, 'client', 'Dobar dan, slali smo upit za apartman, radujemo se dolasku!', '15. Jul u 12:00')");
 
       // 6. Seed Activity Logs
-      await dbHelper.run("INSERT INTO activity_logs (timestamp, user, action, type) VALUES ('19.06.2026. u 20:00', 'Sistem', 'Inicijalizovana SQLite baza podataka sa fabričkim podacima.', 'create')");
+      await dbHelper.run("INSERT INTO activity_logs (timestamp, user, action, type) VALUES ('19.06.2026. u 20:00', 'Sistem', 'Inicijalizovan portal sa fabričkim podacima.', 'create')");
 
       // 7. Seed Forum Posts
       const seedForum = [
@@ -328,6 +353,36 @@ async function seedDatabase() {
       }
 
       console.log('Popunjavanje baze inicijalnim podacima je uspešno završeno.');
+      
+      // 8. Seed Rooms if empty
+      const roomsRow = await dbHelper.get('SELECT COUNT(*) as count FROM rooms');
+      if (!roomsRow || Number(roomsRow.count) === 0) {
+        console.log('Popunjavam tabelu rooms inicijalnim podacima...');
+        const seedRooms = [
+          [1, 'Standardna Trokrevetna Soba', 95, 3, 1, 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80', 'Standardna soba sa pogledom na planinu i jednim francuskim krevetom.'],
+          [1, 'Deluxe Apartman sa pogledom na more', 125, 4, 2, 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80', 'Luksuzan dvosobni apartman sa sopstvenim balkonom i velikom kadom.'],
+          [1, 'Predsednički Dupleks sa terasom', 180, 6, 3, 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80', 'Najekskluzivniji smeštaj u vili na dva nivoa sa đakuzijem na terasi.'],
+
+          [2, 'Jednosoban Apartman (Prizemlje)', 45, 3, 1, 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80', 'Jednostavan porodični apartman u prizemlju sa direktnim izlazom u dvorište.'],
+          [2, 'Studio sa pogledom na more (Sprat)', 55, 2, 1, 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80', 'Romantičan studio za parove sa prelepim pogledom na more sa balkona.'],
+          
+          [3, 'Standard Room (Bez balkona)', 140, 2, 1, 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80', 'Udobna standardna soba, idealna za kraće boravke.'],
+          [3, 'Superior Sea View Room', 195, 3, 1, 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80', 'Komforna soba na višim spratovima sa frontalnim pogledom na Egejsko more.'],
+          
+          [4, 'Apartman sa jednom spavaćom sobom', 35, 3, 1, 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80', 'Povoljan apartman za manju porodicu, opremljen čajnom kuhinjom.'],
+          [4, 'Porodični dvosobni apartman', 45, 5, 2, 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80', 'Veliki prostrani apartman sa dve spavaće sobe i terasom.'],
+
+          [5, 'Četvorokrevetni apartman', 120, 4, 2, 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80', 'Komforan apartman sa dve spavaće sobe, idealan za dve porodice.'],
+          [5, 'Deluxe Vila na plaži', 155, 8, 4, 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80', 'Cela kuća sa sopstvenim dvorištem na samoj peščanoj plaži.'],
+
+          [6, 'Double Standard Room', 80, 2, 1, 'https://images.unsplash.com/photo-1568495248636-6432b97bd949?auto=format&fit=crop&w=800&q=80', 'Dvokrevetna soba sa bračnim krevetom ili dva odvojena ležaja.'],
+          [6, 'Triple Superior Room', 90, 3, 1, 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80', 'Soba sa bračnim krevetom i jednim pomoćnim krevetom sa pogledom na bazen.']
+        ];
+        for (const rm of seedRooms) {
+          await dbHelper.run('INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description) VALUES (?, ?, ?, ?, ?, ?, ?)', rm);
+        }
+        console.log('Seeding rooms table done.');
+      }
     });
   } catch (err) {
     console.error('Greška pri seeding-u baze:', err.message);
@@ -396,9 +451,10 @@ app.post('/api/auth/register', async (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   
   try {
+    const defaultAvatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fullName) + '&background=0a4f70&color=fff';
     const result = await dbHelper.run(
       'INSERT INTO users (username, fullName, email, password, phone, avatar, isAdmin) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [username, fullName, email.toLowerCase().trim(), hashedPassword, phone, avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', adminFlag]
+      [username, fullName, email.toLowerCase().trim(), hashedPassword, phone, avatar || defaultAvatar, adminFlag]
     );
     
     const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [result.lastID]);
@@ -420,13 +476,14 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// 3. Get All Properties (along with reviews)
+// 3. Get All Properties (along with reviews and rooms)
 app.get('/api/properties', async (req, res) => {
   try {
     const properties = await dbHelper.all('SELECT * FROM properties');
     const reviews = await dbHelper.all('SELECT * FROM reviews');
+    const rooms = await dbHelper.all('SELECT * FROM rooms');
 
-    // Group reviews by propertyId
+    // Group reviews and rooms by propertyId
     const populated = properties.map(p => {
       p.amenities = {
         wifi: !!p.wifi,
@@ -437,6 +494,7 @@ app.get('/api/properties', async (req, res) => {
         pets: !!p.pets
       };
       p.reviews = reviews.filter(r => r.propertyId === p.id);
+      p.rooms = rooms.filter(r => r.propertyId === p.id);
       return p;
     });
     res.json(populated);
@@ -547,13 +605,13 @@ app.get('/api/inquiries', async (req, res) => {
 
 // 9. Add Inquiry
 app.post('/api/inquiries', async (req, res) => {
-  const { userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message } = req.body;
+  const { userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message, roomTitle } = req.body;
   
   try {
     const result = await dbHelper.run(
-      `INSERT INTO inquiries (userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status || 'Poslato', message]
+      `INSERT INTO inquiries (userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message, roomTitle)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status || 'Poslato', message, roomTitle || null]
     );
     const inquiryId = result.lastID;
     
@@ -562,9 +620,9 @@ app.post('/api/inquiries', async (req, res) => {
         'INSERT INTO chat_messages (inquiryId, sender, text, timestamp) VALUES (?, ?, ?, ?)',
         [inquiryId, 'client', message, dates.split(' - ')[0]]
       );
-      res.json({ id: inquiryId, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status: status || 'Poslato', message, chat: [{ sender: 'client', text: message, timestamp: dates.split(' - ')[0] }] });
+      res.json({ id: inquiryId, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status: status || 'Poslato', message, roomTitle, chat: [{ sender: 'client', text: message, timestamp: dates.split(' - ')[0] }] });
     } else {
-      res.json({ id: inquiryId, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status: status || 'Poslato', message, chat: [] });
+      res.json({ id: inquiryId, userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status: status || 'Poslato', message, roomTitle, chat: [] });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -758,6 +816,7 @@ app.post('/api/admin/reset-db', requireAdmin, async (req, res) => {
       await dbHelper.run('DROP TABLE IF EXISTS users');
       await dbHelper.run('DROP TABLE IF EXISTS activity_logs');
       await dbHelper.run('DROP TABLE IF EXISTS forum_posts');
+      await dbHelper.run('DROP TABLE IF EXISTS rooms');
     });
 
     console.log('Tabele obrisane na zahtev administratora.');

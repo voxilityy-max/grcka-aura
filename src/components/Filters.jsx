@@ -1,6 +1,8 @@
 import React from 'react';
 
 export default function Filters({ filters, setFilters, maxPriceLimit = 250, clearFilters }) {
+  const activeMaxPrice = filters.maxPrice !== null && filters.maxPrice !== undefined ? filters.maxPrice : maxPriceLimit;
+
   const handleRangeChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -38,13 +40,15 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
             name="maxPrice" 
             min="20" 
             max={maxPriceLimit} 
-            value={filters.maxPrice} 
+            value={activeMaxPrice} 
             onChange={handleRangeChange}
           />
           <div className="range-values">
             <span>20€</span>
-            <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>Do {filters.maxPrice}€</span>
-            <span>{maxPriceLimit}€</span>
+            <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
+              {activeMaxPrice >= 1000 ? 'Bilo koja cena' : `Do ${activeMaxPrice}€`}
+            </span>
+            <span>1000+€</span>
           </div>
         </div>
       </div>

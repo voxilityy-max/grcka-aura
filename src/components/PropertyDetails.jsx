@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 // Pre-defined additional images to create rich carousels dynamically if properties don't have them
 const EXTRA_CAROUSEL_IMAGES = [
@@ -13,6 +14,11 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
   const [leafletLoaded, setLeafletLoaded] = useState(false);
   const mapContainerRef = React.useRef(null);
   const mapInstanceRef = React.useRef(null);
+
+  // Scroll to top when page opens
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Map coordinates mapping
   const getCoordinates = (locName, propId) => {
@@ -138,6 +144,50 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
     ];
   }, [image, id]);
   const [activeImgIndex, setActiveImgIndex] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
+
+  // Keyboard navigation for Lightbox
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setLightboxIndex(null);
+      } else if (typeof lightboxIndex === 'number') {
+        if (e.key === 'ArrowRight') {
+          setLightboxIndex((prev) => (prev + 1) % carouselImages.length);
+        } else if (e.key === 'ArrowLeft') {
+          setLightboxIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxIndex, carouselImages.length]);
+
+  // Derived Rich Amenities similar to GrckaInfo
+  const richAmenities = useMemo(() => {
+    const hasSeaView = amenities.beachfront || title.toLowerCase().includes('more') || title.toLowerCase().includes('horizon') || description.toLowerCase().includes('pogled na more') || description.toLowerCase().includes('pogledom na more');
+    const hasGarden = type === 'Vila' || type === 'Hotel' || amenities.pool;
+    const hasBbq = type === 'Vila' || amenities.pool;
+    const hasSafe = type === 'Hotel' || type === 'Vila' || price > 100;
+    
+    return [
+      { id: 'wifi', label: 'Besplatan Wi-Fi', active: !!amenities.wifi, icon: '📶' },
+      { id: 'ac', label: 'Klima uređaj', active: !!amenities.airConditioning, icon: '❄️' },
+      { id: 'parking', label: 'Besplatan parking', active: !!amenities.parking, icon: '🚗' },
+      { id: 'pool', label: 'Bazen', active: !!amenities.pool, icon: '🏊' },
+      { id: 'seaview', label: 'Pogled na more', active: hasSeaView, icon: '🌊' },
+      { id: 'terrace', label: 'Terasa / Balkon', active: true, icon: '🌅' },
+      { id: 'kitchen', label: 'Kuhinja / Posuđe', active: true, icon: '🍳' },
+      { id: 'tv', label: 'LCD TV', active: true, icon: '📺' },
+      { id: 'garden', label: 'Dvorište / Vrt', active: hasGarden, icon: '🌳' },
+      { id: 'bbq', label: 'Roštilj', active: hasBbq, icon: '🍖' },
+      { id: 'safe', label: 'Sef u sobi', active: hasSafe, icon: '🔒' },
+      { id: 'pets', label: 'Ljubimci dozvoljeni', active: !!amenities.pets, icon: '🐾' }
+    ];
+  }, [amenities, title, description, type, price]);
 
   // Booking Form State
   const todayStr = new Date().toISOString().split('T')[0];
@@ -145,6 +195,44 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
   const [bookingGuests, setBookingGuests] = useState('2');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
+
+  // Derived Rooms List (Virtual room fallback if property.rooms is empty)
+  const roomsList = useMemo(() => {
+    if (property.rooms && property.rooms.length > 0) {
+      return property.rooms;
+    }
+    return [
+      {
+        id: `entire-${id}`,
+        propertyId: id,
+        title: `Ceo objekat (${type})`,
+        price: price,
+        guests: maxGuests,
+        bedrooms: bedrooms,
+        image: image,
+        description: 'Rezervacija kompletnog objekta (sve sobe i prostorije).'
+      }
+    ];
+  }, [property.rooms, id, type, price, maxGuests, bedrooms, image]);
+
+  // Selected room sub-unit state
+  const [selectedRoom, setSelectedRoom] = useState(() => {
+    return roomsList[0];
+  });
+
+  // Sync selectedRoom if roomsList updates dynamically
+  useEffect(() => {
+    if (roomsList && roomsList.length > 0) {
+      const exists = roomsList.some(r => r.id === selectedRoom?.id);
+      if (!exists) {
+        setSelectedRoom(roomsList[0]);
+      }
+    }
+  }, [roomsList]);
+
+  const activePrice = selectedRoom ? selectedRoom.price : price;
+  const activeMaxGuests = selectedRoom ? selectedRoom.guests : maxGuests;
+  const activeBedrooms = selectedRoom ? selectedRoom.bedrooms : bedrooms;
   
   // Pre-fill user data if logged in
   const [inquiryName, setInquiryName] = useState(currentUser ? currentUser.fullName : '');
@@ -170,10 +258,8 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
   };
 
   const isDateBooked = (dateStr) => {
-    return inquiries.some(inq => {
-      if (inq.propertyId !== id || inq.status !== 'Odobreno') return false;
-      return dateStr >= inq.checkIn && dateStr < inq.checkOut;
-    });
+    // Guests cannot see booked dates; they can select any dates and send an inquiry.
+    return false;
   };
 
   const isRangeBooked = (startStr, endStr) => {
@@ -249,17 +335,17 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
   // Invoice Breakdown Math
   const invoice = useMemo(() => {
     if (nights <= 0) return null;
-    const baseTotal = price * nights;
+    const baseTotal = activePrice * nights;
     const cleaningFee = 25;
     const touristTax = 1.5 * nights;
     const total = baseTotal + cleaningFee + touristTax;
     return { baseTotal, cleaningFee, touristTax, total };
-  }, [price, nights]);
+  }, [activePrice, nights]);
 
   // Guest validation check
   const guestCountExceeded = useMemo(() => {
-    return parseInt(bookingGuests, 10) > maxGuests;
-  }, [bookingGuests, maxGuests]);
+    return parseInt(bookingGuests, 10) > activeMaxGuests;
+  }, [bookingGuests, activeMaxGuests]);
 
   // Carousel handlers
   const handlePrevImage = () => {
@@ -280,7 +366,7 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
       return;
     }
     if (guestCountExceeded) {
-      setInquiryError(`Greška: Broj gostiju premašuje maksimalni kapacitet objekta (${maxGuests} osobe).`);
+      setInquiryError(`Greška: Broj gostiju premašuje maksimalni kapacitet objekta (${activeMaxGuests} osobe).`);
       return;
     }
     if (nights <= 0) {
@@ -303,10 +389,11 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
       checkOut: checkOut,
       dates: `${startD} - ${endD}`,
       nights: nights,
-      guests: parseInt(bookingGuests, 10),
+      guests: Math.min(parseInt(bookingGuests, 10) || 2, activeMaxGuests),
       totalPrice: invoice.total,
       status: 'Poslato', // Sent status
-      message: inquiryMessage
+      message: inquiryMessage,
+      roomTitle: selectedRoom ? selectedRoom.title : null
     };
 
     onAddInquiry(newInquiry);
@@ -338,13 +425,10 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
   const walkingTimeMin = Math.round(distanceToBeach / 80) || 1;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <button className="btn-modal-close" onClick={onClose} aria-label="Zatvori">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+    <div className="property-page-wrapper animate-fade">
+      <div className="property-page-container">
+        <button className="btn-back-to-search" onClick={onClose} aria-label="Nazad na pretragu">
+          &larr; Nazad na pretragu
         </button>
         
         {/* Advanced Gallery Carousel */}
@@ -355,6 +439,8 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
               src={imgUrl} 
               alt={`${title} - slika ${idx + 1}`} 
               className={`carousel-slide ${idx === activeImgIndex ? 'active' : ''}`}
+              onClick={() => setLightboxIndex(idx)}
+              style={{ cursor: 'pointer' }}
             />
           ))}
           
@@ -401,23 +487,20 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
 
             <div className="modal-quick-specs">
               <div className="spec-item">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M2 6c.6.5 1.2 1 2.5 1C5.8 7 7 6 7 6s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
-                </svg>
-                <span>Udaljenost: <span className="spec-label">{distanceToBeach}m od plaže</span></span>
+                <span className="spec-icon" style={{ fontSize: '1.2rem', marginRight: '0.4rem' }}>🏖️</span>
+                <span>Plaža: <span className="spec-label">{distanceToBeach}m ({walkingTimeMin} min hoda)</span></span>
               </div>
               <div className="spec-item">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                </svg>
-                <span>Kapacitet: <span className="spec-label">Maks. {maxGuests} osobe</span></span>
+                <span className="spec-icon" style={{ fontSize: '1.2rem', marginRight: '0.4rem' }}>👥</span>
+                <span>Kapacitet: <span className="spec-label">Maks. {activeMaxGuests} {activeMaxGuests === 1 ? 'osoba' : activeMaxGuests < 5 ? 'osobe' : 'osoba'}</span></span>
               </div>
               <div className="spec-item">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M2 4v16M2 8h20M2 12h20M22 4v16" />
-                </svg>
-                <span>Soba: <span className="spec-label">{bedrooms} spavaće sobe</span></span>
+                <span className="spec-icon" style={{ fontSize: '1.2rem', marginRight: '0.4rem' }}>🚪</span>
+                <span>Soba: <span className="spec-label">{activeBedrooms} {activeBedrooms === 1 ? 'spavaća soba' : activeBedrooms < 5 ? 'spavaće sobe' : 'spavaćih soba'}</span></span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-icon" style={{ fontSize: '1.2rem', marginRight: '0.4rem' }}>💰</span>
+                <span>Cena: <span className="spec-label">od {price}€ / noć</span></span>
               </div>
             </div>
 
@@ -428,27 +511,111 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
 
             <div>
               <h3 className="modal-section-title">Sadržaj i pogodnosti</h3>
-              <div className="amenities-grid">
-                <div className={`amenity-item ${amenities.wifi ? 'active' : ''}`}>
-                  <span>Besplatan Wi-Fi</span>
+              <div className="rich-amenities-grid">
+                {richAmenities.map((amenity) => (
+                  <div 
+                    key={amenity.id} 
+                    className={`rich-amenity-card ${amenity.active ? 'active' : 'inactive'}`}
+                  >
+                    <span className="rich-amenity-icon">{amenity.icon}</span>
+                    <span>{amenity.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Pravila smeštaja & Važne informacije */}
+            <div>
+              <h3 className="modal-section-title">🕒 Pravila smeštaja & Kućni red</h3>
+              <div className="property-rules-card" style={{
+                backgroundColor: 'var(--bg-main)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '1.2rem',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1rem',
+                marginTop: '0.8rem',
+                fontSize: '0.88rem'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>🕒 Prijavljivanje (Check-in):</span>
+                  <strong style={{ color: 'var(--text-main)' }}>od 14:00 do 22:00h</strong>
                 </div>
-                <div className={`amenity-item ${amenities.pool ? 'active' : ''}`}>
-                  <span>Bazen</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>🕒 Odjavljivanje (Check-out):</span>
+                  <strong style={{ color: 'var(--text-main)' }}>od 07:00 do 11:00h</strong>
                 </div>
-                <div className={`amenity-item ${amenities.beachfront ? 'active' : ''}`}>
-                  <span>Na plaži</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>🐾 Kućni ljubimci:</span>
+                  <strong style={{ color: 'var(--text-main)' }}>{amenities.pets ? "Dozvoljeni (na upit)" : "Nisu dozvoljeni"}</strong>
                 </div>
-                <div className={`amenity-item ${amenities.parking ? 'active' : ''}`}>
-                  <span>Besplatan parking</span>
-                </div>
-                <div className={`amenity-item ${amenities.airConditioning ? 'active' : ''}`}>
-                  <span>Klima uređaj</span>
-                </div>
-                <div className={`amenity-item ${amenities.pets ? 'active' : ''}`}>
-                  <span>Ljubimci</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>🧹 Čišćenje i higijena:</span>
+                  <strong style={{ color: 'var(--text-main)' }}>Svakodnevno čišćenje</strong>
                 </div>
               </div>
             </div>
+
+            {roomsList && roomsList.length > 0 && (
+              <div>
+                <h3 className="modal-section-title">Izaberite smeštajnu jedinicu</h3>
+                <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', marginTop: '1rem' }}>
+                  {roomsList.map(room => {
+                    const isSelected = selectedRoom && selectedRoom.id === room.id;
+                    return (
+                      <div 
+                        key={room.id}
+                        onClick={() => setSelectedRoom(room)}
+                        style={{
+                          border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                          borderRadius: 'var(--radius-sm)',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          backgroundColor: isSelected ? 'rgba(var(--primary-rgb), 0.05)' : 'var(--card-bg)',
+                          boxShadow: isSelected ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+                          transition: 'all 0.2s ease-in-out',
+                          position: 'relative'
+                        }}
+                        className="room-card animate-scale"
+                      >
+                        {room.image && (
+                          <img 
+                            src={room.image} 
+                            alt={room.title}
+                            style={{ width: '100%', height: '140px', objectFit: 'cover', cursor: 'pointer' }}
+                            onClick={(e) => { e.stopPropagation(); setLightboxIndex(room.image); }}
+                          />
+                        )}
+                        <div style={{ padding: '0.8rem' }}>
+                          <h4 style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '0.4rem', color: 'var(--text-main)' }}>{room.title}</h4>
+                          {room.description && <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.5rem', lineHeight: '1.4' }}>{room.description}</p>}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
+                            <span>👥 Kapacitet: {room.guests} osobe</span>
+                            <span>🛏️ Soba: {room.bedrooms}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                            <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1rem' }}>{room.price}€ <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)' }}>/ noć</span></span>
+                            {isSelected && (
+                              <span style={{
+                                backgroundColor: 'var(--primary)',
+                                color: 'white',
+                                fontSize: '0.7rem',
+                                padding: '0.2rem 0.5rem',
+                                borderRadius: '12px',
+                                fontWeight: 'bold'
+                              }}>
+                                Izabrano
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Real Geografska Mapa (Leaflet) */}
             <div>
@@ -649,14 +816,11 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
                   <div className="calendar-container">
                     <div className="calendar-nav-header">
                       <button type="button" className="btn-calendar-nav" onClick={handlePrevMonth} title="Prethodni mesec">&larr;</button>
-                      <span className="calendar-nav-label">Kalendar slobodnih dana</span>
+                      <span className="calendar-nav-label">Izaberite datume boravka</span>
                       <button type="button" className="btn-calendar-nav" onClick={handleNextMonth} title="Sledeći mesec">&rarr;</button>
                     </div>
                     <div className="calendar-months-wrapper">
                       {(() => {
-                        const leftMonth = calendarMonth;
-                        const rightMonth = new Date(leftMonth.getFullYear(), leftMonth.getMonth() + 1, 1);
-                        
                         const renderCalendarMonth = (dateObj) => {
                           const year = dateObj.getFullYear();
                           const month = dateObj.getMonth();
@@ -736,12 +900,7 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
                           );
                         };
 
-                        return (
-                          <>
-                            {renderCalendarMonth(leftMonth)}
-                            {renderCalendarMonth(rightMonth)}
-                          </>
-                        );
+                        return renderCalendarMonth(calendarMonth);
                       })()}
                     </div>
                     {(checkIn || checkOut) && (
@@ -759,10 +918,10 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
                     <label htmlFor="booking-guests">Broj gostiju</label>
                     <select 
                       id="booking-guests" 
-                      value={bookingGuests} 
+                      value={Math.min(parseInt(bookingGuests, 10) || 2, activeMaxGuests)} 
                       onChange={(e) => setBookingGuests(e.target.value)}
                     >
-                      {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                      {Array.from({ length: activeMaxGuests }, (_, i) => i + 1).map(n => (
                         <option key={n} value={n}>{n} {n === 1 ? 'gost' : n < 5 ? 'gosta' : 'gostiju'}</option>
                       ))}
                     </select>
@@ -820,12 +979,12 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
                       id="inq-msg" 
                       value={inquiryMessage} 
                       onChange={(e) => setInquiryMessage(e.target.value)} 
-                      rows="2" 
+                      rows="1" 
                     />
                   </div>
                   
                   <button type="submit" className="btn-submit-inquiry" disabled={guestCountExceeded || nights <= 0}>
-                    Pošalji Upit Vlasniku
+                    Pošalji Upit
                   </button>
                 </form>
               )}
@@ -833,6 +992,69 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
           </div>
         </div>
       </div>
+      
+      {/* Mobile Floating Bar */}
+      <div className="mobile-floating-booking-bar">
+        <div className="price-info">
+          <span className="price">{price}€</span>
+          <span className="night">/ noć</span>
+        </div>
+        <button 
+          className="btn-check-availability"
+          onClick={() => {
+            const formElement = document.querySelector('.sticky-form-wrapper');
+            if (formElement) {
+              formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }}
+        >
+          Proveri dostupnost
+        </button>
+      </div>
+
+      {/* Lightbox for Full Image View */}
+      {lightboxIndex !== null && createPortal(
+        <div 
+          className="lightbox-overlay"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <div className="lightbox-container" onClick={(e) => e.stopPropagation()}>
+            <button className="lightbox-close" onClick={() => setLightboxIndex(null)} aria-label="Zatvori">
+              &times;
+            </button>
+            
+            {typeof lightboxIndex === 'number' && (
+              <button 
+                className="btn-lightbox-nav prev" 
+                onClick={() => setLightboxIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length)}
+                aria-label="Prethodna slika"
+              >
+                &#10094;
+              </button>
+            )}
+
+            <div className="lightbox-img-wrapper" onClick={() => setLightboxIndex(null)}>
+              <img 
+                src={typeof lightboxIndex === 'number' ? carouselImages[lightboxIndex] : lightboxIndex} 
+                alt="Smeštaj Uvećano" 
+                className="lightbox-img" 
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            {typeof lightboxIndex === 'number' && (
+              <button 
+                className="btn-lightbox-nav next" 
+                onClick={() => setLightboxIndex((prev) => (prev + 1) % carouselImages.length)}
+                aria-label="Sledeća slika"
+              >
+                &#10095;
+              </button>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
