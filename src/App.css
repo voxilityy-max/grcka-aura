@@ -361,6 +361,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-light);
+  margin-left: 1.5rem;
 }
 
 .nav-user-profile:hover {
@@ -396,10 +397,11 @@
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(var(--accent-rgb), 0.3);
+  margin-left: 1.5rem;
 }
 
 .btn-nav-login:hover {
-  background: #02c0ad;
+  background: rgba(var(--accent-rgb), 0.85);
   transform: translateY(-1px);
   box-shadow: 0 6px 15px rgba(var(--accent-rgb), 0.5);
 }
@@ -2774,7 +2776,11 @@
   .nav-user-profile {
     padding: 0.4rem 0.7rem;
     gap: 0.3rem;
-}
+    margin-left: 0.8rem;
+  }
+  .btn-nav-login {
+    margin-left: 0.8rem;
+  }
 
   .nav-username {
     font-size: 0.8rem;
@@ -8377,7 +8383,7 @@ g:hover > .pin-hover-label {
 }
 
 .landing-page-wrapper .btn-search-icon-nikana:hover {
-  background: #02c0ad !important;
+  background: rgba(var(--accent-rgb), 0.85) !important;
   transform: scale(1.05);
   box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.6);
 }
