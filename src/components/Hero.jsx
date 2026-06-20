@@ -46,6 +46,7 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
                 name="checkIn" 
                 value={searchFilters.checkIn || ''}
                 onChange={handleSelectChange}
+                onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                 min={new Date().toISOString().split('T')[0]}
                 className="date-input-nikana"
               />
@@ -56,6 +57,7 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
                 name="checkOut" 
                 value={searchFilters.checkOut || ''}
                 onChange={handleSelectChange}
+                onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                 min={searchFilters.checkIn || new Date().toISOString().split('T')[0]}
                 className="date-input-nikana"
               />
