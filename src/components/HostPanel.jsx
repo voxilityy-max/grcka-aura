@@ -1652,37 +1652,83 @@ export default function HostPanel({
                     <span /> Prikaz uživo (Live Preview)
                   </div>
                   
-                  {/* Property Card Mock */}
-                  <div className="property-card" style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.1)', cursor: 'default' }}>
-                    <div className="property-image-wrapper">
-                      <img src={formData.image} alt="Live preview card" />
-                      <span className="property-type-tag">{formData.type}</span>
+                  {/* Browser Mockup Wrapper */}
+                  <div className="preview-browser-mockup">
+                    <div className="browser-header">
+                      <div className="browser-dots">
+                        <div className="browser-dot red" />
+                        <div className="browser-dot yellow" />
+                        <div className="browser-dot green" />
+                      </div>
+                      <div className="browser-address-bar">
+                        grcka-aura.com/smestaj/vila-preview
+                      </div>
                     </div>
-                    <div className="property-content">
-                      <div className="property-meta-row">
-                        <span className="property-location-tag">📍 {formData.location}</span>
-                        <span className="property-rating">★ 5.0 (Novo)</span>
-                      </div>
-                      <h3 className="property-title" style={{ fontSize: '1rem', margin: '0.5rem 0' }}>
-                        {formData.title || 'Naziv Vašeg Smeštaja'}
-                      </h3>
-                      <p className="property-distance" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                        🌊 {formData.distanceToBeach}m od plaže
-                      </p>
-                      <div className="property-capacity" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.8rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
-                        👥 Do {formData.guests} osoba • 🛏️ {formData.bedrooms} sobe
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
-                        {formData.amenities.wifi && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>⚡ WiFi</span>}
-                        {formData.amenities.pool && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🏊 Bazen</span>}
-                        {formData.amenities.beachfront && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🏖️ Plaža</span>}
-                      </div>
-                      <div className="property-footer" style={{ border: 'none', paddingTop: 0 }}>
-                        <div className="property-price">
-                          <span className="price-amount">{formData.price}€</span>
-                          <span className="price-unit"> / noć</span>
+                    
+                    <div className="browser-body">
+                      {/* Property Card Mockup (reusing homepage styles) */}
+                      <article className="property-card" style={{ cursor: 'default', margin: 0, width: '100%', maxWidth: '330px', boxShadow: 'none' }}>
+                        <div className="card-image-container">
+                          <img 
+                            src={formData.image || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80'} 
+                            alt="Live preview card" 
+                            className="card-image"
+                          />
+                          <span className="card-tag">{formData.type}</span>
                         </div>
-                      </div>
+                        
+                        <div className="card-content">
+                          <div className="card-header-info">
+                            <span className="card-location">📍 {formData.location || 'Lokacija'}</span>
+                            <div className="card-rating">
+                              <svg viewBox="0 0 24 24" style={{ width: '12px', height: '12px', fill: 'var(--secondary)' }}>
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                              </svg>
+                              <span>5.0 (Novo)</span>
+                            </div>
+                          </div>
+                          
+                          <h3 className="card-title" style={{ fontSize: '1rem', margin: '0.5rem 0' }}>
+                            {formData.title || 'Naziv Vašeg Smeštaja'}
+                          </h3>
+                          
+                          <div className="card-details" style={{ marginBottom: '0.8rem' }}>
+                            <div className="card-detail-item">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M2 6c.6.5 1.2 1 2.5 1C5.8 7 7 6 7 6s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
+                                <path d="M2 12c.6.5 1.2 1 2.5 1 1.3 0 2.5-1 2.5-1s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
+                                <path d="M2 18c.6.5 1.2 1 2.5 1 1.3 0 2.5-1 2.5-1s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
+                              </svg>
+                              <span>{formData.distanceToBeach}m od plaže</span>
+                            </div>
+                            <div className="card-detail-item">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                              </svg>
+                              <span>Do {formData.guests} osoba</span>
+                            </div>
+                            <div className="card-detail-item">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M2 4v16M2 8h20M2 12h20M22 4v16M18 12v4M4 12v4" />
+                              </svg>
+                              <span>{formData.bedrooms} {formData.bedrooms === 1 ? 'soba' : formData.bedrooms < 5 ? 'sobe' : 'soba'}</span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
+                            {formData.amenities.wifi && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>⚡ WiFi</span>}
+                            {formData.amenities.pool && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🏊 Bazen</span>}
+                            {formData.amenities.beachfront && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🏖️ Plaža</span>}
+                          </div>
+                          
+                          <div className="card-footer" style={{ border: 'none', paddingTop: 0 }}>
+                            <div className="card-price">
+                              od <span className="card-price-value">{formData.price}€</span> / noć
+                            </div>
+                          </div>
+                        </div>
+                      </article>
                     </div>
                   </div>
                 </div>

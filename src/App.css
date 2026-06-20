@@ -5724,4 +5724,58 @@ g:hover > .pin-hover-label {
   font-size: 1.1rem;
 }
 
+/* Browser Mockup styling for Live Preview */
+.preview-browser-mockup {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  width: 100%;
+}
+
+.browser-header {
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.browser-dots {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.browser-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.browser-dot.red { background-color: #ff5f56; }
+.browser-dot.yellow { background-color: #ffbd2e; }
+.browser-dot.green { background-color: #27c93f; }
+
+.browser-address-bar {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 1rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-grow: 1;
+  text-align: center;
+  font-family: monospace;
+}
+
+.browser-body {
+  padding: 1.5rem;
+  background-color: var(--bg-main);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 
