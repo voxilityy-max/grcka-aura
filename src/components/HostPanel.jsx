@@ -2500,7 +2500,7 @@ export default function HostPanel({
                         return;
                       }
                       try {
-                        const response = await fetch(`${API_URL}/api/properties/${editingProperty.id}/sync-ical`, {
+                        const response = await fetch(`${API_URL}/api/properties/${editingProperty.id}/sync-ical?force=true`, {
                           method: 'POST'
                         });
                         const data = await response.json();

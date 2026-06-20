@@ -300,6 +300,18 @@ async function initializeSchema() {
     console.warn("Nije uspelo automatsko dodavanje kolone icalUrl u rooms:", err.message);
   }
 
+  // Add lastSynced column to properties table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(properties)");
+    const hasLastSynced = columns.some(c => c.name === 'lastSynced');
+    if (!hasLastSynced) {
+      await dbHelper.run("ALTER TABLE properties ADD COLUMN lastSynced INTEGER DEFAULT 0");
+      console.log("Dodata kolona 'lastSynced' u tabelu properties.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone lastSynced u properties:", err.message);
+  }
+
   // Create calendar_blocks table
   await dbHelper.run(`CREATE TABLE IF NOT EXISTS calendar_blocks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -985,6 +997,17 @@ app.post('/api/properties/:id/sync-ical', async (req, res) => {
       return res.status(404).json({ error: 'Property not found.' });
     }
 
+    // 15-minute sync throttle (ignore if force=true is passed)
+    const force = req.query.force === 'true';
+    const fifteenMinutes = 15 * 60 * 1000;
+    if (!force && property.lastSynced && (Date.now() - property.lastSynced < fifteenMinutes)) {
+      return res.json({ 
+        success: true, 
+        message: 'Kalendar je nedavno sinhronizovan (pre manje od 15 minuta). Sinhronizacija preskočena radi optimalnog rada.', 
+        skipped: true 
+      });
+    }
+
     const rooms = await dbHelper.all('SELECT * FROM rooms WHERE propertyId = ?', [id]);
 
     // Clear old imported blocks for this property
@@ -1033,6 +1056,9 @@ app.post('/api/properties/:id/sync-ical', async (req, res) => {
         }
       }
     }
+
+    // Update lastSynced timestamp
+    await dbHelper.run('UPDATE properties SET lastSynced = ? WHERE id = ?', [Date.now(), id]);
 
     res.json({ success: true, message: `Sinhronizacija završena! Uvezeno ${syncedCount} perioda sa Booking.com.` });
   } catch (err) {
