@@ -276,6 +276,41 @@ async function initializeSchema() {
     console.warn("Nije uspelo automatsko dodavanje kolone roomTitle:", err.message);
   }
 
+  // Add icalUrl column to properties table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(properties)");
+    const hasIcalUrl = columns.some(c => c.name === 'icalUrl');
+    if (!hasIcalUrl) {
+      await dbHelper.run("ALTER TABLE properties ADD COLUMN icalUrl TEXT");
+      console.log("Dodata kolona 'icalUrl' u tabelu properties.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone icalUrl u properties:", err.message);
+  }
+
+  // Add icalUrl column to rooms table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(rooms)");
+    const hasIcalUrl = columns.some(c => c.name === 'icalUrl');
+    if (!hasIcalUrl) {
+      await dbHelper.run("ALTER TABLE rooms ADD COLUMN icalUrl TEXT");
+      console.log("Dodata kolona 'icalUrl' u tabelu rooms.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone icalUrl u rooms:", err.message);
+  }
+
+  // Create calendar_blocks table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS calendar_blocks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    propertyId INTEGER NOT NULL,
+    roomTitle TEXT,
+    startDate TEXT NOT NULL,
+    endDate TEXT NOT NULL,
+    source TEXT NOT NULL,
+    FOREIGN KEY (propertyId) REFERENCES properties(id) ON DELETE CASCADE
+  )`);
+
   // Seed database if empty
   await seedDatabase();
 }
@@ -503,17 +538,17 @@ app.get('/api/properties', async (req, res) => {
   }
 });
 
-// 4. Create Property
 app.post('/api/properties', requireAdmin, async (req, res) => {
-  const { title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, amenities } = req.body;
+  const { title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, icalUrl, amenities } = req.body;
   
   try {
     const result = await dbHelper.run(
-      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets, icalUrl)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title, type, location, price, rating || 5.0, distanceToBeach, image, guests, bedrooms, description,
-        amenities.wifi ? 1 : 0, amenities.pool ? 1 : 0, amenities.beachfront ? 1 : 0, amenities.parking ? 1 : 0, amenities.airConditioning ? 1 : 0, amenities.pets ? 1 : 0
+        amenities.wifi ? 1 : 0, amenities.pool ? 1 : 0, amenities.beachfront ? 1 : 0, amenities.parking ? 1 : 0, amenities.airConditioning ? 1 : 0, amenities.pets ? 1 : 0,
+        icalUrl || null
       ]
     );
     
@@ -880,6 +915,212 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   } else {
     const fileUrl = `http://localhost:${PORT}/uploads/${req.file.filename}`;
     res.json({ url: fileUrl });
+  }
+});
+
+// 24. Get Synced Calendar Blocks
+app.get('/api/properties/:id/calendar-blocks', async (req, res) => {
+  const { id } = req.params;
+  const { roomTitle } = req.query;
+  try {
+    let query = 'SELECT * FROM calendar_blocks WHERE propertyId = ?';
+    const params = [id];
+    if (roomTitle) {
+      query += ' AND (roomTitle = ? OR roomTitle IS NULL OR roomTitle = "")';
+      params.push(roomTitle);
+    }
+    const blocks = await dbHelper.all(query, params);
+    res.json(blocks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 25. Synchronize Property and Rooms from External Booking.com iCal Feeds
+app.post('/api/properties/:id/sync-ical', async (req, res) => {
+  const { id } = req.params;
+  
+  // Lightweight ICS Parser
+  function parseICS(icsText) {
+    const events = [];
+    const lines = icsText.split(/\r?\n/);
+    let currentEvent = null;
+    
+    for (const line of lines) {
+      const cleanLine = line.trim();
+      if (cleanLine.startsWith('BEGIN:VEVENT')) {
+        currentEvent = {};
+      } else if (cleanLine.startsWith('END:VEVENT')) {
+        if (currentEvent && currentEvent.start && currentEvent.end) {
+          events.push(currentEvent);
+        }
+        currentEvent = null;
+      } else if (currentEvent) {
+        if (cleanLine.startsWith('DTSTART')) {
+          const parts = cleanLine.split(':');
+          const val = parts[parts.length - 1].trim();
+          currentEvent.start = val.substring(0, 8); // 'YYYYMMDD'
+        } else if (cleanLine.startsWith('DTEND')) {
+          const parts = cleanLine.split(':');
+          const val = parts[parts.length - 1].trim();
+          currentEvent.end = val.substring(0, 8); // 'YYYYMMDD'
+        }
+      }
+    }
+    
+    const formatted = [];
+    for (const ev of events) {
+      if (ev.start && ev.end && ev.start.length === 8 && ev.end.length === 8) {
+        const startStr = `${ev.start.substring(0, 4)}-${ev.start.substring(4, 6)}-${ev.start.substring(6, 8)}`;
+        const endStr = `${ev.end.substring(0, 4)}-${ev.end.substring(4, 6)}-${ev.end.substring(6, 8)}`;
+        formatted.push({ start: startStr, end: endStr });
+      }
+    }
+    return formatted;
+  }
+
+  try {
+    const property = await dbHelper.get('SELECT * FROM properties WHERE id = ?', [id]);
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found.' });
+    }
+
+    const rooms = await dbHelper.all('SELECT * FROM rooms WHERE propertyId = ?', [id]);
+
+    // Clear old imported blocks for this property
+    await dbHelper.run('DELETE FROM calendar_blocks WHERE propertyId = ? AND source = "booking.com"', [id]);
+
+    let syncedCount = 0;
+
+    // 1. Sync whole property calendar if icalUrl exists
+    if (property.icalUrl && property.icalUrl.trim()) {
+      try {
+        const resIcal = await fetch(property.icalUrl.trim(), { headers: { 'User-Agent': 'GrckaAura/1.0' } });
+        if (resIcal.ok) {
+          const text = await resIcal.text();
+          const blocks = parseICS(text);
+          for (const block of blocks) {
+            await dbHelper.run(
+              'INSERT INTO calendar_blocks (propertyId, roomTitle, startDate, endDate, source) VALUES (?, ?, ?, ?, ?)',
+              [id, null, block.start, block.end, 'booking.com']
+            );
+            syncedCount++;
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to sync property-level ical for ID ${id}:`, err.message);
+      }
+    }
+
+    // 2. Sync individual rooms calendars if room.icalUrl exists
+    for (const room of rooms) {
+      if (room.icalUrl && room.icalUrl.trim()) {
+        try {
+          const resIcal = await fetch(room.icalUrl.trim(), { headers: { 'User-Agent': 'GrckaAura/1.0' } });
+          if (resIcal.ok) {
+            const text = await resIcal.text();
+            const blocks = parseICS(text);
+            for (const block of blocks) {
+              await dbHelper.run(
+                'INSERT INTO calendar_blocks (propertyId, roomTitle, startDate, endDate, source) VALUES (?, ?, ?, ?, ?)',
+                [id, room.title, block.start, block.end, 'booking.com']
+              );
+              syncedCount++;
+            }
+          }
+        } catch (err) {
+          console.error(`Failed to sync room-level ical for room ${room.id}:`, err.message);
+        }
+      }
+    }
+
+    res.json({ success: true, message: `Sinhronizacija završena! Uvezeno ${syncedCount} perioda sa Booking.com.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 26. Export Property approved bookings as iCal Feed
+app.get('/api/properties/:id/export-ical', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const property = await dbHelper.get('SELECT * FROM properties WHERE id = ?', [id]);
+    if (!property) return res.status(404).send('Property not found');
+    
+    const inquiries = await dbHelper.all(
+      'SELECT * FROM inquiries WHERE propertyId = ? AND status = "Odobreno" AND (roomTitle IS NULL OR roomTitle = "")',
+      [id]
+    );
+    
+    let ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//GrckaAura//Calendar Export 1.0//SR',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH'
+    ];
+    
+    for (const inq of inquiries) {
+      const startClean = inq.checkIn.replace(/-/g, '');
+      const endClean = inq.checkOut.replace(/-/g, '');
+      ics.push('BEGIN:VEVENT');
+      ics.push(`UID:inquiry-${inq.id}@grcka-aura.com`);
+      ics.push(`DTSTAMP:${new Date().toISOString().substring(0, 19).replace(/[-:]/g, '')}Z`);
+      ics.push(`DTSTART;VALUE=DATE:${startClean}`);
+      ics.push(`DTEND;VALUE=DATE:${endClean}`);
+      ics.push('SUMMARY:Rezervisano GrckaAura');
+      ics.push('END:VEVENT');
+    }
+    
+    ics.push('END:VCALENDAR');
+    
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="property-${id}-calendar.ics"`);
+    res.send(ics.join('\r\n'));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// 27. Export Room approved bookings as iCal Feed
+app.get('/api/rooms/:roomId/export-ical', async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    const room = await dbHelper.get('SELECT * FROM rooms WHERE id = ?', [roomId]);
+    if (!room) return res.status(404).send('Room not found');
+    
+    const inquiries = await dbHelper.all(
+      'SELECT * FROM inquiries WHERE propertyId = ? AND status = "Odobreno" AND roomTitle = ?',
+      [room.propertyId, room.title]
+    );
+    
+    let ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//GrckaAura//Calendar Export 1.0//SR',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH'
+    ];
+    
+    for (const inq of inquiries) {
+      const startClean = inq.checkIn.replace(/-/g, '');
+      const endClean = inq.checkOut.replace(/-/g, '');
+      ics.push('BEGIN:VEVENT');
+      ics.push(`UID:room-inquiry-${inq.id}@grcka-aura.com`);
+      ics.push(`DTSTAMP:${new Date().toISOString().substring(0, 19).replace(/[-:]/g, '')}Z`);
+      ics.push(`DTSTART;VALUE=DATE:${startClean}`);
+      ics.push(`DTEND;VALUE=DATE:${endClean}`);
+      ics.push('SUMMARY:Rezervisano GrckaAura');
+      ics.push('END:VEVENT');
+    }
+    
+    ics.push('END:VCALENDAR');
+    
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="room-${roomId}-calendar.ics"`);
+    res.send(ics.join('\r\n'));
+  } catch (err) {
+    res.status(500).send(err.message);
   }
 });
 

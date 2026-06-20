@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
 // Pre-defined additional images to create rich carousels dynamically if properties don't have them
 const EXTRA_CAROUSEL_IMAGES = [
   'https://images.unsplash.com/photo-1515263487990-61b07816b324?auto=format&fit=crop&w=800&q=80', // Beach view
@@ -195,6 +197,38 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
   const [bookingGuests, setBookingGuests] = useState('2');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
+  const [calendarBlocks, setCalendarBlocks] = useState([]);
+
+  useEffect(() => {
+    const fetchBlocks = async () => {
+      try {
+        let url = `${API_URL}/api/properties/${id}/calendar-blocks`;
+        if (selectedRoom) {
+          url += `?roomTitle=${encodeURIComponent(selectedRoom.title)}`;
+        }
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setCalendarBlocks(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch calendar blocks:', err);
+      }
+    };
+    
+    fetchBlocks();
+    
+    // Silent background sync
+    const triggerBackgroundSync = async () => {
+      try {
+        await fetch(`${API_URL}/api/properties/${id}/sync-ical`, { method: 'POST' });
+        fetchBlocks(); // Refetch to show newly synced blocks
+      } catch (e) {
+        // fail silently
+      }
+    };
+    triggerBackgroundSync();
+  }, [id, selectedRoom]);
 
   // Derived Rooms List (Virtual room fallback if property.rooms is empty)
   const roomsList = useMemo(() => {
@@ -258,8 +292,29 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
   };
 
   const isDateBooked = (dateStr) => {
-    // Guests cannot see booked dates; they can select any dates and send an inquiry.
-    return false;
+    // 1. Check local approved inquiries
+    const matchesLocal = inquiries.some(inq => {
+      if (inq.propertyId !== id) return false;
+      if (inq.status !== 'Odobreno') return false;
+      
+      // If a specific room is selected, check if this reservation is for this room
+      if (selectedRoom && inq.roomTitle && inq.roomTitle !== selectedRoom.title) {
+        return false;
+      }
+      
+      const checkInDate = inq.checkIn;
+      const checkOutDate = inq.checkOut;
+      return dateStr >= checkInDate && dateStr < checkOutDate;
+    });
+    
+    if (matchesLocal) return true;
+
+    // 2. Check synced calendar blocks from Booking.com
+    const matchesSync = calendarBlocks.some(block => {
+      return dateStr >= block.startDate && dateStr < block.endDate;
+    });
+
+    return matchesSync;
   };
 
   const isRangeBooked = (startStr, endStr) => {

@@ -110,6 +110,7 @@ export default function HostPanel({
     bedrooms: 2,
     description: '',
     image: PRESET_IMAGES[0].url,
+    icalUrl: '',
     amenities: {
       wifi: true,
       pool: false,
@@ -455,6 +456,7 @@ export default function HostPanel({
     const titleEsc = editingProperty.title.replace(/'/g, "''");
     const descEsc = editingProperty.description.replace(/'/g, "''");
     const amenitiesStr = JSON.stringify(editingProperty.amenities).replace(/'/g, "''");
+    const icalUrlEsc = (editingProperty.icalUrl || '').replace(/'/g, "''");
     
     const query = `UPDATE properties SET 
       title = '${titleEsc}', 
@@ -466,7 +468,8 @@ export default function HostPanel({
       bedrooms = ${parseInt(editingProperty.bedrooms, 10) || 0}, 
       description = '${descEsc}', 
       image = '${editingProperty.image}', 
-      amenities = '${amenitiesStr}'
+      amenities = '${amenitiesStr}',
+      icalUrl = '${icalUrlEsc}'
       WHERE id = ${editingProperty.id};`;
 
     try {
@@ -497,7 +500,8 @@ export default function HostPanel({
     guests: 2,
     bedrooms: 1,
     image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80',
-    description: ''
+    description: '',
+    icalUrl: ''
   });
 
   const handleAddRoom = async () => {
@@ -507,8 +511,9 @@ export default function HostPanel({
     }
     const titleEsc = newRoomData.title.replace(/'/g, "''");
     const descEsc = newRoomData.description.replace(/'/g, "''");
-    const query = `INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description)
-      VALUES (${editingProperty.id}, '${titleEsc}', ${parseFloat(newRoomData.price) || 0}, ${parseInt(newRoomData.guests, 10) || 1}, ${parseInt(newRoomData.bedrooms, 10) || 1}, '${newRoomData.image}', '${descEsc}');`;
+    const icalUrlEsc = (newRoomData.icalUrl || '').replace(/'/g, "''");
+    const query = `INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description, icalUrl)
+      VALUES (${editingProperty.id}, '${titleEsc}', ${parseFloat(newRoomData.price) || 0}, ${parseInt(newRoomData.guests, 10) || 1}, ${parseInt(newRoomData.bedrooms, 10) || 1}, '${newRoomData.image}', '${descEsc}', '${icalUrlEsc}');`;
       
     try {
       const response = await fetch(`${API_URL}/api/admin/query`, {
@@ -536,7 +541,8 @@ export default function HostPanel({
               guests: parseInt(newRoomData.guests, 10) || 1,
               bedrooms: parseInt(newRoomData.bedrooms, 10) || 1,
               image: newRoomData.image,
-              description: newRoomData.description
+              description: newRoomData.description,
+              icalUrl: newRoomData.icalUrl
             }
           ]
         }));
@@ -548,7 +554,8 @@ export default function HostPanel({
           guests: 2,
           bedrooms: 1,
           image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80',
-          description: ''
+          description: '',
+          icalUrl: ''
         });
       } else {
         alert('Greška pri dodavanju sobe.');
@@ -698,6 +705,7 @@ export default function HostPanel({
         bedrooms: 2,
         description: '',
         image: PRESET_IMAGES[0].url,
+        icalUrl: '',
         amenities: {
           wifi: true,
           pool: false,
@@ -1603,6 +1611,25 @@ export default function HostPanel({
                             </div>
                           </div>
                         </div>
+
+                        {/* Booking.com iCal Link */}
+                        <div className="form-field" style={{ marginTop: '1.2rem' }}>
+                          <label htmlFor="icalUrl">Booking.com iCal Link za sinhronizaciju (Opciono)</label>
+                          <div className="input-with-icon-wrapper">
+                            <span className="input-icon">🔄</span>
+                            <input 
+                              type="url" 
+                              id="icalUrl" 
+                              name="icalUrl" 
+                              value={formData.icalUrl} 
+                              onChange={handleChange}
+                              placeholder="npr. https://ical.booking.com/v1/export?..." 
+                            />
+                          </div>
+                          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                            💡 Ako popunite, kalendar će se automatski zaključavati na osnovu Vaših Booking.com rezervacija.
+                          </p>
+                        </div>
                       </div>
                     )}
 
@@ -2427,6 +2454,74 @@ export default function HostPanel({
                 </div>
               </div>
 
+              {/* Booking.com iCal Synchronization Panel */}
+              <div style={{ borderTop: '1px solid var(--border)', marginTop: '1.5rem', paddingTop: '1.5rem' }}>
+                <h4 style={{ fontWeight: '700', color: 'var(--primary)', marginBottom: '0.8rem' }}>🔄 Sinhronizacija kalendara (Booking.com / Airbnb)</h4>
+                
+                <div className="form-field">
+                  <label>Booking.com iCal Link za Uvoz (Import)</label>
+                  <input 
+                    type="url" 
+                    placeholder="Nalepite link kalendara sa Booking.com portala (npr. https://ical.booking.com/...)" 
+                    value={editingProperty.icalUrl || ''} 
+                    onChange={e => setEditingProperty(p => ({ ...p, icalUrl: e.target.value }))} 
+                  />
+                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem', lineHeight: '1.3' }}>
+                    💡 Nalazi se na Booking.com Extranetu: Kalendar &rarr; Sinhronizacija kalendara &rarr; Izvezi kalendar (kopirajte taj link ovde).
+                  </p>
+                </div>
+
+                <div style={{ 
+                  backgroundColor: 'rgba(0, 180, 216, 0.05)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: 'var(--radius-sm)', 
+                  padding: '0.8rem', 
+                  marginTop: '0.8rem',
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '0.8rem'
+                }}>
+                  <div style={{ flex: 1, minWidth: '220px' }}>
+                    <strong style={{ fontSize: '0.8rem', color: 'var(--text-main)', display: 'block', marginBottom: '0.15rem' }}>🔗 Eksport kalendara sa ovog sajta</strong>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', wordBreak: 'break-all' }}>
+                      iCal eksport link (kopirajte u Booking.com): <br />
+                      <code style={{ fontSize: '0.7rem', color: 'var(--accent)', background: 'var(--bg-main)', padding: '0.1rem 0.3rem', borderRadius: '3px', border: '1px solid var(--border)', display: 'inline-block', marginTop: '0.2rem' }}>
+                        {`${API_URL}/api/properties/${editingProperty.id}/export-ical`}
+                      </code>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!editingProperty.icalUrl || !editingProperty.icalUrl.trim()) {
+                        alert('Prvo unesite i sačuvajte iCal link za uvoz kako biste mogli pokrenuti sinhronizaciju.');
+                        return;
+                      }
+                      try {
+                        const response = await fetch(`${API_URL}/api/properties/${editingProperty.id}/sync-ical`, {
+                          method: 'POST'
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                          alert(data.message);
+                          if (onRefreshDatabase) await onRefreshDatabase();
+                        } else {
+                          alert('Greška: ' + (data.error || 'Neuspešna sinhronizacija.'));
+                        }
+                      } catch {
+                        alert('Greška u konekciji sa serverom.');
+                      }
+                    }}
+                    className="btn-wizard-next"
+                    style={{ fontSize: '0.75rem', padding: '0.45rem 1rem', whiteSpace: 'nowrap', margin: 0 }}
+                  >
+                    🔄 Sinhronizuj sad
+                  </button>
+                </div>
+              </div>
+
               {/* Upravljanje Smeštajnim Jedinicama (Sobe) */}
               <div style={{ borderTop: '1px solid var(--border)', marginTop: '1.5rem', paddingTop: '1.5rem' }}>
                 <h4 style={{ fontWeight: '700', color: 'var(--primary)', marginBottom: '1rem' }}>🚪 Smeštajne jedinice (Sobe)</h4>
@@ -2451,6 +2546,18 @@ export default function HostPanel({
                           <strong style={{ color: 'var(--text-main)' }}>{room.title}</strong>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
                             💰 Cena: {room.price}€/noć | 👥 Kapacitet: {room.guests} osobe | 🛏️ Spavaće sobe: {room.bedrooms}
+                          </div>
+                          {room.icalUrl ? (
+                            <div style={{ fontSize: '0.72rem', color: 'var(--success)', marginTop: '0.2rem', fontWeight: 'bold' }}>
+                              ✅ Povezano sa Booking.com iCal
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                              ℹ️ Soba se ručno popunjava (Nema iCal uvoza)
+                            </div>
+                          )}
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.2rem', wordBreak: 'break-all' }}>
+                            Eksport link (kopirajte u Booking): <code style={{ fontSize: '0.65rem', color: 'var(--accent)', background: 'var(--bg-main)', padding: '0.05rem 0.2rem', borderRadius: '3px', border: '1px solid var(--border)' }}>{`${API_URL}/api/rooms/${room.id}/export-ical`}</code>
                           </div>
                         </div>
                         <button 
@@ -2553,6 +2660,17 @@ export default function HostPanel({
                       value={newRoomData.description}
                       onChange={e => setNewRoomData(p => ({ ...p, description: e.target.value }))}
                       placeholder="Udoban smeštaj sa bračnim krevetom..."
+                      style={{ padding: '0.4rem' }}
+                    />
+                  </div>
+
+                  <div className="form-field" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '0.78rem' }}>Booking.com iCal Link za Uvoz (Opciono)</label>
+                    <input 
+                      type="url" 
+                      value={newRoomData.icalUrl || ''}
+                      onChange={e => setNewRoomData(p => ({ ...p, icalUrl: e.target.value }))}
+                      placeholder="Nalepite link kalendara sa Booking.com za ovu sobu..."
                       style={{ padding: '0.4rem' }}
                     />
                   </div>
