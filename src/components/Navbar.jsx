@@ -1,21 +1,56 @@
 import React from 'react';
 
-export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkMode, setIsDarkMode, currentUser, onOpenAuth }) {
+export default function Navbar({ 
+  activeTab, 
+  setActiveTab, 
+  wishlistCount, 
+  isDarkMode, 
+  setIsDarkMode, 
+  currentUser, 
+  onOpenAuth,
+  isGridMenuOpen,
+  setIsGridMenuOpen,
+  onSelectDestination,
+  onSelectCategory
+}) {
   return (
     <nav className="navbar glass">
-      <div className="nav-brand" onClick={() => setActiveTab('listings')} style={{ cursor: 'pointer' }}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-        <span>Grčka</span>Aura
+      <div className="nav-brand" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <button 
+          className={`grid-launcher-btn ${isGridMenuOpen ? 'active' : ''}`}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            setIsGridMenuOpen(!isGridMenuOpen); 
+          }}
+          aria-label="Brzi meni regija"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <circle cx="6" cy="6" r="2" />
+            <circle cx="12" cy="6" r="2" />
+            <circle cx="18" cy="6" r="2" />
+            <circle cx="6" cy="12" r="2" />
+            <circle cx="12" cy="12" r="2" />
+            <circle cx="18" cy="12" r="2" />
+            <circle cx="6" cy="18" r="2" />
+            <circle cx="12" cy="18" r="2" />
+            <circle cx="18" cy="18" r="2" />
+          </svg>
+        </button>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => { setActiveTab('listings'); setIsGridMenuOpen(false); }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          <span className="brand-logo-text"><span>Grčka</span>Aura</span>
+        </div>
       </div>
       
       <ul className="nav-menu">
         <li>
           <a 
             className={`nav-link ${activeTab === 'listings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('listings')}
+            onClick={() => { setActiveTab('listings'); setIsGridMenuOpen(false); }}
           >
             Smeštaj
           </a>
@@ -23,7 +58,7 @@ export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkM
         <li>
           <a 
             className={`nav-link ${activeTab === 'guide' ? 'active' : ''}`}
-            onClick={() => setActiveTab('guide')}
+            onClick={() => { setActiveTab('guide'); setIsGridMenuOpen(false); }}
           >
             Putni Vodič
           </a>
@@ -31,7 +66,7 @@ export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkM
         <li>
           <a 
             className={`nav-link ${activeTab === 'blog' ? 'active' : ''}`}
-            onClick={() => setActiveTab('blog')}
+            onClick={() => { setActiveTab('blog'); setIsGridMenuOpen(false); }}
           >
             Vodiči & Saveti
           </a>
@@ -39,7 +74,7 @@ export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkM
         <li>
           <a 
             className={`nav-link ${activeTab === 'forum' ? 'active' : ''}`}
-            onClick={() => setActiveTab('forum')}
+            onClick={() => { setActiveTab('forum'); setIsGridMenuOpen(false); }}
           >
             Iskustva Putnika
           </a>
@@ -47,7 +82,7 @@ export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkM
         <li>
           <a 
             className={`nav-link ${activeTab === 'alerts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('alerts')}
+            onClick={() => { setActiveTab('alerts'); setIsGridMenuOpen(false); }}
           >
             Stanje na Granici
           </a>
@@ -56,7 +91,7 @@ export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkM
           <li>
             <a 
               className={`nav-link ${activeTab === 'host' ? 'active' : ''}`}
-              onClick={() => setActiveTab('host')}
+              onClick={() => { setActiveTab('host'); setIsGridMenuOpen(false); }}
             >
               Admin Panel
             </a>
@@ -66,7 +101,7 @@ export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkM
           <li>
             <a 
               className={`nav-link ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveTab('profile')}
+              onClick={() => { setActiveTab('profile'); setIsGridMenuOpen(false); }}
             >
               Moj Profil
             </a>
@@ -103,7 +138,7 @@ export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkM
         
         <button 
           className="btn-wishlist"
-          onClick={() => setActiveTab('wishlist')}
+          onClick={() => { setActiveTab('wishlist'); setIsGridMenuOpen(false); }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
@@ -111,18 +146,60 @@ export default function Navbar({ activeTab, setActiveTab, wishlistCount, isDarkM
           <span>Sačuvano</span>
           {wishlistCount > 0 && <span className="wishlist-count">{wishlistCount}</span>}
         </button>
-
+ 
         {currentUser ? (
-          <div className="nav-user-profile" onClick={() => setActiveTab('profile')}>
+          <div className="nav-user-profile" onClick={() => { setActiveTab('profile'); setIsGridMenuOpen(false); }}>
             <img src={currentUser.avatar} alt={currentUser.fullName} className="nav-avatar-img" />
             <span className="nav-username">{currentUser.fullName.split(' ')[0]}</span>
           </div>
         ) : (
-          <button className="btn-nav-login" onClick={onOpenAuth}>
+          <button className="btn-nav-login" onClick={() => { onOpenAuth(); setIsGridMenuOpen(false); }}>
             Prijavi se
           </button>
         )}
       </div>
+
+      {isGridMenuOpen && (
+        <div className="navbar-grid-dropdown animate-fade">
+          <div className="dropdown-section">
+            <h4 className="dropdown-title">🗺️ Popularne regije</h4>
+            <div className="dropdown-links-grid">
+              {['Tasos', 'Sitonija', 'Kasandra', 'Lefkada', 'Kefalonija', 'Epir', 'Krf', 'Atos', 'Kavala'].map(dest => (
+                <button 
+                  key={dest} 
+                  className="dropdown-link-btn"
+                  onClick={() => onSelectDestination(dest)}
+                >
+                  {dest}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="dropdown-divider-v"></div>
+          <div className="dropdown-section">
+            <h4 className="dropdown-title">🎛️ Brze kategorije</h4>
+            <div className="dropdown-links-grid">
+              {[
+                { id: 'first_line', label: '🏖️ Na plaži' },
+                { id: 'pool', label: '🏊 Sa bazenom' },
+                { id: 'pets', label: '🐾 Ljubimci' },
+                { id: 'premium', label: '💎 Premium' },
+                { id: 'Apartman', label: '🏢 Apartmani' },
+                { id: 'Hotel', label: '🏨 Hoteli' },
+                { id: 'Hrvatska', label: '🌍 Hrvatska' }
+              ].map(cat => (
+                <button 
+                  key={cat.id} 
+                  className="dropdown-link-btn"
+                  onClick={() => onSelectCategory(cat.id)}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
