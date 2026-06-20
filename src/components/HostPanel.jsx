@@ -821,95 +821,99 @@ export default function HostPanel({
     );
   }
 
+  const isFullscreenWizard = panelTab === 'add';
+
   return (
-    <div className="admin-cms-layout animate-fade">
+    <div className={`admin-cms-layout ${isFullscreenWizard ? 'fullscreen-wizard-active' : ''} animate-fade`}>
       {/* ===================================================================
           1. GLASSMORPHIC SIDEBAR NAVIGATION
           =================================================================== */}
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar-branding">
-          <div className="admin-sidebar-title">
-            🏝️ <span>Grčka</span>Aura
+      {!isFullscreenWizard && (
+        <aside className="admin-sidebar">
+          <div className="admin-sidebar-branding">
+            <div className="admin-sidebar-title">
+              🏝️ <span>Grčka</span>Aura
+            </div>
+            <div className="admin-sidebar-subtitle">Control Center v2.2</div>
           </div>
-          <div className="admin-sidebar-subtitle">Control Center v2.2</div>
-        </div>
 
-        <div className="admin-profile-widget">
-          <div className="admin-avatar-wrapper">
-            <img 
-              src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName || 'Admin')}&background=00b4d8&color=fff`} 
-              alt="Admin avatar" 
-              className="admin-avatar-img" 
-            />
-            <span className="pulse-status" />
+          <div className="admin-profile-widget">
+            <div className="admin-avatar-wrapper">
+              <img 
+                src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName || 'Admin')}&background=00b4d8&color=fff`} 
+                alt="Admin avatar" 
+                className="admin-avatar-img" 
+              />
+              <span className="pulse-status" />
+            </div>
+            <div className="admin-profile-info">
+              <span className="admin-profile-name">{currentUser.fullName}</span>
+              <span className="admin-profile-role">Vlasnik</span>
+            </div>
           </div>
-          <div className="admin-profile-info">
-            <span className="admin-profile-name">{currentUser.fullName}</span>
-            <span className="admin-profile-role">Vlasnik</span>
+
+          <ul className="admin-menu-list">
+            <li>
+              <button 
+                className={`admin-menu-item ${panelTab === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setPanelTab('dashboard')}
+              >
+                <div className="admin-menu-item-left">📈 Dashboard</div>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={`admin-menu-item ${panelTab === 'add' ? 'active' : ''}`}
+                onClick={() => { setPanelTab('add'); setWizardStep(1); }}
+              >
+                <div className="admin-menu-item-left">➕ Dodaj Smeštaj</div>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={`admin-menu-item ${panelTab === 'manage' ? 'active' : ''}`}
+                onClick={() => setPanelTab('manage')}
+              >
+                <div className="admin-menu-item-left">🏡 Objekti</div>
+                <span className="admin-menu-badge">{totalProperties}</span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={`admin-menu-item ${panelTab === 'inquiries' ? 'active' : ''}`}
+                onClick={() => setPanelTab('inquiries')}
+              >
+                <div className="admin-menu-item-left">📩 Rezervacije</div>
+                <span className="admin-menu-badge" style={{ backgroundColor: pendingCount > 0 ? 'var(--accent)' : 'var(--border)' }}>
+                  {inquiries.length}
+                </span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={`admin-menu-item ${panelTab === 'users' ? 'active' : ''}`}
+                onClick={() => setPanelTab('users')}
+              >
+                <div className="admin-menu-item-left">👥 Korisnici</div>
+                <span className="admin-menu-badge">{users.length}</span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={`admin-menu-item ${panelTab === 'logs' ? 'active' : ''}`}
+                onClick={() => setPanelTab('logs')}
+              >
+                <div className="admin-menu-item-left">📋 Aktivnosti</div>
+              </button>
+            </li>
+          </ul>
+
+          <div className="admin-sidebar-status-box">
+            <div className="admin-status-indicator success">Sistem Baze Podataka: Aktivan</div>
+            <div className="admin-status-indicator success">Skladište Slika: Povezano</div>
           </div>
-        </div>
-
-        <ul className="admin-menu-list">
-          <li>
-            <button 
-              className={`admin-menu-item ${panelTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setPanelTab('dashboard')}
-            >
-              <div className="admin-menu-item-left">📈 Dashboard</div>
-            </button>
-          </li>
-          <li>
-            <button 
-              className={`admin-menu-item ${panelTab === 'add' ? 'active' : ''}`}
-              onClick={() => { setPanelTab('add'); setWizardStep(1); }}
-            >
-              <div className="admin-menu-item-left">➕ Dodaj Smeštaj</div>
-            </button>
-          </li>
-          <li>
-            <button 
-              className={`admin-menu-item ${panelTab === 'manage' ? 'active' : ''}`}
-              onClick={() => setPanelTab('manage')}
-            >
-              <div className="admin-menu-item-left">🏡 Objekti</div>
-              <span className="admin-menu-badge">{totalProperties}</span>
-            </button>
-          </li>
-          <li>
-            <button 
-              className={`admin-menu-item ${panelTab === 'inquiries' ? 'active' : ''}`}
-              onClick={() => setPanelTab('inquiries')}
-            >
-              <div className="admin-menu-item-left">📩 Rezervacije</div>
-              <span className="admin-menu-badge" style={{ backgroundColor: pendingCount > 0 ? 'var(--accent)' : 'var(--border)' }}>
-                {inquiries.length}
-              </span>
-            </button>
-          </li>
-          <li>
-            <button 
-              className={`admin-menu-item ${panelTab === 'users' ? 'active' : ''}`}
-              onClick={() => setPanelTab('users')}
-            >
-              <div className="admin-menu-item-left">👥 Korisnici</div>
-              <span className="admin-menu-badge">{users.length}</span>
-            </button>
-          </li>
-          <li>
-            <button 
-              className={`admin-menu-item ${panelTab === 'logs' ? 'active' : ''}`}
-              onClick={() => setPanelTab('logs')}
-            >
-              <div className="admin-menu-item-left">📋 Aktivnosti</div>
-            </button>
-          </li>
-        </ul>
-
-        <div className="admin-sidebar-status-box">
-          <div className="admin-status-indicator success">Sistem Baze Podataka: Aktivan</div>
-          <div className="admin-status-indicator success">Skladište Slika: Povezano</div>
-        </div>
-      </aside>
+        </aside>
+      )}
 
       {/* ===================================================================
           2. MAIN CONTENT AREA
@@ -1226,6 +1230,20 @@ export default function HostPanel({
             ========================================== */}
         {panelTab === 'add' && (
           <div className="wizard-outer-wrapper">
+            {/* Fullscreen Header */}
+            <div className="wizard-fullscreen-header">
+              <button 
+                type="button" 
+                className="btn-wizard-back-to-cms"
+                onClick={() => setPanelTab('dashboard')}
+              >
+                ← Nazad na Kontrolnu Tablu
+              </button>
+              <div className="wizard-fullscreen-title">
+                🏝️ Dodavanje Novog Smeštaja
+              </div>
+            </div>
+
             {/* Steps indicator */}
             <div className="wizard-steps-indicator">
               <div className={`wizard-step-node ${wizardStep === 1 ? 'active' : ''} ${wizardStep > 1 ? 'completed' : ''}`}>
@@ -1237,7 +1255,6 @@ export default function HostPanel({
               <div className={`wizard-step-node ${wizardStep === 3 ? 'active' : ''} ${wizardStep > 3 ? 'completed' : ''}`}>
                 <span className="step-number-circle">3</span> Opis & Slike
               </div>
-              <div className="wizard-line-connector" />
             </div>
 
             {submitted ? (

@@ -5158,6 +5158,58 @@ g:hover > .pin-hover-label {
 }
 
 /* Multi-Step Wizard Styling */
+.admin-cms-layout.fullscreen-wizard-active {
+  grid-template-columns: 1fr !important;
+}
+
+.wizard-fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .wizard-fullscreen-header {
+    flex-direction: column-reverse;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+.wizard-fullscreen-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-wizard-back-to-cms {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 0.65rem 1.3rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-wizard-back-to-cms:hover {
+  background-color: var(--bg-main);
+  border-color: var(--accent);
+  transform: translateX(-4px);
+}
+
 .wizard-container {
   display: grid;
   grid-template-columns: 1fr 370px;
