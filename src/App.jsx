@@ -306,16 +306,23 @@ export default function App() {
     }, 100);
   };
 
-  // Close grid menu on outside click
+  // Close grid menu on outside click or ESC key
   useEffect(() => {
     const handleDocumentClick = (e) => {
       // Proveri da li klik potiče od samog grid launcher dugmeta
       if (e.target.closest('.grid-launcher-btn')) return;
       setIsGridMenuOpen(false);
     };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsGridMenuOpen(false);
+      }
+    };
     document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('click', handleDocumentClick);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -1363,86 +1370,35 @@ export default function App() {
         // Listings / Wishlist tab layouts
         return (
           <div className="listings-tab-wrapper">
-            {/* Visual Destination & Categories section */}
+            {/* Visual Destination Grid */}
             {activeTab === 'listings' && (
-              <div className="home-hero-features-layout animate-fade">
-                {/* Left Column: Destinations Grid */}
-                <div className="destination-grid-section">
-                  <div className="section-header-row">
-                    <h2 className="section-title-nikana">Gde želite da letujete?</h2>
-                    <button 
-                      className="btn-all-listings-nikana"
-                      onClick={() => setSearchFilters(prev => ({ ...prev, destination: 'all' }))}
-                    >
-                      Svi smeštaji
-                    </button>
-                  </div>
-                  <div className="destination-cards-container">
-                    {[
-                      { name: 'Tasos', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80' },
-                      { name: 'Sitonija', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=400&q=80' },
-                      { name: 'Kasandra', img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=400&q=80' },
-                      { name: 'Lefkada', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=400&q=80' },
-                      { name: 'Kefalonija', img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=400&q=80' },
-                      { name: 'Epir', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=400&q=80' },
-                      { name: 'Krf', img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80' },
-                      { name: 'Atos', img: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=400&q=80' },
-                      { name: 'Kavala', img: 'https://images.unsplash.com/photo-1515263487990-61b07816b324?auto=format&fit=crop&w=400&q=80' }
-                    ].map(dest => {
-                      const isSelected = searchFilters.destination.toLowerCase() === dest.name.toLowerCase();
-                      return (
-                        <div 
-                          key={dest.name} 
-                          className={`destination-card-item ${isSelected ? 'active' : ''}`}
-                          onClick={() => handleSelectDestination(dest.name)}
-                        >
-                          <img src={dest.img} alt={dest.name} className="destination-card-img" />
-                          <div className="destination-card-overlay"></div>
-                          <div className="destination-card-name">{dest.name}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Right Column: Popular Categories */}
-                <div className="popular-categories-section">
-                  <h2 className="section-title-nikana">Popularne kategorije</h2>
-                  <div className="popular-categories-grid">
-                    {[
-                      { id: 'first_line', label: 'Na plaži', desc: 'Smeštaj na samoj plaži ili u prvom redu do mora.', icon: '🏖️', type: 'pill' },
-                      { id: 'pool', label: 'Sa bazenom', desc: 'Smeštaj sa privatnim ili zajedničkim bazenom.', icon: '🏊', type: 'pill' },
-                      { id: 'pets', label: 'Dozvoljeni ljubimci', desc: 'Smeštaji u kojima su kućni ljubimci dobrodošli.', icon: '🐾', type: 'pill' },
-                      { id: 'premium', label: 'Premium smeštaj', desc: 'Pažljivo odabrani objekti višeg nivoa udobnosti.', icon: '💎', type: 'pill' },
-                      { id: 'Apartman', label: 'Apartmani', desc: 'Širok izbor privatnog apartmanskog smeštaja.', icon: '🏢', type: 'type' },
-                      { id: 'Hotel', label: 'Hoteli', desc: 'Veliki izbor hotela sa instant potvrdom rezervacije.', icon: '🏨', type: 'type' },
-                      { id: 'Hrvatska', label: 'Hrvatska', desc: 'Preko 12.000 smeštajnih jedinica na Jadranu.', icon: '🌍', type: 'custom' },
-                      { id: 'budget', label: 'Last minute', desc: 'Ponude sa popustima za putovanja u zadnji čas.', icon: '⏱️', type: 'pill' }
-                    ].map(cat => {
-                      let isActive = false;
-                      if (cat.type === 'pill') {
-                        isActive = activePills.includes(cat.id);
-                      } else if (cat.type === 'type') {
-                        isActive = searchFilters.type === cat.id;
-                      }
-                      
-                      return (
-                        <div 
-                          key={cat.id} 
-                          className={`category-card-item ${isActive ? 'active' : ''}`}
-                          onClick={() => handleSelectCategory(cat.id)}
-                        >
-                          <div className="category-card-icon-wrapper">
-                            <span className="category-card-icon">{cat.icon}</span>
-                          </div>
-                          <div className="category-card-info">
-                            <strong className="category-card-label">{cat.label}</strong>
-                            <p className="category-card-desc">{cat.desc}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+              <div className="destination-grid-section animate-fade">
+                <h2 className="section-title-nikana">Gde želite da putujete?</h2>
+                <div className="destination-cards-container">
+                  {[
+                    { name: 'Tasos', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Sitonija', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Kasandra', img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Lefkada', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Krit', img: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Halkidiki', img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=300&q=80' }
+                  ].map(dest => {
+                    const isSelected = searchFilters.destination.toLowerCase() === dest.name.toLowerCase();
+                    return (
+                      <div 
+                        key={dest.name} 
+                        className={`destination-card-item ${isSelected ? 'active' : ''}`}
+                        onClick={() => setSearchFilters(prev => ({ 
+                          ...prev, 
+                          destination: isSelected ? 'all' : dest.name 
+                        }))}
+                      >
+                        <img src={dest.img} alt={dest.name} className="destination-card-img" />
+                        <div className="destination-card-overlay"></div>
+                        <div className="destination-card-name">{dest.name}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1472,63 +1428,6 @@ export default function App() {
                       </button>
                     );
                   })}
-                </div>
-              </div>
-            )}
-
-            {/* Korisne prečice & Vodič sections */}
-            {activeTab === 'listings' && (
-              <div className="homepage-extra-sections animate-fade">
-                {/* 1. Korisne prečice */}
-                <div className="useful-shortcuts-section">
-                  <h3 className="section-title-nikana-sub">Korisne prečice</h3>
-                  <div className="useful-shortcuts-grid">
-                    <div className="shortcut-card partneri" onClick={() => {
-                      if (currentUser) {
-                        setActiveTab('profile');
-                      } else {
-                        setIsAuthModalOpen(true);
-                      }
-                    }}>
-                      <div className="shortcut-tag partneri-tag">PARTNERI</div>
-                      <h4>Dodajte svoj smeštaj</h4>
-                      <p>Postanite naš partner i objavite svoj smeštaj na GrčkaAura portalu potpuno besplatno.</p>
-                    </div>
-                    
-                    <div className="shortcut-card rezervacije" onClick={() => {
-                      const listingsEl = document.getElementById('listings-section');
-                      if (listingsEl) {
-                        listingsEl.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}>
-                      <div className="shortcut-tag rezervacije-tag">REZERVACIJE</div>
-                      <h4>Preporuke smeštaja</h4>
-                      <p>Popunite kratku formu i dobićete personalizovane preporuke slobodnih smeštaja direktno na mejl.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. Vodič */}
-                <div className="guide-links-section">
-                  <h3 className="section-title-nikana-sub">Vodič</h3>
-                  <div className="guide-links-container">
-                    {[
-                      'Tasos', 'Sitonija', 'Kasandra', 'Lefkada', 'Kefalonija', 
-                      'Epir', 'Krf', 'Atos', 'Kavala', 'Solunska regija'
-                    ].map(region => (
-                      <a 
-                        key={region} 
-                        href="#listings-section" 
-                        className="guide-link-item"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSelectDestination(region);
-                        }}
-                      >
-                        {region}
-                      </a>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}
@@ -1898,6 +1797,159 @@ export default function App() {
           onRegister={handleRegister}
           registeredUsers={users}
         />
+      )}
+
+      {/* 9-Dot Fullscreen Megamenu Overlay */}
+      {isGridMenuOpen && (
+        <div className="megamenu-overlay" onClick={() => setIsGridMenuOpen(false)}>
+          <div className="megamenu-container" onClick={(e) => e.stopPropagation()}>
+            <button className="megamenu-close-btn" onClick={() => setIsGridMenuOpen(false)} aria-label="Zatvori meni">
+              ✕
+            </button>
+            
+            {/* Visual Destination & Categories section */}
+            <div className="home-hero-features-layout">
+              {/* Left Column: Destinations Grid */}
+              <div className="destination-grid-section">
+                <div className="section-header-row">
+                  <h2 className="section-title-nikana">Gde želite da letujete?</h2>
+                  <button 
+                    className="btn-all-listings-nikana"
+                    onClick={() => {
+                      setSearchFilters(prev => ({ ...prev, destination: 'all' }));
+                      setIsGridMenuOpen(false);
+                    }}
+                  >
+                    Svi smeštaji
+                  </button>
+                </div>
+                <div className="destination-cards-container">
+                  {[
+                    { name: 'Tasos', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80' },
+                    { name: 'Sitonija', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=400&q=80' },
+                    { name: 'Kasandra', img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=400&q=80' },
+                    { name: 'Lefkada', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=400&q=80' },
+                    { name: 'Kefalonija', img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=400&q=80' },
+                    { name: 'Epir', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=400&q=80' },
+                    { name: 'Krf', img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80' },
+                    { name: 'Atos', img: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=400&q=80' },
+                    { name: 'Kavala', img: 'https://images.unsplash.com/photo-1515263487990-61b07816b324?auto=format&fit=crop&w=400&q=80' }
+                  ].map(dest => {
+                    const isSelected = searchFilters.destination.toLowerCase() === dest.name.toLowerCase();
+                    return (
+                      <div 
+                        key={dest.name} 
+                        className={`destination-card-item ${isSelected ? 'active' : ''}`}
+                        onClick={() => handleSelectDestination(dest.name)}
+                      >
+                        <img src={dest.img} alt={dest.name} className="destination-card-img" />
+                        <div className="destination-card-overlay"></div>
+                        <div className="destination-card-name">{dest.name}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Column: Popular Categories */}
+              <div className="popular-categories-section">
+                <h2 className="section-title-nikana">Popularne kategorije</h2>
+                <div className="popular-categories-grid">
+                  {[
+                    { id: 'first_line', label: 'Na plaži', desc: 'Smeštaj na samoj plaži ili u prvom redu do mora.', icon: '🏖️', type: 'pill' },
+                    { id: 'pool', label: 'Sa bazenom', desc: 'Smeštaj sa privatnim ili zajedničkim bazenom.', icon: '🏊', type: 'pill' },
+                    { id: 'pets', label: 'Dozvoljeni ljubimci', desc: 'Smeštaji u kojima su kućni ljubimci dobrodošli.', icon: '🐾', type: 'pill' },
+                    { id: 'premium', label: 'Premium smeštaj', desc: 'Pažljivo odabrani objekti višeg nivoa udobnosti.', icon: '💎', type: 'pill' },
+                    { id: 'Apartman', label: 'Apartmani', desc: 'Širok izbor privatnog apartmanskog smeštaja.', icon: '🏢', type: 'type' },
+                    { id: 'Hotel', label: 'Hoteli', desc: 'Veliki izbor hotela sa instant potvrdom rezervacije.', icon: '🏨', type: 'type' },
+                    { id: 'Hrvatska', label: 'Hrvatska', desc: 'Preko 12.000 smeštajnih jedinica na Jadranu.', icon: '🌍', type: 'custom' },
+                    { id: 'budget', label: 'Last minute', desc: 'Ponude sa popustima za putovanja u zadnji čas.', icon: '⏱️', type: 'pill' }
+                  ].map(cat => {
+                    let isActive = false;
+                    if (cat.type === 'pill') {
+                      isActive = activePills.includes(cat.id);
+                    } else if (cat.type === 'type') {
+                      isActive = searchFilters.type === cat.id;
+                    }
+                    
+                    return (
+                      <div 
+                        key={cat.id} 
+                        className={`category-card-item ${isActive ? 'active' : ''}`}
+                        onClick={() => handleSelectCategory(cat.id)}
+                      >
+                        <div className="category-card-icon-wrapper">
+                          <span className="category-card-icon">{cat.icon}</span>
+                        </div>
+                        <div className="category-card-info">
+                          <strong className="category-card-label">{cat.label}</strong>
+                          <p className="category-card-desc">{cat.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Korisne prečice & Vodič sections */}
+            <div className="homepage-extra-sections">
+              {/* 1. Korisne prečice */}
+              <div className="useful-shortcuts-section">
+                <h3 className="section-title-nikana-sub">Korisne prečice</h3>
+                <div className="useful-shortcuts-grid">
+                  <div className="shortcut-card partneri" onClick={() => {
+                    setIsGridMenuOpen(false);
+                    if (currentUser) {
+                      setActiveTab('profile');
+                    } else {
+                      setIsAuthModalOpen(true);
+                    }
+                  }}>
+                    <div className="shortcut-tag partneri-tag">PARTNERI</div>
+                    <h4>Dodajte svoj smeštaj</h4>
+                    <p>Postanite naš partner i objavite svoj smeštaj na GrčkaAura portalu potpuno besplatno.</p>
+                  </div>
+                  
+                  <div className="shortcut-card rezervacije" onClick={() => {
+                    setIsGridMenuOpen(false);
+                    const listingsEl = document.getElementById('listings-section');
+                    if (listingsEl) {
+                      listingsEl.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}>
+                    <div className="shortcut-tag rezervacije-tag">REZERVACIJE</div>
+                    <h4>Preporuke smeštaja</h4>
+                    <p>Popunite kratku formu i dobićete personalizovane preporuke slobodnih smeštaja direktno na mejl.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Vodič */}
+              <div className="guide-links-section">
+                <h3 className="section-title-nikana-sub">Vodič</h3>
+                <div className="guide-links-container">
+                  {[
+                    'Tasos', 'Sitonija', 'Kasandra', 'Lefkada', 'Kefalonija', 
+                    'Epir', 'Krf', 'Atos', 'Kavala', 'Solunska regija'
+                  ].map(region => (
+                    <a 
+                      key={region} 
+                      href="#listings-section" 
+                      className="guide-link-item"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleSelectDestination(region);
+                      }}
+                    >
+                      {region}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -158,48 +158,6 @@ export default function Navbar({
           </button>
         )}
       </div>
-
-      {isGridMenuOpen && (
-        <div className="navbar-grid-dropdown animate-fade">
-          <div className="dropdown-section">
-            <h4 className="dropdown-title">🗺️ Popularne regije</h4>
-            <div className="dropdown-links-grid">
-              {['Tasos', 'Sitonija', 'Kasandra', 'Lefkada', 'Kefalonija', 'Epir', 'Krf', 'Atos', 'Kavala'].map(dest => (
-                <button 
-                  key={dest} 
-                  className="dropdown-link-btn"
-                  onClick={() => onSelectDestination(dest)}
-                >
-                  {dest}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="dropdown-divider-v"></div>
-          <div className="dropdown-section">
-            <h4 className="dropdown-title">🎛️ Brze kategorije</h4>
-            <div className="dropdown-links-grid">
-              {[
-                { id: 'first_line', label: '🏖️ Na plaži' },
-                { id: 'pool', label: '🏊 Sa bazenom' },
-                { id: 'pets', label: '🐾 Ljubimci' },
-                { id: 'premium', label: '💎 Premium' },
-                { id: 'Apartman', label: '🏢 Apartmani' },
-                { id: 'Hotel', label: '🏨 Hoteli' },
-                { id: 'Hrvatska', label: '🌍 Hrvatska' }
-              ].map(cat => (
-                <button 
-                  key={cat.id} 
-                  className="dropdown-link-btn"
-                  onClick={() => onSelectCategory(cat.id)}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }

@@ -6437,67 +6437,116 @@ g:hover > .pin-hover-label {
   border-color: var(--accent);
 }
 
-/* Navbar 9-Dot Dropdown */
-.navbar-grid-dropdown {
-  position: absolute;
-  top: 100%;
+/* Fullscreen Megamenu Overlay */
+.megamenu-overlay {
+  position: fixed;
+  top: 0;
   left: 0;
-  width: 100%;
-  background-color: var(--bg-card);
-  border-bottom: 2px solid var(--accent);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(11, 33, 47, 0.97); /* Slate Navy */
+  z-index: 99999; /* Ispred svega */
   display: flex;
-  padding: 1.5rem 5%;
-  gap: 2rem;
-  z-index: 999;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: 5rem 2rem 3rem 2rem;
   box-sizing: border-box;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
 }
 
-.dropdown-section {
-  flex: 1;
-  min-width: 250px;
+.megamenu-container {
+  width: 100%;
+  max-width: 1200px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
 }
 
-.dropdown-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.5rem;
-}
-
-.dropdown-links-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0.6rem;
-}
-
-.dropdown-link-btn {
-  background-color: var(--bg-main);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.5rem 0.8rem;
-  color: var(--text-main);
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.dropdown-link-btn:hover {
-  background-color: var(--accent);
+.megamenu-close-btn {
+  position: absolute;
+  top: -3.2rem;
+  right: 0;
+  background: none;
+  border: none;
   color: #ffffff;
-  border-color: var(--accent);
-  transform: translateY(-2px);
+  font-size: 2.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  line-height: 1;
 }
 
-.dropdown-divider-v {
-  width: 1px;
-  background-color: var(--border);
-  align-self: stretch;
+.megamenu-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--accent);
+  transform: rotate(90deg);
+}
+
+/* Prilagođavanje boja unutar megamenija za savršen kontrast */
+.megamenu-overlay .section-title-nikana,
+.megamenu-overlay .section-title-nikana-sub {
+  color: #ffffff !important;
+}
+
+.megamenu-overlay .category-card-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.megamenu-overlay .category-card-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+}
+
+.megamenu-overlay .category-card-item.active {
+  background-color: rgba(0, 168, 150, 0.2);
+  border-color: var(--accent);
+}
+
+.megamenu-overlay .category-card-label {
+  color: #ffffff;
+}
+
+.megamenu-overlay .category-card-desc {
+  color: #94a3b8;
+}
+
+.megamenu-overlay .shortcut-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.megamenu-overlay .shortcut-card:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+}
+
+.megamenu-overlay .shortcut-card h4 {
+  color: #ffffff;
+}
+
+.megamenu-overlay .shortcut-card p {
+  color: #94a3b8;
+}
+
+.megamenu-overlay .guide-links-container {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.megamenu-overlay .guide-link-item {
+  color: #e2e8f0;
+}
+
+.megamenu-overlay .guide-link-item:hover {
+  color: var(--accent);
 }
 
 /* Two-Column Home Grid Layout */
@@ -6854,16 +6903,7 @@ g:hover > .pin-hover-label {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .navbar-grid-dropdown {
-    flex-direction: column;
-    padding: 1rem;
-    gap: 1.2rem;
-  }
-  
-  .dropdown-divider-v {
-    width: 100%;
-    height: 1px;
-  }
+
 }
 
 @media (max-width: 480px) {
