@@ -3,11 +3,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 5%;
+  padding: 1rem 5%;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: var(--shadow);
+  background-color: var(--primary);
+  border-bottom: 3px solid var(--accent);
+  box-shadow: 0 4px 12px rgba(7, 34, 48, 0.15);
   transition: var(--transition);
 }
 
@@ -17,37 +19,38 @@
   gap: 0.5rem;
   font-size: 1.6rem;
   font-weight: 800;
-  color: var(--primary);
+  color: var(--text-light) !important;
   font-family: var(--font-heading);
 }
 
 .nav-brand span {
-  color: var(--accent);
+  color: var(--accent) !important;
 }
 
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.8rem;
   list-style: none;
 }
 
 .nav-link {
-  font-weight: 500;
+  font-weight: 600;
   padding: 0.5rem 0;
-  color: var(--text-main);
+  color: rgba(255, 255, 255, 0.85);
   position: relative;
   cursor: pointer;
   font-size: 0.95rem;
+  transition: var(--transition);
 }
 
 .nav-link::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -4px;
   left: 0;
   width: 0;
-  height: 2px;
+  height: 3px;
   background-color: var(--accent);
   transition: var(--transition);
 }
@@ -57,8 +60,9 @@
   width: 100%;
 }
 
+.nav-link:hover,
 .nav-link.active {
-  color: var(--primary-light);
+  color: #ffffff;
 }
 
 .nav-actions {
@@ -72,12 +76,13 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.2rem;
-  background: rgba(0, 180, 216, 0.1);
-  color: var(--primary);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
   border-radius: var(--radius-sm);
   font-weight: 600;
   position: relative;
   font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-wishlist svg {
@@ -87,8 +92,8 @@
 }
 
 [data-theme="dark"] .btn-wishlist {
-  background: rgba(0, 180, 216, 0.15);
-  color: var(--accent-light);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-light);
 }
 
 .wishlist-count {
@@ -112,20 +117,22 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--border);
+  background: rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-main);
+  color: var(--text-light);
   font-size: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 [data-theme="dark"] .btn-theme-toggle {
-  background: var(--bg-input);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .btn-theme-toggle:hover {
   transform: rotate(30deg);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* User Profile Navbar Avatar button */
@@ -137,12 +144,13 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: var(--transition);
-  border: 1px solid var(--border);
-  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
 }
 
 .nav-user-profile:hover {
-  background-color: var(--bg-main);
+  background-color: rgba(255, 255, 255, 0.2);
   border-color: var(--accent);
 }
 
@@ -164,16 +172,17 @@
 }
 
 .btn-nav-login {
-  background: var(--primary);
+  background: var(--accent);
   color: white;
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: 0.9rem;
+  transition: var(--transition);
 }
 
 .btn-nav-login:hover {
-  background: var(--primary-light);
+  background: #009181;
   transform: translateY(-1px);
 }
 
@@ -6039,6 +6048,219 @@ g:hover > .pin-hover-label {
 [data-theme="dark"] .preview-detail-book-btn {
   background-color: var(--accent);
   color: #0b131a;
+}
+
+/* ==========================================
+   Nikana.gr Style Layout Additions
+   ========================================== */
+
+/* Visual Destination Grid */
+.destination-grid-section {
+  max-width: 1200px;
+  margin: 2rem auto 1.5rem auto;
+  padding: 0 1rem;
+}
+
+.section-title-nikana {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1rem;
+  font-family: var(--font-heading);
+}
+
+.destination-cards-container {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .destination-cards-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .destination-cards-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.destination-card-item {
+  position: relative;
+  height: 100px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  border: 1px solid var(--border);
+}
+
+.destination-card-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--accent);
+}
+
+.destination-card-item.active {
+  border: 2.5px solid var(--accent);
+  box-shadow: 0 0 10px rgba(0, 168, 150, 0.3);
+}
+
+.destination-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: var(--transition);
+}
+
+.destination-card-item:hover .destination-card-img {
+  scale: 1.08;
+}
+
+.destination-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(7, 34, 48, 0.75) 20%, rgba(7, 34, 48, 0.1) 80%);
+}
+
+.destination-card-name {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  z-index: 2;
+}
+
+/* Quick filters capsules */
+.quick-filters-section {
+  max-width: 1200px;
+  margin: 0 auto 1.5rem auto;
+  padding: 0 1rem;
+}
+
+.quick-filters-scroll {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+}
+
+.quick-filters-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.quick-filters-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.quick-filter-pill {
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  transition: var(--transition);
+}
+
+.quick-filter-pill:hover {
+  border-color: var(--primary-light);
+  background-color: var(--bg-main);
+}
+
+.quick-filter-pill.active {
+  color: #ffffff;
+  background-color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 3px 8px rgba(0, 168, 150, 0.25);
+}
+
+/* Host Trust Card in Reservation Column */
+.host-trust-card {
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.9rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.host-trust-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.host-trust-avatar-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.host-trust-icon {
+  font-size: 1.1rem;
+}
+
+.host-trust-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.host-trust-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+
+.host-trust-badge-status {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.host-trust-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.host-trust-metric {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.host-metric-icon {
+  font-size: 0.9rem;
+}
+
+.host-metric-text {
+  font-size: 0.78rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+/* Listings Tab Wrapper */
+.listings-tab-wrapper {
+  width: 100%;
 }
 
 

@@ -261,6 +261,9 @@ async function initializeSchema() {
     bedrooms INTEGER NOT NULL,
     image TEXT,
     description TEXT,
+    icalUrl TEXT,
+    bedStructure TEXT,
+    kitchenType TEXT,
     FOREIGN KEY (propertyId) REFERENCES properties(id) ON DELETE CASCADE
   )`);
 
@@ -298,6 +301,30 @@ async function initializeSchema() {
     }
   } catch (err) {
     console.warn("Nije uspelo automatsko dodavanje kolone icalUrl u rooms:", err.message);
+  }
+
+  // Add bedStructure column to rooms table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(rooms)");
+    const hasBedStructure = columns.some(c => c.name === 'bedStructure');
+    if (!hasBedStructure) {
+      await dbHelper.run("ALTER TABLE rooms ADD COLUMN bedStructure TEXT");
+      console.log("Dodata kolona 'bedStructure' u tabelu rooms.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone bedStructure u rooms:", err.message);
+  }
+
+  // Add kitchenType column to rooms table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(rooms)");
+    const hasKitchenType = columns.some(c => c.name === 'kitchenType');
+    if (!hasKitchenType) {
+      await dbHelper.run("ALTER TABLE rooms ADD COLUMN kitchenType TEXT");
+      console.log("Dodata kolona 'kitchenType' u tabelu rooms.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone kitchenType u rooms:", err.message);
   }
 
   // Add lastSynced column to properties table if it doesn't exist
@@ -399,36 +426,54 @@ async function seedDatabase() {
         await dbHelper.run('INSERT INTO forum_posts (title, author, content, repliesCount, timestamp) VALUES (?, ?, ?, ?, ?)', f);
       }
 
-      console.log('Popunjavanje baze inicijalnim podacima je uspešno završeno.');
-      
       // 8. Seed Rooms if empty
       const roomsRow = await dbHelper.get('SELECT COUNT(*) as count FROM rooms');
       if (!roomsRow || Number(roomsRow.count) === 0) {
         console.log('Popunjavam tabelu rooms inicijalnim podacima...');
         const seedRooms = [
-          [1, 'Standardna Trokrevetna Soba', 95, 3, 1, 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80', 'Standardna soba sa pogledom na planinu i jednim francuskim krevetom.'],
-          [1, 'Deluxe Apartman sa pogledom na more', 125, 4, 2, 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80', 'Luksuzan dvosobni apartman sa sopstvenim balkonom i velikom kadom.'],
-          [1, 'Predsednički Dupleks sa terasom', 180, 6, 3, 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80', 'Najekskluzivniji smeštaj u vili na dva nivoa sa đakuzijem na terasi.'],
+          [1, 'Standardna Trokrevetna Soba', 95, 3, 1, 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80', 'Standardna soba sa pogledom na planinu i jednim francuskim krevetom.', '1 francuski ležaj, 1 singl krevet', 'Čajna kuhinja (mini-rešo)'],
+          [1, 'Deluxe Apartman sa pogledom na more', 125, 4, 2, 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80', 'Luksuzan dvosobni apartman sa sopstvenim balkonom i velikom kadom.', '1 francuski ležaj, 2 singl kreveta', 'Kompletna kuhinja sa rernom'],
+          [1, 'Predsednički Dupleks sa terasom', 180, 6, 3, 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80', 'Najekskluzivniji smeštaj u vili na dva nivoa sa đakuzijem na terasi.', '2 francuska ležaja, 2 singl kreveta', 'Luksuzna kuhinja sa aparatom za kafu'],
 
-          [2, 'Jednosoban Apartman (Prizemlje)', 45, 3, 1, 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80', 'Jednostavan porodični apartman u prizemlju sa direktnim izlazom u dvorište.'],
-          [2, 'Studio sa pogledom na more (Sprat)', 55, 2, 1, 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80', 'Romantičan studio za parove sa prelepim pogledom na more sa balkona.'],
+          [2, 'Jednosoban Apartman (Prizemlje)', 45, 3, 1, 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80', 'Jednostavan porodični apartman u prizemlju sa direktnim izlazom u dvorište.', '1 francuski ležaj, 1 singl krevet', 'Čajna kuhinja sa frižiderom'],
+          [2, 'Studio sa pogledom na more (Sprat)', 55, 2, 1, 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80', 'Romantičan studio za parove sa prelepim pogledom na more sa balkona.', '1 francuski ležaj', 'Čajna kuhinja / rešo'],
           
-          [3, 'Standard Room (Bez balkona)', 140, 2, 1, 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80', 'Udobna standardna soba, idealna za kraće boravke.'],
-          [3, 'Superior Sea View Room', 195, 3, 1, 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80', 'Komforna soba na višim spratovima sa frontalnim pogledom na Egejsko more.'],
+          [3, 'Standard Room (Bez balkona)', 140, 2, 1, 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80', 'Udobna standardna soba, idealna za kraće boravke.', '1 francuski ležaj', 'Mini frižider i kuvalo za vodu'],
+          [3, 'Superior Sea View Room', 195, 3, 1, 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80', 'Komforna soba na višim spratovima sa frontalnim pogledom na Egejsko more.', '1 francuski ležaj, 1 singl krevet', 'Čajna kuhinja sa rešoom'],
           
-          [4, 'Apartman sa jednom spavaćom sobom', 35, 3, 1, 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80', 'Povoljan apartman za manju porodicu, opremljen čajnom kuhinjom.'],
-          [4, 'Porodični dvosobni apartman', 45, 5, 2, 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80', 'Veliki prostrani apartman sa dve spavaće sobe i terasom.'],
+          [4, 'Apartman sa jednom spavaćom sobom', 35, 3, 1, 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80', 'Povoljan apartman za manju porodicu, opremljen čajnom kuhinjom.', '1 francuski ležaj, 1 singl krevet', 'Čajna kuhinja'],
+          [4, 'Porodični dvosobni apartman', 45, 5, 2, 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80', 'Veliki prostrani apartman sa dve spavaće sobe i terasom.', '1 francuski ležaj, 3 singl kreveta', 'Kompletna kuhinja'],
 
-          [5, 'Četvorokrevetni apartman', 120, 4, 2, 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80', 'Komforan apartman sa dve spavaće sobe, idealan za dve porodice.'],
-          [5, 'Deluxe Vila na plaži', 155, 8, 4, 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80', 'Cela kuća sa sopstvenim dvorištem na samoj peščanoj plaži.'],
+          [5, 'Četvorokrevetni apartman', 120, 4, 2, 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80', 'Komforan apartman sa dve spavaće sobe, idealan za dve porodice.', '1 francuski ležaj, 2 singl kreveta', 'Kompletna kuhinja sa trpezarijom'],
+          [5, 'Deluxe Vila na plaži', 155, 8, 4, 'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=800&q=80', 'Cela kuća sa sopstvenim dvorištem na samoj peščanoj plaži.', '2 francuska ležaja, 4 singl kreveta', 'Kompletna kuhinja sa mašinom za sudove'],
 
-          [6, 'Double Standard Room', 80, 2, 1, 'https://images.unsplash.com/photo-1568495248636-6432b97bd949?auto=format&fit=crop&w=800&q=80', 'Dvokrevetna soba sa bračnim krevetom ili dva odvojena ležaja.'],
-          [6, 'Triple Superior Room', 90, 3, 1, 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80', 'Soba sa bračnim krevetom i jednim pomoćnim krevetom sa pogledom na bazen.']
+          [6, 'Double Standard Room', 80, 2, 1, 'https://images.unsplash.com/photo-1568495248636-6432b97bd949?auto=format&fit=crop&w=800&q=80', 'Dvokrevetna soba sa bračnim krevetom ili dva odvojena ležaja.', '1 francuski ležaj', 'Mini čajna kuhinja'],
+          [6, 'Triple Superior Room', 90, 3, 1, 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80', 'Soba sa bračnim krevetom i jednim pomoćnim krevetom sa pogledom na bazen.', '1 francuski ležaj, 1 singl krevet', 'Čajna kuhinja sa frižiderom i rešoom']
         ];
         for (const rm of seedRooms) {
-          await dbHelper.run('INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description) VALUES (?, ?, ?, ?, ?, ?, ?)', rm);
+          await dbHelper.run('INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description, bedStructure, kitchenType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', rm);
         }
         console.log('Seeding rooms table done.');
+      }
+
+      // Ažuriranje kreveta i kuhinja za već postojeće sobe ako su prazne
+      try {
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj, 1 singl krevet', kitchenType = 'Čajna kuhinja (mini-rešo)' WHERE title = 'Standardna Trokrevetna Soba' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj, 2 singl kreveta', kitchenType = 'Kompletna kuhinja sa rernom' WHERE title = 'Deluxe Apartman sa pogledom na more' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '2 francuska ležaja, 2 singl kreveta', kitchenType = 'Luksuzna kuhinja sa aparatom za kafu' WHERE title = 'Predsednički Dupleks sa terasom' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj, 1 singl krevet', kitchenType = 'Čajna kuhinja sa frižiderom' WHERE title = 'Jednosoban Apartman (Prizemlje)' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj', kitchenType = 'Čajna kuhinja / rešo' WHERE title = 'Studio sa pogledom na more (Sprat)' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj', kitchenType = 'Mini frižider i kuvalo za vodu' WHERE title = 'Standard Room (Bez balkona)' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj, 1 singl krevet', kitchenType = 'Čajna kuhinja sa rešoom' WHERE title = 'Superior Sea View Room' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj, 1 singl krevet', kitchenType = 'Čajna kuhinja' WHERE title = 'Apartman sa jednom spavaćom sobom' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj, 3 singl kreveta', kitchenType = 'Kompletna kuhinja' WHERE title = 'Porodični dvosobni apartman' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj, 2 singl kreveta', kitchenType = 'Kompletna kuhinja sa trpezarijom' WHERE title = 'Četvorokrevetni apartman' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '2 francuska ležaja, 4 singl kreveta', kitchenType = 'Kompletna kuhinja sa mašinom za sudove' WHERE title = 'Deluxe Vila na plaži' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj', kitchenType = 'Mini čajna kuhinja' WHERE title = 'Double Standard Room' AND (bedStructure IS NULL OR bedStructure = '')");
+        await dbHelper.run("UPDATE rooms SET bedStructure = '1 francuski ležaj, 1 singl krevet', kitchenType = 'Čajna kuhinja sa frižiderom i rešoom' WHERE title = 'Triple Superior Room' AND (bedStructure IS NULL OR bedStructure = '')");
+        console.log("Ažurirani detalji o krevetima i kuhinjama za postojeće sobe.");
+      } catch (err) {
+        console.warn("Nije uspelo automatsko ažuriranje soba:", err.message);
       }
     });
   } catch (err) {

@@ -645,9 +645,23 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
                         <div style={{ padding: '0.8rem' }}>
                           <h4 style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '0.4rem', color: 'var(--text-main)' }}>{room.title}</h4>
                           {room.description && <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.5rem', lineHeight: '1.4' }}>{room.description}</p>}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
-                            <span>👥 Kapacitet: {room.guests} osobe</span>
-                            <span>🛏️ Soba: {room.bedrooms}</span>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>👥 Kapacitet: <strong>{room.guests} osobe</strong></span>
+                              <span>🚪 Soba: <strong>{room.bedrooms}</strong></span>
+                            </div>
+                            {room.bedStructure && (
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '0.75rem', marginTop: '0.1rem' }}>
+                                <span>🛏️</span>
+                                <span style={{ color: 'var(--text-main)' }}>{room.bedStructure}</span>
+                              </div>
+                            )}
+                            {room.kitchenType && (
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '0.75rem' }}>
+                                <span>🍳</span>
+                                <span style={{ color: 'var(--text-main)' }}>{room.kitchenType}</span>
+                              </div>
+                            )}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
                             <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1rem' }}>{room.price}€ <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)' }}>/ noć</span></span>
@@ -809,6 +823,31 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
               <div className="form-price-display">
                 <span className="form-price-val">{price}€</span>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>/ noć</span>
+              </div>
+
+              {/* Host Trust & Response Badge */}
+              <div className="host-trust-card">
+                <div className="host-trust-header">
+                  <div className="host-trust-avatar-wrapper">
+                    <span className="host-trust-icon">👤</span>
+                  </div>
+                  <div className="host-trust-info">
+                    <span className="host-trust-label">Domaćin AURA</span>
+                    <span className="host-trust-badge-status">
+                      {rating >= 4.8 ? '🏆 Top Domaćin' : '⭐ Pouzdan Vlasnik'}
+                    </span>
+                  </div>
+                </div>
+                <div className="host-trust-body">
+                  <div className="host-trust-metric">
+                    <span className="host-metric-icon">⚡</span>
+                    <span className="host-metric-text">Odgovara za &lt;30 min</span>
+                  </div>
+                  <div className="host-trust-metric">
+                    <span className="host-metric-icon">🔒</span>
+                    <span className="host-metric-text">Direktan dogovor bez provizije</span>
+                  </div>
+                </div>
               </div>
               
               {!currentUser ? (

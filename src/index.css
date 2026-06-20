@@ -1,39 +1,39 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Rubik:wght@300;400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Colors */
-  --primary: #0a4f70;
-  --primary-dark: #073a52;
-  --primary-light: #0d6e9c;
-  --accent: #00b4d8;
-  --accent-light: #90e0ef;
-  --accent-rgb: 0, 180, 216;
-  --secondary: #ffb703;
+  /* Colors - Nikana.gr Style */
+  --primary: #0b3146;
+  --primary-dark: #072230;
+  --primary-light: #154562;
+  --accent: #00a896;
+  --accent-light: #e0f2f1;
+  --accent-rgb: 0, 168, 150;
+  --secondary: #ff9f1c;
   --success: #2ec4b6;
   --danger: #e63946;
   
   /* Light Mode Colors */
-  --bg-main: #f8fafd;
+  --bg-main: #f4f6f9;
   --bg-card: #ffffff;
   --bg-input: #ffffff;
-  --border: #e1e8ed;
-  --text-main: #2b3a4a;
-  --text-muted: #6c7a89;
+  --border: #e2e8f0;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
   --text-light: #ffffff;
-  --shadow: 0 10px 30px -10px rgba(10, 79, 112, 0.08), 0 1px 3px rgba(10, 79, 112, 0.03);
-  --shadow-hover: 0 20px 40px -15px rgba(10, 79, 112, 0.15), 0 4px 6px -2px rgba(10, 79, 112, 0.05);
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(226, 232, 240, 0.8);
 
   /* Fonts */
   --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Rubik', sans-serif;
+  --font-body: 'Nunito', sans-serif;
   
   /* Layout */
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --transition: all 0.25s ease-in-out;
 }
 
 [data-theme="dark"] {

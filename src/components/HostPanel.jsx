@@ -501,7 +501,9 @@ export default function HostPanel({
     bedrooms: 1,
     image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80',
     description: '',
-    icalUrl: ''
+    icalUrl: '',
+    bedStructure: '',
+    kitchenType: ''
   });
 
   const handleAddRoom = async () => {
@@ -512,8 +514,10 @@ export default function HostPanel({
     const titleEsc = newRoomData.title.replace(/'/g, "''");
     const descEsc = newRoomData.description.replace(/'/g, "''");
     const icalUrlEsc = (newRoomData.icalUrl || '').replace(/'/g, "''");
-    const query = `INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description, icalUrl)
-      VALUES (${editingProperty.id}, '${titleEsc}', ${parseFloat(newRoomData.price) || 0}, ${parseInt(newRoomData.guests, 10) || 1}, ${parseInt(newRoomData.bedrooms, 10) || 1}, '${newRoomData.image}', '${descEsc}', '${icalUrlEsc}');`;
+    const bedStructureEsc = (newRoomData.bedStructure || '').replace(/'/g, "''");
+    const kitchenTypeEsc = (newRoomData.kitchenType || '').replace(/'/g, "''");
+    const query = `INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description, icalUrl, bedStructure, kitchenType)
+      VALUES (${editingProperty.id}, '${titleEsc}', ${parseFloat(newRoomData.price) || 0}, ${parseInt(newRoomData.guests, 10) || 1}, ${parseInt(newRoomData.bedrooms, 10) || 1}, '${newRoomData.image}', '${descEsc}', '${icalUrlEsc}', '${bedStructureEsc}', '${kitchenTypeEsc}');`;
       
     try {
       const response = await fetch(`${API_URL}/api/admin/query`, {
@@ -542,7 +546,9 @@ export default function HostPanel({
               bedrooms: parseInt(newRoomData.bedrooms, 10) || 1,
               image: newRoomData.image,
               description: newRoomData.description,
-              icalUrl: newRoomData.icalUrl
+              icalUrl: newRoomData.icalUrl,
+              bedStructure: newRoomData.bedStructure,
+              kitchenType: newRoomData.kitchenType
             }
           ]
         }));
@@ -555,7 +561,9 @@ export default function HostPanel({
           bedrooms: 1,
           image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80',
           description: '',
-          icalUrl: ''
+          icalUrl: '',
+          bedStructure: '',
+          kitchenType: ''
         });
       } else {
         alert('Greška pri dodavanju sobe.');
@@ -2673,6 +2681,29 @@ export default function HostPanel({
                       placeholder="Nalepite link kalendara sa Booking.com za ovu sobu..."
                       style={{ padding: '0.4rem' }}
                     />
+                  </div>
+
+                  <div className="host-form-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.8rem', marginBottom: 0 }}>
+                    <div className="form-field">
+                      <label style={{ fontSize: '0.78rem' }}>Struktura kreveta</label>
+                      <input 
+                        type="text" 
+                        value={newRoomData.bedStructure || ''}
+                        onChange={e => setNewRoomData(p => ({ ...p, bedStructure: e.target.value }))}
+                        placeholder="npr. 1 francuski ležaj, 2 singl kreveta"
+                        style={{ padding: '0.4rem' }}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label style={{ fontSize: '0.78rem' }}>Tip kuhinje / Posuđe</label>
+                      <input 
+                        type="text" 
+                        value={newRoomData.kitchenType || ''}
+                        onChange={e => setNewRoomData(p => ({ ...p, kitchenType: e.target.value }))}
+                        placeholder="npr. Kompletna kuhinja sa rernom"
+                        style={{ padding: '0.4rem' }}
+                      />
+                    </div>
                   </div>
 
                   <button 

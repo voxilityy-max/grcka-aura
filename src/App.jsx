@@ -369,6 +369,19 @@ export default function App() {
   // Sorting
   const [sortBy, setSortBy] = useState('recommended'); // 'recommended', 'priceLow', 'priceHigh', 'beachNearest'
 
+  // Quick Filter Pills State
+  const [activePills, setActivePills] = useState([]);
+
+  const toggleQuickFilter = (pillId) => {
+    setActivePills(prev => {
+      if (prev.includes(pillId)) {
+        return prev.filter(id => id !== pillId);
+      } else {
+        return [...prev, pillId];
+      }
+    });
+  };
+
   // Selected Property for Details Modal
   const [selectedProperty, setSelectedProperty] = useState(null);
 
@@ -1113,6 +1126,7 @@ export default function App() {
       checkOut: ''
     });
     setSortBy('recommended');
+    setActivePills([]);
   };
 
   // Filter and Sort Logic
@@ -1165,6 +1179,27 @@ export default function App() {
         items = items.filter(p => p.amenities[key] === true);
       }
     });
+
+    // Filter by Quick Pills
+    if (activePills.length > 0) {
+      const pillTests = {
+        first_line: p => p.distanceToBeach <= 50,
+        pool: p => p.amenities.pool === true,
+        parking: p => p.amenities.parking === true,
+        pets: p => p.amenities.pets === true,
+        sea_view: p => p.description.toLowerCase().includes('pogled na more') || p.title.toLowerCase().includes('pogled na more'),
+        ac: p => p.amenities.airConditioning === true,
+        premium: p => p.rating >= 4.8,
+        budget: p => p.price <= 60
+      };
+      
+      activePills.forEach(pillId => {
+        const testFn = pillTests[pillId];
+        if (testFn) {
+          items = items.filter(testFn);
+        }
+      });
+    }
 
     // Sorting
     if (sortBy === 'recommended') {
@@ -1267,21 +1302,84 @@ export default function App() {
       default:
         // Listings / Wishlist tab layouts
         return (
-          <div className="main-layout">
-            {/* Left Sidebar Filters */}
-            <Filters 
-              filters={filters} 
-              setFilters={setFilters} 
-              maxPriceLimit={maxPriceLimit}
-              clearFilters={handleClearFilters}
-            />
-
-            {/* Right Listings Column */}
-            <section className="listings-container">
-              <div className="listings-header">
-                <div className="listings-count">
-                  {activeTab === 'wishlist' ? 'Sačuvani Smeštaj' : 'Svi Smeštaji'}: {processedProperties.length}
+          <div className="listings-tab-wrapper">
+            {/* Visual Destination Grid */}
+            {activeTab === 'listings' && (
+              <div className="destination-grid-section animate-fade">
+                <h2 className="section-title-nikana">Gde želite da putujete?</h2>
+                <div className="destination-cards-container">
+                  {[
+                    { name: 'Tasos', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Sitonija', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Kasandra', img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Lefkada', img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Krit', img: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=300&q=80' },
+                    { name: 'Halkidiki', img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=300&q=80' }
+                  ].map(dest => {
+                    const isSelected = searchFilters.destination.toLowerCase() === dest.name.toLowerCase();
+                    return (
+                      <div 
+                        key={dest.name} 
+                        className={`destination-card-item ${isSelected ? 'active' : ''}`}
+                        onClick={() => setSearchFilters(prev => ({ 
+                          ...prev, 
+                          destination: isSelected ? 'all' : dest.name 
+                        }))}
+                      >
+                        <img src={dest.img} alt={dest.name} className="destination-card-img" />
+                        <div className="destination-card-overlay"></div>
+                        <div className="destination-card-name">{dest.name}</div>
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
+            )}
+
+            {/* Quick filter capsules */}
+            {activeTab === 'listings' && (
+              <div className="quick-filters-section animate-fade">
+                <div className="quick-filters-scroll">
+                  {[
+                    { id: 'first_line', label: '🏖️ Prva linija' },
+                    { id: 'pool', label: '🏊 Sa bazenom' },
+                    { id: 'parking', label: '🚗 Privatni parking' },
+                    { id: 'pets', label: '🐾 Ljubimci' },
+                    { id: 'sea_view', label: '🌅 Pogled na more' },
+                    { id: 'ac', label: '❄️ Klima uključena' },
+                    { id: 'premium', label: '💎 Premium (4.8+)' },
+                    { id: 'budget', label: '💰 Povoljno (do 60€)' }
+                  ].map(pill => {
+                    const isActive = activePills.includes(pill.id);
+                    return (
+                      <button
+                        key={pill.id}
+                        className={`quick-filter-pill ${isActive ? 'active' : ''}`}
+                        onClick={() => toggleQuickFilter(pill.id)}
+                      >
+                        {pill.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="main-layout">
+              {/* Left Sidebar Filters */}
+              <Filters 
+                filters={filters} 
+                setFilters={setFilters} 
+                maxPriceLimit={maxPriceLimit}
+                clearFilters={handleClearFilters}
+              />
+
+              {/* Right Listings Column */}
+              <section className="listings-container">
+                <div className="listings-header">
+                  <div className="listings-count">
+                    {activeTab === 'wishlist' ? 'Sačuvani Smeštaj' : 'Svi Smeštaji'}: {processedProperties.length}
+                  </div>
 
                 {/* View Mode Toggle Switch */}
                 {activeTab === 'listings' && (
@@ -1351,7 +1449,8 @@ export default function App() {
               )}
             </section>
           </div>
-        );
+        </div>
+      );
     }
   };
 
