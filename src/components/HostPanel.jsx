@@ -1265,34 +1265,40 @@ export default function HostPanel({
                     {/* STEP 1: Basic Info */}
                     {wizardStep === 1 && (
                       <div className="wizard-step-form-content animate-fade">
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.2rem', color: 'var(--primary)' }}>
-                          Korak 1: Osnovni detalji smeštaja
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--primary)' }}>
+                          🏠 Korak 1: Osnovni detalji smeštaja
                         </h3>
                         <div className="form-field">
                           <label htmlFor="title">Naziv Smeštaja *</label>
-                          <input 
-                            type="text" 
-                            id="title" 
-                            name="title" 
-                            value={formData.title} 
-                            onChange={handleChange}
-                            placeholder="npr. Vila Horizon Sea View" 
-                            required 
-                          />
+                          <div className="input-with-icon-wrapper">
+                            <span className="input-icon">🏡</span>
+                            <input 
+                              type="text" 
+                              id="title" 
+                              name="title" 
+                              value={formData.title} 
+                              onChange={handleChange}
+                              placeholder="npr. Vila Horizon Sea View" 
+                              required 
+                            />
+                          </div>
                         </div>
 
                         <div className="host-form-grid">
                           <div className="form-field">
                             <label htmlFor="location">Regija / Lokacija *</label>
-                            <input 
-                              list="host-destinations-list"
-                              id="location" 
-                              name="location" 
-                              value={formData.location} 
-                              onChange={handleChange}
-                              placeholder="Izaberite ili upišite novu lokaciju..."
-                              required
-                            />
+                            <div className="input-with-icon-wrapper">
+                              <span className="input-icon">📍</span>
+                              <input 
+                                list="host-destinations-list"
+                                id="location" 
+                                name="location" 
+                                value={formData.location} 
+                                onChange={handleChange}
+                                placeholder="Izaberite ili upišite..."
+                                required
+                              />
+                            </div>
                             <datalist id="host-destinations-list">
                               {destinations.map(dest => (
                                 <option key={dest} value={dest} />
@@ -1301,38 +1307,47 @@ export default function HostPanel({
                           </div>
                           <div className="form-field">
                             <label htmlFor="type">Tip smeštaja *</label>
-                            <select id="type" name="type" value={formData.type} onChange={handleChange}>
-                              {propertyTypes.map(t => (
-                                <option key={t} value={t}>{t}</option>
-                              ))}
-                            </select>
+                            <div className="input-with-icon-wrapper">
+                              <span className="input-icon">🏢</span>
+                              <select id="type" name="type" value={formData.type} onChange={handleChange}>
+                                {propertyTypes.map(t => (
+                                  <option key={t} value={t}>{t}</option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
                         </div>
 
                         <div className="host-form-grid">
                           <div className="form-field">
                             <label htmlFor="price">Cena po noćenju (€) *</label>
-                            <input 
-                              type="number" 
-                              id="price" 
-                              name="price" 
-                              value={formData.price} 
-                              onChange={handleChange}
-                              min="1"
-                              required 
-                            />
+                            <div className="input-with-icon-wrapper">
+                              <span className="input-icon">💶</span>
+                              <input 
+                                type="number" 
+                                id="price" 
+                                name="price" 
+                                value={formData.price} 
+                                onChange={handleChange}
+                                min="1"
+                                required 
+                              />
+                            </div>
                           </div>
                           <div className="form-field">
                             <label htmlFor="distanceToBeach">Udaljenost od plaže (m) *</label>
-                            <input 
-                              type="number" 
-                              id="distanceToBeach" 
-                              name="distanceToBeach" 
-                              value={formData.distanceToBeach} 
-                              onChange={handleChange}
-                              min="0"
-                              required 
-                            />
+                            <div className="input-with-icon-wrapper">
+                              <span className="input-icon">🌊</span>
+                              <input 
+                                type="number" 
+                                id="distanceToBeach" 
+                                name="distanceToBeach" 
+                                value={formData.distanceToBeach} 
+                                onChange={handleChange}
+                                min="0"
+                                required 
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
