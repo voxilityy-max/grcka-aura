@@ -45,6 +45,7 @@ export default function HostPanel({
   // Navigation & View States
   const [panelTab, setPanelTab] = useState('dashboard'); // 'dashboard', 'add', 'manage', 'inquiries', 'users', 'logs', 'database'
   const [wizardStep, setWizardStep] = useState(1); // For property adding wizard: 1, 2, 3
+  const [previewMode, setPreviewMode] = useState('card'); // 'card' or 'detail'
 
   // SQL Terminal & Console States
   const [activeTable, setActiveTable] = useState('users');
@@ -1651,6 +1652,24 @@ export default function HostPanel({
                   <div className="live-preview-title">
                     <span /> Prikaz uživo (Live Preview)
                   </div>
+
+                  {/* Mode Selector */}
+                  <div className="preview-mode-toggle">
+                    <button 
+                      type="button" 
+                      className={`preview-mode-btn ${previewMode === 'card' ? 'active' : ''}`}
+                      onClick={() => setPreviewMode('card')}
+                    >
+                      🎴 Kartica na Početnoj
+                    </button>
+                    <button 
+                      type="button" 
+                      className={`preview-mode-btn ${previewMode === 'detail' ? 'active' : ''}`}
+                      onClick={() => setPreviewMode('detail')}
+                    >
+                      📱 Stranica Detalja
+                    </button>
+                  </div>
                   
                   {/* Browser Mockup Wrapper */}
                   <div className="preview-browser-mockup">
@@ -1661,74 +1680,169 @@ export default function HostPanel({
                         <div className="browser-dot green" />
                       </div>
                       <div className="browser-address-bar">
-                        grcka-aura.com/smestaj/vila-preview
+                        {previewMode === 'card' ? 'grcka-aura.com/smestaji' : `grcka-aura.com/smestaj/${formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'vila-preview'}`}
                       </div>
                     </div>
                     
                     <div className="browser-body">
-                      {/* Property Card Mockup (reusing homepage styles) */}
-                      <article className="property-card" style={{ cursor: 'default', margin: 0, width: '100%', maxWidth: '330px', boxShadow: 'none' }}>
-                        <div className="card-image-container">
-                          <img 
-                            src={formData.image || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80'} 
-                            alt="Live preview card" 
-                            className="card-image"
-                          />
-                          <span className="card-tag">{formData.type}</span>
-                        </div>
-                        
-                        <div className="card-content">
-                          <div className="card-header-info">
-                            <span className="card-location">📍 {formData.location || 'Lokacija'}</span>
-                            <div className="card-rating">
-                              <svg viewBox="0 0 24 24" style={{ width: '12px', height: '12px', fill: 'var(--secondary)' }}>
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                              </svg>
-                              <span>5.0 (Novo)</span>
-                            </div>
+                      {previewMode === 'card' ? (
+                        /* Property Card Mockup (reusing homepage styles) */
+                        <article className="property-card" style={{ cursor: 'default', margin: 0, width: '100%', boxShadow: 'none' }}>
+                          <div className="card-image-container">
+                            <img 
+                              src={formData.image || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80'} 
+                              alt="Live preview card" 
+                              className="card-image"
+                            />
+                            <span className="card-tag">{formData.type}</span>
                           </div>
                           
-                          <h3 className="card-title" style={{ fontSize: '1rem', margin: '0.5rem 0' }}>
-                            {formData.title || 'Naziv Vašeg Smeštaja'}
-                          </h3>
-                          
-                          <div className="card-details" style={{ marginBottom: '0.8rem' }}>
-                            <div className="card-detail-item">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M2 6c.6.5 1.2 1 2.5 1C5.8 7 7 6 7 6s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
-                                <path d="M2 12c.6.5 1.2 1 2.5 1 1.3 0 2.5-1 2.5-1s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
-                                <path d="M2 18c.6.5 1.2 1 2.5 1 1.3 0 2.5-1 2.5-1s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
-                              </svg>
-                              <span>{formData.distanceToBeach}m od plaže</span>
+                          <div className="card-content">
+                            <div className="card-header-info">
+                              <span className="card-location">📍 {formData.location || 'Lokacija'}</span>
+                              <div className="card-rating">
+                                <svg viewBox="0 0 24 24" style={{ width: '12px', height: '12px', fill: 'var(--secondary)' }}>
+                                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                </svg>
+                                <span>5.0 (Novo)</span>
+                              </div>
                             </div>
-                            <div className="card-detail-item">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                              </svg>
-                              <span>Do {formData.guests} osoba</span>
+                            
+                            <h3 className="card-title" style={{ fontSize: '1rem', margin: '0.5rem 0' }}>
+                              {formData.title || 'Naziv Vašeg Smeštaja'}
+                            </h3>
+                            
+                            <div className="card-details" style={{ marginBottom: '0.8rem' }}>
+                              <div className="card-detail-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M2 6c.6.5 1.2 1 2.5 1C5.8 7 7 6 7 6s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
+                                  <path d="M2 12c.6.5 1.2 1 2.5 1 1.3 0 2.5-1 2.5-1s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
+                                  <path d="M2 18c.6.5 1.2 1 2.5 1 1.3 0 2.5-1 2.5-1s1.2-1 2.5-1c1.3 0 2.5 1 2.5 1s1.2 1 2.5 1c1.3 0 2.5-1 2.5-1s1.2-1 2.5-1 2.5 1 2.5 1"></path>
+                                </svg>
+                                <span>{formData.distanceToBeach}m od plaže</span>
+                              </div>
+                              <div className="card-detail-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                  <circle cx="9" cy="7" r="4"></circle>
+                                </svg>
+                                <span>Do {formData.guests} osoba</span>
+                              </div>
+                              <div className="card-detail-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M2 4v16M2 8h20M2 12h20M22 4v16M18 12v4M4 12v4" />
+                                </svg>
+                                <span>{formData.bedrooms} {formData.bedrooms === 1 ? 'soba' : formData.bedrooms < 5 ? 'sobe' : 'soba'}</span>
+                              </div>
                             </div>
-                            <div className="card-detail-item">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M2 4v16M2 8h20M2 12h20M22 4v16M18 12v4M4 12v4" />
-                              </svg>
-                              <span>{formData.bedrooms} {formData.bedrooms === 1 ? 'soba' : formData.bedrooms < 5 ? 'sobe' : 'soba'}</span>
+
+                            <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
+                              {formData.amenities.wifi && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>⚡ WiFi</span>}
+                              {formData.amenities.pool && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🏊 Bazen</span>}
+                              {formData.amenities.beachfront && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🏖️ Plaža</span>}
+                              {formData.amenities.parking && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🚗 Parking</span>}
+                              {formData.amenities.airConditioning && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>❄️ Klima</span>}
+                              {formData.amenities.pets && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🐾 Ljubimci</span>}
+                            </div>
+                            
+                            <div className="card-footer" style={{ border: 'none', paddingTop: 0 }}>
+                              <div className="card-price">
+                                od <span className="card-price-value">{formData.price}€</span> / noć
+                              </div>
+                            </div>
+                          </div>
+                        </article>
+                      ) : (
+                        /* Mobile Details simulator */
+                        <div className="preview-detail-container">
+                          <div className="preview-detail-image-wrapper">
+                            <img 
+                              src={formData.image || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80'} 
+                              alt="Live preview details" 
+                              className="preview-detail-image"
+                            />
+                            <span className="preview-detail-tag">{formData.type}</span>
+                          </div>
+
+                          <div className="preview-detail-body">
+                            <div className="preview-detail-meta">
+                              <span className="preview-detail-location">📍 {formData.location || 'Lokacija'}</span>
+                              <div className="preview-detail-rating">
+                                <svg viewBox="0 0 24 24">
+                                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                </svg>
+                                <span>5.0 (Novo)</span>
+                              </div>
+                            </div>
+
+                            <h3 className="preview-detail-title">
+                              {formData.title || 'Naziv Vašeg Smeštaja'}
+                            </h3>
+
+                            {/* Specs Grid */}
+                            <div className="preview-detail-specs-grid">
+                              <div className="preview-detail-spec-item">
+                                <span className="preview-detail-spec-icon">🌊</span>
+                                <span className="preview-detail-spec-value">{formData.distanceToBeach}m plaža</span>
+                              </div>
+                              <div className="preview-detail-spec-item">
+                                <span className="preview-detail-spec-icon">👥</span>
+                                <span className="preview-detail-spec-value">Do {formData.guests} osoba</span>
+                              </div>
+                              <div className="preview-detail-spec-item">
+                                <span className="preview-detail-spec-icon">🛏️</span>
+                                <span className="preview-detail-spec-value">{formData.bedrooms} {formData.bedrooms === 1 ? 'soba' : formData.bedrooms < 5 ? 'sobe' : 'soba'}</span>
+                              </div>
+                            </div>
+
+                            {/* Description section */}
+                            <h4 className="preview-detail-section-title">Opis smeštaja</h4>
+                            <p className="preview-detail-desc-text">
+                              {formData.description || 'Unesite opis u formi sa leve strane da biste ga videli ovde...'}
+                            </p>
+
+                            {/* Amenities section */}
+                            <h4 className="preview-detail-section-title">Pogodnosti</h4>
+                            <div className="preview-detail-amenities-grid">
+                              <div className={`preview-detail-amenity-card ${formData.amenities.wifi ? 'active' : 'inactive'}`}>
+                                <span className="preview-detail-amenity-icon">📶</span>
+                                <span>Wi-Fi</span>
+                              </div>
+                              <div className={`preview-detail-amenity-card ${formData.amenities.pool ? 'active' : 'inactive'}`}>
+                                <span className="preview-detail-amenity-icon">🏊</span>
+                                <span>Bazen</span>
+                              </div>
+                              <div className={`preview-detail-amenity-card ${formData.amenities.beachfront ? 'active' : 'inactive'}`}>
+                                <span className="preview-detail-amenity-icon">🏖️</span>
+                                <span>Plaža</span>
+                              </div>
+                              <div className={`preview-detail-amenity-card ${formData.amenities.parking ? 'active' : 'inactive'}`}>
+                                <span className="preview-detail-amenity-icon">🚗</span>
+                                <span>Parking</span>
+                              </div>
+                              <div className={`preview-detail-amenity-card ${formData.amenities.airConditioning ? 'active' : 'inactive'}`}>
+                                <span className="preview-detail-amenity-icon">❄️</span>
+                                <span>Klima</span>
+                              </div>
+                              <div className={`preview-detail-amenity-card ${formData.amenities.pets ? 'active' : 'inactive'}`}>
+                                <span className="preview-detail-amenity-icon">🐾</span>
+                                <span>Ljubimci</span>
+                              </div>
                             </div>
                           </div>
 
-                          <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
-                            {formData.amenities.wifi && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>⚡ WiFi</span>}
-                            {formData.amenities.pool && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🏊 Bazen</span>}
-                            {formData.amenities.beachfront && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '3px' }}>🏖️ Plaža</span>}
-                          </div>
-                          
-                          <div className="card-footer" style={{ border: 'none', paddingTop: 0 }}>
-                            <div className="card-price">
-                              od <span className="card-price-value">{formData.price}€</span> / noć
+                          {/* Sticky bottom booking bar */}
+                          <div className="preview-detail-booking-bar">
+                            <div className="preview-detail-price">
+                              cena od <br />
+                              <span className="preview-detail-price-value">{formData.price}€</span> / noć
                             </div>
+                            <button type="button" className="preview-detail-book-btn">
+                              Pošalji Upit
+                            </button>
                           </div>
                         </div>
-                      </article>
+                      )}
                     </div>
                   </div>
                 </div>
