@@ -6263,4 +6263,150 @@ g:hover > .pin-hover-label {
   width: 100%;
 }
 
+/* Gradient Search Bar (Nikana.gr style) */
+.search-bar-gradient-wrapper {
+  width: 90%;
+  max-width: 900px;
+  margin: -35px auto 2rem auto;
+  position: relative;
+  z-index: 10;
+  padding: 4px;
+  border-radius: 20px;
+  background: linear-gradient(to right, #ff8fa3, #a2e89b, #3ac6e6, #007cff);
+  box-shadow: 0 10px 30px rgba(7, 34, 48, 0.15);
+  box-sizing: border-box;
+}
+
+.search-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-card);
+  border-radius: 16px;
+  padding: 0.75rem 1.2rem;
+  gap: 1rem;
+}
+
+.search-field-col {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  flex: 1;
+  gap: 0.15rem;
+}
+
+.search-field-col label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.select-wrapper-nikana select {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.15rem 0;
+  outline: none;
+  cursor: pointer;
+}
+
+.dates-wrapper-nikana {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.date-input-nikana {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  padding: 0.15rem 0;
+}
+
+.date-separator {
+  color: var(--text-muted);
+  font-weight: bold;
+}
+
+.search-field-divider {
+  width: 1px;
+  height: 32px;
+  background-color: var(--border);
+}
+
+.btn-search-icon-nikana {
+  background-color: #007cff;
+  color: #ffffff;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: var(--transition);
+  box-shadow: 0 4px 6px rgba(0, 124, 255, 0.2);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn-search-icon-nikana svg {
+  stroke: #ffffff;
+}
+
+.btn-search-icon-nikana:hover {
+  background-color: #0060c7;
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 124, 255, 0.35);
+}
+
+@media (max-width: 768px) {
+  .search-bar-gradient-wrapper {
+    margin-top: 1rem;
+    width: 95%;
+  }
+
+  .search-bar-inner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.2rem;
+    gap: 0.8rem;
+  }
+  
+  .search-field-divider {
+    display: none;
+  }
+  
+  .dates-wrapper-nikana {
+    justify-content: space-between;
+  }
+  
+  .date-input-nikana {
+    width: 45%;
+    border-bottom: 1px solid var(--border);
+    padding: 0.25rem 0;
+  }
+  
+  .select-wrapper-nikana select {
+    border-bottom: 1px solid var(--border);
+    padding: 0.25rem 0;
+  }
+  
+  .btn-search-icon-nikana {
+    width: 100%;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    margin-top: 0.5rem;
+  }
+}
+
 

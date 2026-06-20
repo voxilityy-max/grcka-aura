@@ -16,22 +16,18 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
         <p className="hero-subtitle animate-fade">Ulepšaj svoje letovanje uz najniže cene</p>
       </div>
       
-      <div className="search-bar-container glass animate-scale">
-        <div className="search-form">
-          <div className="search-field">
+      <div className="search-bar-gradient-wrapper animate-scale">
+        <div className="search-bar-inner">
+          <div className="search-field-col">
             <label htmlFor="destination">Destinacija</label>
-            <div className="search-input-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
+            <div className="select-wrapper-nikana">
               <select 
                 id="destination" 
                 name="destination" 
                 value={searchFilters.destination}
                 onChange={handleSelectChange}
               >
-                <option value="all">Sve regije</option>
+                <option value="all">Unesite mesto, regiju ili smeštaj</option>
                 {destinations.map(dest => (
                   <option key={dest} value={dest}>{dest}</option>
                 ))}
@@ -39,61 +35,11 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
             </div>
           </div>
           
-          <div className="search-field">
-            <label htmlFor="priceCategory">Cenovni Rang</label>
-            <div className="search-input-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 5H9.5a7 7 0 0 0 0 14H17"></path>
-                <line x1="5" y1="9" x2="14" y2="9"></line>
-                <line x1="5" y1="15" x2="14" y2="15"></line>
-              </svg>
-              <select 
-                id="priceCategory" 
-                name="priceCategory" 
-                value={searchFilters.priceCategory}
-                onChange={handleSelectChange}
-              >
-                <option value="all">Bilo koja cena</option>
-                <option value="budget">Povoljan (do 60€ / noć)</option>
-                <option value="mid">Standardan (60€ - 120€ / noć)</option>
-                <option value="luxury">Luksuzan (preko 120€ / noć)</option>
-              </select>
-            </div>
-          </div>
+          <div className="search-field-divider"></div>
           
-          <div className="search-field">
-            <label htmlFor="type">Tip Smeštaja</label>
-            <div className="search-input-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-                <line x1="15" y1="3" x2="15" y2="21"></line>
-                <line x1="3" y1="9" x2="21" y2="9"></line>
-                <line x1="3" y1="15" x2="21" y2="15"></line>
-              </svg>
-              <select 
-                id="type" 
-                name="type" 
-                value={searchFilters.type}
-                onChange={handleSelectChange}
-              >
-                <option value="all">Sve vrste objekata</option>
-                {propertyTypes.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="search-field">
-            <label htmlFor="checkIn">Dolazak</label>
-            <div className="search-input-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
+          <div className="search-field-col">
+            <label>Dolazak / Odlazak</label>
+            <div className="dates-wrapper-nikana">
               <input 
                 type="date"
                 id="checkIn" 
@@ -101,19 +47,9 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
                 value={searchFilters.checkIn || ''}
                 onChange={handleSelectChange}
                 min={new Date().toISOString().split('T')[0]}
+                className="date-input-nikana"
               />
-            </div>
-          </div>
-
-          <div className="search-field">
-            <label htmlFor="checkOut">Odlazak</label>
-            <div className="search-input-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
+              <span className="date-separator">&rarr;</span>
               <input 
                 type="date"
                 id="checkOut" 
@@ -121,21 +57,45 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, pr
                 value={searchFilters.checkOut || ''}
                 onChange={handleSelectChange}
                 min={searchFilters.checkIn || new Date().toISOString().split('T')[0]}
+                className="date-input-nikana"
               />
             </div>
           </div>
           
+          <div className="search-field-divider"></div>
+          
+          <div className="search-field-col">
+            <label htmlFor="type">Tip smeštaja</label>
+            <div className="select-wrapper-nikana">
+              <select 
+                id="type" 
+                name="type" 
+                value={searchFilters.type}
+                onChange={handleSelectChange}
+              >
+                <option value="all">Sve vrste smeštaja</option>
+                {propertyTypes.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <button 
             type="button" 
-            className="btn-search"
+            className="btn-search-icon-nikana"
             onClick={() => {
               const listingsEl = document.getElementById('listings-section');
               if (listingsEl) {
                 listingsEl.scrollIntoView({ behavior: 'smooth' });
               }
             }}
+            aria-label="Pretraži"
           >
-            Pretraži
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
           </button>
         </div>
       </div>
