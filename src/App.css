@@ -2265,7 +2265,7 @@
 
 .host-form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
@@ -4698,9 +4698,19 @@ g:hover > .pin-hover-label {
 /* Two-column layout */
 .admin-cms-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 250px 1fr;
   gap: 2rem;
   align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .admin-cms-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .admin-sidebar {
+    position: static !important;
+  }
 }
 
 /* Glassmorphic Sidebar */
@@ -5148,11 +5158,23 @@ g:hover > .pin-hover-label {
 }
 
 /* Multi-Step Wizard Styling */
+/* Multi-Step Wizard Styling */
 .wizard-container {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: 1fr 360px;
   gap: 2rem;
   align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .wizard-container {
+    grid-template-columns: 1fr;
+  }
+  .live-preview-panel {
+    position: static !important;
+    max-width: 360px;
+    margin: 1.5rem auto 0 auto;
+  }
 }
 
 .wizard-steps-indicator {
@@ -5161,20 +5183,34 @@ g:hover > .pin-hover-label {
   background-color: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 1rem 1.8rem;
-  margin-bottom: 1.5rem;
+  padding: 1.2rem 2.2rem;
+  margin-bottom: 2rem;
   position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 768px) {
+  .wizard-steps-indicator {
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem 1.5rem;
+    align-items: flex-start;
+  }
+  .wizard-line-connector {
+    display: none;
+  }
 }
 
 .wizard-step-node {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.8rem;
   color: var(--text-muted);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   position: relative;
   z-index: 2;
+  transition: all 0.3s ease;
 }
 
 .wizard-step-node.active {
@@ -5186,24 +5222,25 @@ g:hover > .pin-hover-label {
 }
 
 .step-number-circle {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 800;
   background-color: var(--bg-main);
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .wizard-step-node.active .step-number-circle {
   border-color: var(--accent);
   background-color: var(--accent);
   color: #ffffff;
-  box-shadow: 0 0 10px rgba(0, 180, 216, 0.3);
+  box-shadow: 0 0 12px rgba(0, 180, 216, 0.4);
+  transform: scale(1.08);
 }
 
 .wizard-step-node.completed .step-number-circle {
@@ -5215,8 +5252,8 @@ g:hover > .pin-hover-label {
 .wizard-line-connector {
   position: absolute;
   top: 50%;
-  left: 10%;
-  right: 10%;
+  left: 12%;
+  right: 12%;
   height: 2px;
   background-color: var(--border);
   transform: translateY(-50%);
