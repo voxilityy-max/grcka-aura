@@ -10,7 +10,18 @@ const EXTRA_CAROUSEL_IMAGES = [
   'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80', // Balcony / pool view
 ];
 
-export default function PropertyDetails({ property, onClose, onAddReview, currentUser, onOpenAuth, onAddInquiry, onDeleteReview, inquiries = [] }) {
+export default function PropertyDetails({ 
+  property, 
+  onClose, 
+  onAddReview, 
+  currentUser, 
+  onOpenAuth, 
+  onAddInquiry, 
+  onDeleteReview, 
+  inquiries = [],
+  initialCheckIn = '',
+  initialCheckOut = ''
+}) {
   const { id, title, type, location, price, rating, distanceToBeach, image, guests: maxGuests, bedrooms, description, amenities, reviews = [] } = property;
   
   const [leafletLoaded, setLeafletLoaded] = useState(false);
@@ -195,8 +206,8 @@ export default function PropertyDetails({ property, onClose, onAddReview, curren
   const todayStr = new Date().toISOString().split('T')[0];
   
   const [bookingGuests, setBookingGuests] = useState('2');
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState(initialCheckIn);
+  const [checkOut, setCheckOut] = useState(initialCheckOut);
   const [calendarBlocks, setCalendarBlocks] = useState([]);
 
   useEffect(() => {

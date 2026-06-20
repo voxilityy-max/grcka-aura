@@ -152,6 +152,8 @@ async function checkAndInitializeSchema() {
     }
     
     await initializeSchema();
+    // Pokretanje automatske sinhronizacije kalendara u pozadini
+    startBackgroundICalSync();
   });
 }
 
@@ -994,118 +996,179 @@ app.get('/api/properties/:id/calendar-blocks', async (req, res) => {
 });
 
 // 25. Synchronize Property and Rooms from External Booking.com iCal Feeds
-app.post('/api/properties/:id/sync-ical', async (req, res) => {
-  const { id } = req.params;
+// 25. Synchronize Property and Rooms from External Booking.com iCal Feeds
+// Lightweight ICS Parser
+function parseICS(icsText) {
+  const events = [];
+  const lines = icsText.split(/\r?\n/);
+  let currentEvent = null;
   
-  // Lightweight ICS Parser
-  function parseICS(icsText) {
-    const events = [];
-    const lines = icsText.split(/\r?\n/);
-    let currentEvent = null;
-    
-    for (const line of lines) {
-      const cleanLine = line.trim();
-      if (cleanLine.startsWith('BEGIN:VEVENT')) {
-        currentEvent = {};
-      } else if (cleanLine.startsWith('END:VEVENT')) {
-        if (currentEvent && currentEvent.start && currentEvent.end) {
-          events.push(currentEvent);
-        }
-        currentEvent = null;
-      } else if (currentEvent) {
-        if (cleanLine.startsWith('DTSTART')) {
-          const parts = cleanLine.split(':');
-          const val = parts[parts.length - 1].trim();
-          currentEvent.start = val.substring(0, 8); // 'YYYYMMDD'
-        } else if (cleanLine.startsWith('DTEND')) {
-          const parts = cleanLine.split(':');
-          const val = parts[parts.length - 1].trim();
-          currentEvent.end = val.substring(0, 8); // 'YYYYMMDD'
-        }
+  for (const line of lines) {
+    const cleanLine = line.trim();
+    if (cleanLine.startsWith('BEGIN:VEVENT')) {
+      currentEvent = {};
+    } else if (cleanLine.startsWith('END:VEVENT')) {
+      if (currentEvent && currentEvent.start && currentEvent.end) {
+        events.push(currentEvent);
+      }
+      currentEvent = null;
+    } else if (currentEvent) {
+      if (cleanLine.startsWith('DTSTART')) {
+        const parts = cleanLine.split(':');
+        const val = parts[parts.length - 1].trim();
+        currentEvent.start = val.substring(0, 8); // 'YYYYMMDD'
+      } else if (cleanLine.startsWith('DTEND')) {
+        const parts = cleanLine.split(':');
+        const val = parts[parts.length - 1].trim();
+        currentEvent.end = val.substring(0, 8); // 'YYYYMMDD'
       }
     }
-    
-    const formatted = [];
-    for (const ev of events) {
-      if (ev.start && ev.end && ev.start.length === 8 && ev.end.length === 8) {
-        const startStr = `${ev.start.substring(0, 4)}-${ev.start.substring(4, 6)}-${ev.start.substring(6, 8)}`;
-        const endStr = `${ev.end.substring(0, 4)}-${ev.end.substring(4, 6)}-${ev.end.substring(6, 8)}`;
-        formatted.push({ start: startStr, end: endStr });
-      }
+  }
+  
+  const formatted = [];
+  for (const ev of events) {
+    if (ev.start && ev.end && ev.start.length === 8 && ev.end.length === 8) {
+      const startStr = `${ev.start.substring(0, 4)}-${ev.start.substring(4, 6)}-${ev.start.substring(6, 8)}`;
+      const endStr = `${ev.end.substring(0, 4)}-${ev.end.substring(4, 6)}-${ev.end.substring(6, 8)}`;
+      formatted.push({ start: startStr, end: endStr });
     }
-    return formatted;
+  }
+  return formatted;
+}
+
+// Reusable function to perform iCal sync for a property
+async function performICalSyncForProperty(id, force = false) {
+  const property = await dbHelper.get('SELECT * FROM properties WHERE id = ?', [id]);
+  if (!property) {
+    throw new Error('Property not found.');
   }
 
-  try {
-    const property = await dbHelper.get('SELECT * FROM properties WHERE id = ?', [id]);
-    if (!property) {
-      return res.status(404).json({ error: 'Property not found.' });
+  // 15-minute sync throttle (ignore if force=true is passed)
+  const fifteenMinutes = 15 * 60 * 1000;
+  if (!force && property.lastSynced && (Date.now() - property.lastSynced < fifteenMinutes)) {
+    return { skipped: true };
+  }
+
+  const rooms = await dbHelper.all('SELECT * FROM rooms WHERE propertyId = ?', [id]);
+
+  // Clear old imported blocks for this property
+  await dbHelper.run('DELETE FROM calendar_blocks WHERE propertyId = ? AND source = "booking.com"', [id]);
+
+  let syncedCount = 0;
+
+  // 1. Sync whole property calendar if icalUrl exists
+  if (property.icalUrl && property.icalUrl.trim()) {
+    try {
+      const resIcal = await fetch(property.icalUrl.trim(), { headers: { 'User-Agent': 'GrckaAura/1.0' } });
+      if (resIcal.ok) {
+        const text = await resIcal.text();
+        const blocks = parseICS(text);
+        for (const block of blocks) {
+          await dbHelper.run(
+            'INSERT INTO calendar_blocks (propertyId, roomTitle, startDate, endDate, source) VALUES (?, ?, ?, ?, ?)',
+            [id, null, block.start, block.end, 'booking.com']
+          );
+          syncedCount++;
+        }
+      }
+    } catch (err) {
+      console.error(`Failed to sync property-level ical for ID ${id}:`, err.message);
     }
+  }
 
-    // 15-minute sync throttle (ignore if force=true is passed)
-    const force = req.query.force === 'true';
-    const fifteenMinutes = 15 * 60 * 1000;
-    if (!force && property.lastSynced && (Date.now() - property.lastSynced < fifteenMinutes)) {
-      return res.json({ 
-        success: true, 
-        message: 'Kalendar je nedavno sinhronizovan (pre manje od 15 minuta). Sinhronizacija preskočena radi optimalnog rada.', 
-        skipped: true 
-      });
-    }
-
-    const rooms = await dbHelper.all('SELECT * FROM rooms WHERE propertyId = ?', [id]);
-
-    // Clear old imported blocks for this property
-    await dbHelper.run('DELETE FROM calendar_blocks WHERE propertyId = ? AND source = "booking.com"', [id]);
-
-    let syncedCount = 0;
-
-    // 1. Sync whole property calendar if icalUrl exists
-    if (property.icalUrl && property.icalUrl.trim()) {
+  // 2. Sync individual rooms calendars if room.icalUrl exists
+  for (const room of rooms) {
+    if (room.icalUrl && room.icalUrl.trim()) {
       try {
-        const resIcal = await fetch(property.icalUrl.trim(), { headers: { 'User-Agent': 'GrckaAura/1.0' } });
+        const resIcal = await fetch(room.icalUrl.trim(), { headers: { 'User-Agent': 'GrckaAura/1.0' } });
         if (resIcal.ok) {
           const text = await resIcal.text();
           const blocks = parseICS(text);
           for (const block of blocks) {
             await dbHelper.run(
               'INSERT INTO calendar_blocks (propertyId, roomTitle, startDate, endDate, source) VALUES (?, ?, ?, ?, ?)',
-              [id, null, block.start, block.end, 'booking.com']
+              [id, room.title, block.start, block.end, 'booking.com']
             );
             syncedCount++;
           }
         }
       } catch (err) {
-        console.error(`Failed to sync property-level ical for ID ${id}:`, err.message);
+        console.error(`Failed to sync room-level ical for room ${room.id}:`, err.message);
       }
     }
+  }
 
-    // 2. Sync individual rooms calendars if room.icalUrl exists
-    for (const room of rooms) {
-      if (room.icalUrl && room.icalUrl.trim()) {
+  // Update lastSynced timestamp
+  await dbHelper.run('UPDATE properties SET lastSynced = ? WHERE id = ?', [Date.now(), id]);
+
+  return { success: true, syncedCount };
+}
+
+// Automated Background Calendar Synchronization
+function startBackgroundICalSync() {
+  console.log('[Sync] Inicijalizujem automatsku pozadinsku sinhronizaciju iCal kalendara...');
+  
+  // Pokreni proveru odmah nakon starta (sa malim zakašnjenjem od 10 sekundi da se baza stabilizuje)
+  setTimeout(() => {
+    runBackgroundSyncTask();
+  }, 10000);
+
+  // Proveravaj na svakih 5 minuta (300000 ms)
+  setInterval(() => {
+    runBackgroundSyncTask();
+  }, 5 * 60 * 1000); 
+}
+
+// Glavna funkcija za pozadinsku sinhronizaciju
+async function runBackgroundSyncTask() {
+  try {
+    console.log('[Sync] Pokrecem automatsku sinhronizaciju kalendara za sve objekte u pozadini...');
+    // Pronađi sve objekte koji imaju icalUrl ili imaju sobe sa icalUrl
+    const properties = await dbHelper.all(`
+      SELECT DISTINCT p.id, p.title, p.lastSynced 
+      FROM properties p 
+      LEFT JOIN rooms r ON p.id = r.propertyId 
+      WHERE (p.icalUrl IS NOT NULL AND p.icalUrl != '') 
+         OR (r.icalUrl IS NOT NULL AND r.icalUrl != '')
+    `);
+    
+    const fifteenMinutes = 15 * 60 * 1000;
+    let syncCount = 0;
+    
+    for (const prop of properties) {
+      if (!prop.lastSynced || (Date.now() - prop.lastSynced >= fifteenMinutes)) {
         try {
-          const resIcal = await fetch(room.icalUrl.trim(), { headers: { 'User-Agent': 'GrckaAura/1.0' } });
-          if (resIcal.ok) {
-            const text = await resIcal.text();
-            const blocks = parseICS(text);
-            for (const block of blocks) {
-              await dbHelper.run(
-                'INSERT INTO calendar_blocks (propertyId, roomTitle, startDate, endDate, source) VALUES (?, ?, ?, ?, ?)',
-                [id, room.title, block.start, block.end, 'booking.com']
-              );
-              syncedCount++;
-            }
-          }
-        } catch (err) {
-          console.error(`Failed to sync room-level ical for room ${room.id}:`, err.message);
+          console.log(`[Sync] Pozadinska sinhronizacija za objekat: ${prop.title} (ID: ${prop.id})`);
+          await performICalSyncForProperty(prop.id, false);
+          syncCount++;
+        } catch (syncErr) {
+          console.error(`[Sync] Greska pri pozadinskoj sinhronizaciji objekta ${prop.id}:`, syncErr.message);
         }
       }
     }
+    if (syncCount > 0) {
+      console.log(`[Sync] Zavrsena pozadinska sinhronizacija. Azurirano ${syncCount} objekata.`);
+    } else {
+      console.log('[Sync] Nema objekata kojima je potrebna sinhronizacija u ovom intervalu.');
+    }
+  } catch (err) {
+    console.error('[Sync] Greska u pozadinskom poslu za sinhronizaciju kalendara:', err.message);
+  }
+}
 
-    // Update lastSynced timestamp
-    await dbHelper.run('UPDATE properties SET lastSynced = ? WHERE id = ?', [Date.now(), id]);
-
-    res.json({ success: true, message: `Sinhronizacija završena! Uvezeno ${syncedCount} perioda sa Booking.com.` });
+app.post('/api/properties/:id/sync-ical', async (req, res) => {
+  const { id } = req.params;
+  const force = req.query.force === 'true';
+  try {
+    const result = await performICalSyncForProperty(id, force);
+    if (result.skipped) {
+      return res.json({ 
+        success: true, 
+        message: 'Kalendar je nedavno sinhronizovan (pre manje od 15 minuta). Sinhronizacija preskočena radi optimalnog rada.', 
+        skipped: true 
+      });
+    }
+    res.json({ success: true, message: `Sinhronizacija završena! Uvezeno ${result.syncedCount} perioda sa Booking.com.` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

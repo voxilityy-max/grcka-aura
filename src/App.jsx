@@ -1501,6 +1501,8 @@ export default function App() {
             onAddInquiry={handleAddInquiry}
             onDeleteReview={handleDeleteReview}
             inquiries={inquiries}
+            initialCheckIn={searchFilters.checkIn}
+            initialCheckOut={searchFilters.checkOut}
           />
         ) : (
           renderTabContent()
