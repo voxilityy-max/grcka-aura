@@ -5,8 +5,9 @@
   1. Pokrene komandu `npm run build` da potvrdi stabilnost projekta.
   2. Napravi Git tag sa vremenskom oznakom (npr. `deploy-YYYYMMDD-HHMMSS`).
   3. Ispiše korisniku poruku sa nazivom taga i hash-om commit-a, čime potvrđuje da je ta verzija sačuvana i da se na nju možemo vratiti u bilo kom trenutku.
-- Uvek kada agent potvrdi uspešan deployment na internet (nakon kreiranja taga), agent mora pored standardnih git detalja da predstavi i jasnu uporednu tabelu sa sledećim kolonama:
-  1. **Prethodno stanje (Šta nije bilo pre)**
-  2. **Nove izmene (Šta smo dodali/promenili)**
-  3. **Poboljšanje sistema (Kako smo unapredili rad/sigurnost)**
-- U tabeli, ispred stavki koje predstavljaju uspešne i dobre promene treba staviti zelenu kvačicu (✅), a ispred stavki koje donose sumnju, rizik ili su privremena rešenja staviti crveni krstić (❌).
+- Uvek kada agent potvrdi uspešan deployment na internet (nakon kreiranja taga), agent mora pored standardnih git detalja da predstavi jasnu i urednu uporednu tabelu sa sledećim kolonama:
+  1. **Prethodno stanje (Šta nije bilo pre)** — šta je nedostajalo ili radilo lošije.
+  2. **Nove izmene (Šta smo dodali/promenili)** — šta je tačno dodato u ovom koraku.
+  3. **Ocena i status (Dobro ✅ / Rizik ❌)** — jasna ocena da li je promena stabilna i bezbedna (✅) ili donosi rizik/sumnju (❌).
+  4. **Rešenje i poboljšanje sistema** — kako to rešenje unapređuje rad/sigurnost celog sistema ili plan za otklanjanje rizika.
+
