@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Ellinas – Najveća ponuda i pretraga apartmana, vila i hotela u Grčkoj za sezonu 2026. Rezervišite direktno bez provizije." />
     <title>Ellinas | Premium Smeštaj u Grčkoj 2026</title>
+    <script>
+      (function() {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark' || !saved) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

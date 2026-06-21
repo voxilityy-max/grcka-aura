@@ -259,7 +259,7 @@ export default function App() {
   // Theme State
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
-    return saved === 'dark';
+    return saved ? saved === 'dark' : true;
   });
 
   // App Navigation Tab
