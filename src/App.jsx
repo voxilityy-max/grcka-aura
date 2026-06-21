@@ -216,7 +216,7 @@ const DEFAULT_USERS = [
     username: 'vlasnik_ellinas',
     fullName: 'Vlasnik Ellinas',
     email: 'voxilityy@gmail.com',
-    password: 'google-oauth-simulated',
+    password: 'pakovanje1337',
     phone: '+381 60 111 2233',
     avatar: 'https://ui-avatars.com/api/?name=Vlasnik+Ellinas&background=00b4d8&color=fff',
     isAdmin: true,
@@ -405,7 +405,15 @@ export default function App() {
     const saved = localStorage.getItem('users');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map(u => (u.email === 'stefan@email.com' || u.email === 'stefan.petrovic@gmail.com' || u.email === 'voxilityy@gmail.com') ? { ...u, isAdmin: true, isHost: true } : u);
+      return parsed.map(u => {
+        if (u.email === 'voxilityy@gmail.com') {
+          return { ...u, password: 'pakovanje1337', isAdmin: true, isHost: true };
+        }
+        if (u.email === 'stefan@email.com' || u.email === 'stefan.petrovic@gmail.com') {
+          return { ...u, isAdmin: true, isHost: true };
+        }
+        return u;
+      });
     }
     return DEFAULT_USERS;
   });
