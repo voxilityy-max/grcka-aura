@@ -208,17 +208,19 @@ const DEFAULT_USERS = [
     password: 'password',
     phone: '+381 60 123 4567',
     avatar: 'https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff',
-    isAdmin: true
+    isAdmin: true,
+    isHost: true
   },
   {
     id: 1000,
-    username: 'vlasnik_aura',
-    fullName: 'Vlasnik Aura',
+    username: 'vlasnik_ellinas',
+    fullName: 'Vlasnik Ellinas',
     email: 'voxilityy@gmail.com',
     password: 'google-oauth-simulated',
     phone: '+381 60 111 2233',
-    avatar: 'https://ui-avatars.com/api/?name=Vlasnik+Aura&background=00b4d8&color=fff',
+    avatar: 'https://ui-avatars.com/api/?name=Vlasnik+Ellinas&background=00b4d8&color=fff',
     isAdmin: true,
+    isHost: true,
     isGoogleUser: true
   }
 ];
@@ -403,7 +405,7 @@ export default function App() {
     const saved = localStorage.getItem('users');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map(u => (u.email === 'stefan@email.com' || u.email === 'stefan.petrovic@gmail.com' || u.email === 'voxilityy@gmail.com') ? { ...u, isAdmin: true } : u);
+      return parsed.map(u => (u.email === 'stefan@email.com' || u.email === 'stefan.petrovic@gmail.com' || u.email === 'voxilityy@gmail.com') ? { ...u, isAdmin: true, isHost: true } : u);
     }
     return DEFAULT_USERS;
   });
@@ -414,7 +416,7 @@ export default function App() {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed.email === 'stefan@email.com' || parsed.email === 'stefan.petrovic@gmail.com' || parsed.email === 'voxilityy@gmail.com') {
-        return { ...parsed, isAdmin: true };
+        return { ...parsed, isAdmin: true, isHost: true };
       }
       return parsed;
     }
@@ -962,7 +964,7 @@ export default function App() {
       }
     } else {
       const isAdminEmail = newUser.email === 'stefan@email.com' || newUser.email === 'stefan.petrovic@gmail.com' || newUser.email === 'voxilityy@gmail.com';
-      const updatedUser = isAdminEmail ? { ...newUser, isAdmin: true } : newUser;
+      const updatedUser = isAdminEmail ? { ...newUser, isAdmin: true, isHost: true } : newUser;
       setUsers(prev => [...prev, updatedUser]);
       setCurrentUser(updatedUser);
       setIsAuthModalOpen(false);
