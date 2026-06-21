@@ -9768,12 +9768,12 @@ g:hover > .pin-hover-label {
 }
 
 .chat-widget-header {
-  background: linear-gradient(135deg, #00f2fe, #0084ff);
+  background: rgba(7, 28, 41, 0.96) !important;
   padding: 1.1rem 1.3rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 180, 216, 0.25) !important;
 }
 
 .chat-widget-header .ellinas-logo-svg {
@@ -10235,8 +10235,8 @@ g:hover > .pin-hover-label {
 }
 
 .chat-ai-send-btn {
-  background: linear-gradient(135deg, #00f2fe, #0084ff);
-  border: none;
+  background: rgba(0, 180, 216, 0.12) !important;
+  border: 1px solid rgba(0, 180, 216, 0.35) !important;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -10247,11 +10247,14 @@ g:hover > .pin-hover-label {
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
+  font-size: 1.15rem; /* Povećano da plaža lepo stane */
 }
 
 .chat-ai-send-btn:hover {
   transform: scale(1.06);
-  box-shadow: 0 4px 10px rgba(0, 180, 216, 0.25);
+  background: rgba(0, 180, 216, 0.25) !important;
+  border-color: rgba(0, 180, 216, 0.6) !important;
+  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
 }
 
 .chat-ai-send-btn:active {
@@ -10308,6 +10311,14 @@ g:hover > .pin-hover-label {
 [data-theme="light"] .chat-ai-typing-container {
   background: white;
   border-color: #e2e8f0;
+}
+[data-theme="light"] .chat-ai-send-btn {
+  background: rgba(0, 132, 255, 0.08) !important;
+  border: 1px solid rgba(0, 132, 255, 0.3) !important;
+}
+[data-theme="light"] .chat-ai-send-btn:hover {
+  background: rgba(0, 132, 255, 0.15) !important;
+  border-color: rgba(0, 132, 255, 0.6) !important;
 }
 
 /* Palm Tree Swaying Animation */

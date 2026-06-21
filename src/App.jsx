@@ -2511,7 +2511,7 @@ export default function App() {
                     onKeyPress={(e) => { if (e.key === 'Enter') handleSendAiMessage(); }}
                   />
                   <button className="chat-ai-send-btn" onClick={handleSendAiMessage}>
-                    ✈️
+                    🏖️
                   </button>
                 </div>
               </div>
