@@ -522,6 +522,105 @@ export default function App() {
   const [chatWidgetOptionSelected, setChatWidgetOptionSelected] = useState(null);
   const [showChatWidgetSuccess, setShowChatWidgetSuccess] = useState(false);
 
+  // AI chat states
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInputText, setChatInputText] = useState('');
+  const [isAiTyping, setIsAiTyping] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      setChatMessages([
+        {
+          id: 1,
+          sender: 'ai',
+          text: `Zdravo, ${currentUser.name || 'goste'}! Ja sam vaš Ellinas AI Asistent. ⛵ Kako vam mogu pomoći danas? Slobodno me pitajte za preporuku smeštaja (npr. "vila na Lefkadi sa bazenom" ili "povoljan apartman na Tasosu").`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          recommendedPropertyIds: []
+        }
+      ]);
+    } else {
+      setChatMessages([]);
+    }
+  }, [currentUser]);
+
+  const handleSendAiMessage = async () => {
+    if (!chatInputText.trim() || isAiTyping) return;
+
+    const userMsgText = chatInputText;
+    setChatInputText('');
+
+    // Add user message
+    const userMsg = {
+      id: Date.now(),
+      sender: 'user',
+      text: userMsgText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      recommendedPropertyIds: []
+    };
+    setChatMessages(prev => [...prev, userMsg]);
+    setIsAiTyping(true);
+
+    // Auto scroll down user message
+    setTimeout(() => {
+      const chatList = document.getElementById('chat-messages-scroll');
+      if (chatList) chatList.scrollTop = chatList.scrollHeight;
+    }, 50);
+
+    try {
+      // Build messages history for LLM
+      const history = chatMessages.slice(-10).map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      }));
+
+      const res = await fetch(`${API_URL}/api/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: userMsgText,
+          history: history
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Mrežna greška pri komunikaciji sa AI.');
+      }
+
+      const data = await res.json();
+
+      const aiMsg = {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: data.text || "Izvinite, trenutno ne mogu da procesiram vaš upit.",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        recommendedPropertyIds: data.recommendedPropertyIds || []
+      };
+
+      setChatMessages(prev => [...prev, aiMsg]);
+    } catch (err) {
+      console.error('Greška u AI četu:', err);
+      const errorMsg = {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: "Izvinite, došlo je do tehničke greške prilikom povezivanja sa serverom. Molimo pokušajte ponovo.",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        recommendedPropertyIds: []
+      };
+      setChatMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsAiTyping(false);
+      // Scroll to bottom
+      setTimeout(() => {
+        const chatList = document.getElementById('chat-messages-scroll');
+        if (chatList) {
+          chatList.scrollTop = chatList.scrollHeight;
+        }
+      }, 100);
+    }
+  };
+
   const handleSelectChatWidgetOption = (optionId) => {
     setChatWidgetOptionSelected(optionId);
     setTimeout(() => {
@@ -2284,9 +2383,86 @@ export default function App() {
                 <h3>Zahtev je poslat!</h3>
                 <p>Hvala vam. Vaš zahtev je uspešno zabeležen. Naš tim podrške će vas kontaktirati u najkraćem roku.</p>
               </div>
+            ) : currentUser ? (
+              /* Active AI Chat Mode for logged-in users */
+              <div className="chat-ai-container">
+                <div className="chat-messages-list" id="chat-messages-scroll">
+                  {chatMessages.map(msg => (
+                    <div key={msg.id} className={`chat-message-item ${msg.sender}`}>
+                      <div className="chat-message-bubble">
+                        {msg.text}
+                        {msg.recommendedPropertyIds && msg.recommendedPropertyIds.length > 0 && (
+                          <div className="chat-properties-recommendations">
+                            {msg.recommendedPropertyIds.map(pid => {
+                              const prop = properties.find(p => p.id === pid);
+                              if (!prop) return null;
+                              return (
+                                <div 
+                                  key={pid} 
+                                  className="chat-property-recommendation-card"
+                                  onClick={() => {
+                                    setSelectedProperty(prop);
+                                    setIsChatWidgetOpen(false);
+                                  }}
+                                >
+                                  <img src={prop.image} alt={prop.title} className="chat-property-rec-img" />
+                                  <div className="chat-property-rec-info">
+                                    <h5 className="chat-property-rec-title">{prop.title}</h5>
+                                    <span className="chat-property-rec-location">📍 {prop.location} • {prop.type}</span>
+                                    <div className="chat-property-rec-price-row">
+                                      <span className="chat-property-rec-price">{prop.price}€ / noć</span>
+                                      <button className="chat-property-rec-view-btn">Pogledaj →</button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      <span className="chat-message-time">{msg.time}</span>
+                    </div>
+                  ))}
+                  {isAiTyping && (
+                    <div className="chat-ai-typing-container">
+                      <div className="chat-ai-typing-dot"></div>
+                      <div className="chat-ai-typing-dot"></div>
+                      <div className="chat-ai-typing-dot"></div>
+                    </div>
+                  )}
+                </div>
+                <div className="chat-ai-input-wrapper">
+                  <input 
+                    type="text" 
+                    className="chat-ai-input" 
+                    placeholder="Pitajte našeg AI agenta..." 
+                    value={chatInputText}
+                    onChange={(e) => setChatInputText(e.target.value)}
+                    onKeyPress={(e) => { if (e.key === 'Enter') handleSendAiMessage(); }}
+                  />
+                  <button className="chat-ai-send-btn" onClick={handleSendAiMessage}>
+                    ✈️
+                  </button>
+                </div>
+              </div>
             ) : (
+              /* Standard mode with Lock Panel for Guests */
               <>
                 <div className="chat-widget-body">
+                  <div className="chat-ai-locked-card">
+                    <h4>🤖 Povežite se sa AI Asistentom</h4>
+                    <p>Otključajte personalnog asistenta koji pretražuje smeštaje, odgovara na pitanja i pregovara za vas!</p>
+                    <button 
+                      className="chat-ai-unlock-btn"
+                      onClick={() => {
+                        setIsChatWidgetOpen(false);
+                        setIsAuthModalOpen(true);
+                      }}
+                    >
+                      Prijavi se za AI Chat
+                    </button>
+                  </div>
+
                   <button 
                     onClick={() => handleSelectChatWidgetOption(1)} 
                     className={`chat-option-btn ${chatWidgetOptionSelected === 1 ? 'selected' : ''}`}

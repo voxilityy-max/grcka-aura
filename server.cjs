@@ -1387,6 +1387,165 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
   });
 }
 
+// AI Support Chat Widget Endpoint (Groq API or local fallback)
+app.post('/api/ai/chat', async (req, res) => {
+  try {
+    const { message, history } = req.body;
+
+    // Fetch properties from database to feed context
+    const propertiesList = await dbHelper.all('SELECT * FROM properties');
+    const reviewsList = await dbHelper.all('SELECT * FROM reviews');
+    const roomsList = await dbHelper.all('SELECT * FROM rooms');
+    const properties = propertiesList.map(p => {
+      p.amenities = {
+        wifi: !!p.wifi,
+        pool: !!p.pool,
+        beachfront: !!p.beachfront,
+        parking: !!p.parking,
+        airConditioning: !!p.airConditioning,
+        pets: !!p.pets
+      };
+      p.reviews = reviewsList.filter(r => r.propertyId === p.id);
+      p.rooms = roomsList.filter(r => r.propertyId === p.id);
+      return p;
+    });
+
+    const apiKey = process.env.GROQ_API_KEY;
+
+    if (apiKey) {
+      // Call Groq API
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama3-8b-8192',
+          messages: [
+            {
+              role: 'system',
+              content: `Ti si Ellinas AI Asistent, profesionalni i ljubazni turistički agent i koncjerž za sajt "Ellinas" (premium platforma za smeštaj u Grčkoj).
+Tvoj cilj je da pomažeš klijentima da nađu savršen smeštaj, odgovaraš na pitanja i pregovaraš o ponudama.
+Razgovaraj prirodno, toplo i profesionalno na srpskom jeziku, kao pravi čovek.
+
+Dostupni smeštaji na našem sajtu (preporuči isključivo ove smeštaje i spomeni ih po imenu kada predlažeš):
+${JSON.stringify(properties.map(p => ({ id: p.id, title: p.title, type: p.type, location: p.location, price: p.price, amenities: p.amenities })), null, 2)}
+
+Pravila ponašanja:
+1. Preporuči naše smeštaje. Kada predložiš smeštaj, obavezno navedi njegovo tačno ime kako bi ga sistem povezao.
+2. Budi spreman na pregovore. Ako gost kaže da je skupo, ponudi jeftiniju alternativu sa spiska ili naglasi šta sve ulazi u cenu (npr. bazen, blizina plaže, privatnost) kako bi opravdao vrednost.
+3. Odgovaraj kratko i koncizno (do 3-4 rečenice po poruci) kako bi čet bio lak za čitanje na mobilnim telefonima.
+4. Na kraju odgovora, pitaj gosta nešto što će nastaviti razgovor (npr. "Kada planirate dolazak?", "Koliko osoba putuje sa Vama?").
+5. Odgovori isključivo u validnom JSON formatu sa sledećim ključevima:
+{
+  "text": "Tekst tvog odgovora...",
+  "recommendedPropertyIds": [1, 2] // ID-jevi preporučenih smeštaja sa liste iznad (ako ih ima)
+}`
+            },
+            ...history,
+            { role: 'user', content: message }
+          ],
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Groq API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      try {
+        const aiReply = JSON.parse(data.choices[0].message.content.trim());
+        return res.json(aiReply);
+      } catch (parseErr) {
+        console.error('Groq JSON Parse Error, falling back to simple text:', parseErr);
+        const rawContent = data?.choices?.[0]?.message?.content || "";
+        return res.json({
+          text: rawContent || "Došlo je do male greške u komunikaciji sa AI modelom. Molimo pokušajte ponovo.",
+          recommendedPropertyIds: []
+        });
+      }
+    } else {
+      // Fallback rule-based matching if no API key is provided
+      const userText = message.toLowerCase();
+      let replyText = "";
+      let recommendedIds = [];
+
+      // Match location
+      let matchedLoc = null;
+      if (userText.includes("tasos")) matchedLoc = "Tasos";
+      else if (userText.includes("lefkad")) matchedLoc = "Lefkada";
+      else if (userText.includes("sitonij")) matchedLoc = "Sitonija";
+      else if (userText.includes("krf")) matchedLoc = "Krf";
+
+      // Match amenities
+      const wantsPool = userText.includes("bazen") || userText.includes("pool");
+      const wantsBeach = userText.includes("plaž") || userText.includes("beach") || userText.includes("mor");
+      const wantsPets = userText.includes("ljubim") || userText.includes("pas") || userText.includes("dog");
+
+      // Filter properties
+      let matches = properties;
+      if (matchedLoc) {
+        matches = matches.filter(p => p.location.toLowerCase().includes(matchedLoc.toLowerCase()));
+      }
+      if (wantsPool) {
+        matches = matches.filter(p => p.amenities.pool);
+      }
+      if (wantsBeach) {
+        matches = matches.filter(p => p.distanceToBeach <= 200 || p.amenities.beachfront);
+      }
+      if (wantsPets) {
+        matches = matches.filter(p => p.amenities.pets);
+      }
+
+      // Handle budget negotiations
+      const isComplainingPrice = userText.includes("skupo") || userText.includes("jeftinij") || userText.includes("budžet") || userText.includes("budzet") || userText.includes("cene") || userText.includes("popust");
+
+      if (isComplainingPrice) {
+        matches.sort((a, b) => a.price - b.price);
+        if (matches.length > 0) {
+          const cheapest = matches[0];
+          replyText = `Potpuno vas razumem, budžet je ključan za planiranje odmora. Za vas imam odličnu pristupačniju ponudu: ${cheapest.title} u regiji ${cheapest.location} za samo ${cheapest.price}€ po noćenju. Ima sve što vam treba za udoban boravak. Kako vam se to čini?`;
+          recommendedIds = [cheapest.id];
+        } else {
+          const overallCheapest = [...properties].sort((a, b) => a.price - b.price).slice(0, 2);
+          replyText = `Razumem vas. Trenutno nemamo jeftinijih opcija za te specifične kriterijume, ali naša najpovoljnija ponuda uopšte su ${overallCheapest.map(p => `${p.title} (${p.price}€)`).join(" i ")}. Da li bi vam neka od ovih lokacija odgovarala?`;
+          recommendedIds = overallCheapest.map(p => p.id);
+        }
+      } else if (matchedLoc) {
+        if (matches.length > 0) {
+          const selected = matches[0];
+          replyText = `Sjajan izbor! ${matchedLoc} je fantastična destinacija. Preporučujem vam našu prelepu smeštajnu jedinicu: ${selected.title} za ${selected.price}€ po noćenju. Nalazi se na odličnoj lokaciji. Da li biste želeli da pogledate detalje i fotografije?`;
+          recommendedIds = [selected.id];
+          if (matches.length > 1) {
+            recommendedIds.push(matches[1].id);
+          }
+        } else {
+          replyText = `Nažalost, trenutno nemamo slobodnih smeštaja u regiji ${matchedLoc} sa tim specifičnim pogodnostima. Imamo slobodne smeštaje na drugim lokacijama. Gde biste još voleli da letujete ove godine?`;
+        }
+      } else if (wantsPool) {
+        const poolMatches = properties.filter(p => p.amenities.pool);
+        if (poolMatches.length > 0) {
+          replyText = `Uživanje pored vode je nezamenljivo! Naša preporuka je luksuzna ${poolMatches[0].title} sa sopstvenim bazenom za ${poolMatches[0].price}€ po noćenju. Savršena je za opuštanje. Da li želite da proverim raspoloživost?`;
+          recommendedIds = [poolMatches[0].id];
+        } else {
+          replyText = `Trenutno nemamo slobodnih vila sa bazenom, ali imamo odlične apartmane tik uz peščanu plažu. Da li biste želeli da pogledate te opcije?`;
+        }
+      } else {
+        replyText = `Dobar dan! Ja sam vaš Ellinas AI turistički agent. ⛵ Pomažem vam da izaberete savršen smeštaj u Grčkoj. Imamo prelepe vile i apartmane na Tasosu, Lefkadi, u Sitoniji i na Krfu. Recite mi, u kom periodu planirate putovanje i šta vam je najvažnije kod smeštaja?`;
+      }
+
+      res.json({
+        text: replyText,
+        recommendedPropertyIds: recommendedIds
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Booking.com Property Importer Endpoint
 app.post('/api/import-booking', async (req, res) => {
   const { url } = req.body;
