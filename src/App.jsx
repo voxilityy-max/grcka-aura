@@ -517,6 +517,21 @@ export default function App() {
 
   const [backendActive, setBackendActive] = useState(false);
 
+  // Floating support chat widget states
+  const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
+  const [chatWidgetOptionSelected, setChatWidgetOptionSelected] = useState(null);
+  const [showChatWidgetSuccess, setShowChatWidgetSuccess] = useState(false);
+
+  const handleSelectChatWidgetOption = (optionId) => {
+    setChatWidgetOptionSelected(optionId);
+    setTimeout(() => {
+      setShowChatWidgetSuccess(true);
+      setTimeout(() => {
+        setIsChatWidgetOpen(false);
+      }, 2500);
+    }, 300);
+  };
+
   const handleRefreshDatabase = async () => {
     try {
       const resProps = await fetch(`${API_URL}/api/properties`);
@@ -2205,17 +2220,110 @@ export default function App() {
         onClick={(e) => { e.stopPropagation(); setIsGridMenuOpen(!isGridMenuOpen); }}
         aria-label="Istraži regije"
       >
-        <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="40">
+        <svg className="explorer-map-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="40">
           <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0, 180, 216, 0.15)" strokeWidth="1.5" />
           <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logo-cyan)" strokeWidth="2.5" strokeDasharray="14 8" className="logo-ring-dashed" />
-          <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="url(#logo-cyan)" />
-          <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="url(#logo-gold)" />
-          <g className="logo-waves">
-            <path d="M25 76 C35 70 45 82 55 76 C65 70 75 82 85 76" fill="none" stroke="url(#logo-cyan)" strokeWidth="3" strokeLinecap="round" />
+          <g transform="translate(28, 28) scale(1.8)" stroke="url(#logo-cyan)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+            <line x1="9" y1="3" x2="9" y2="18"></line>
+            <line x1="15" y1="6" x2="15" y2="21"></line>
           </g>
         </svg>
         <span className="floating-tooltip">Istraži Regije</span>
       </button>
+
+      {/* Floating Chat/Booking Support Widget */}
+      <div className="chat-widget-container">
+        <button 
+          className={`chat-widget-trigger ${isChatWidgetOpen ? 'active' : ''}`}
+          onClick={() => {
+            setIsChatWidgetOpen(!isChatWidgetOpen);
+            setShowChatWidgetSuccess(false);
+            setChatWidgetOptionSelected(null);
+          }}
+          aria-label="Podrška i brza rezervacija"
+        >
+          <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="38" height="38">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0, 180, 216, 0.15)" strokeWidth="1.5" />
+            <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logo-cyan)" strokeWidth="2.5" strokeDasharray="14 8" className="logo-ring-dashed" />
+            <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="url(#logo-cyan)" />
+            <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="url(#logo-gold)" />
+            <g className="logo-waves">
+              <path d="M25 76 C35 70 45 82 55 76 C65 70 75 82 85 76" fill="none" stroke="url(#logo-cyan)" strokeWidth="3" strokeLinecap="round" />
+            </g>
+          </svg>
+        </button>
+
+        {isChatWidgetOpen && (
+          <div className="chat-widget-window glass">
+            <div className="chat-widget-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+                  <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="#ffffff" />
+                  <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="#ffb703" />
+                </svg>
+                <div style={{ textAlign: 'left' }}>
+                  <strong style={{ fontSize: '0.95rem', color: '#fff' }}>Ellinas Podrška</strong><br />
+                  <span style={{ fontSize: '0.75rem', color: '#a7f3d0', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span> Online
+                  </span>
+                </div>
+              </div>
+              <button className="chat-widget-close" onClick={() => setIsChatWidgetOpen(false)}>✕</button>
+            </div>
+
+            {showChatWidgetSuccess ? (
+              <div className="chat-success-screen">
+                <div className="success-checkmark-circle">✓</div>
+                <h3>Zahtev je poslat!</h3>
+                <p>Hvala vam. Vaš zahtev je uspešno zabeležen. Naš tim podrške će vas kontaktirati u najkraćem roku.</p>
+              </div>
+            ) : (
+              <>
+                <div className="chat-widget-body">
+                  <button 
+                    onClick={() => handleSelectChatWidgetOption(1)} 
+                    className={`chat-option-btn ${chatWidgetOptionSelected === 1 ? 'selected' : ''}`}
+                  >
+                    🏖️ Tražim smeštaj na Tasosu
+                  </button>
+                  <button 
+                    onClick={() => handleSelectChatWidgetOption(2)} 
+                    className={`chat-option-btn ${chatWidgetOptionSelected === 2 ? 'selected' : ''}`}
+                  >
+                    🏨 Tražim smeštaj na Sitoniji
+                  </button>
+                  <button 
+                    onClick={() => handleSelectChatWidgetOption(3)} 
+                    className={`chat-option-btn ${chatWidgetOptionSelected === 3 ? 'selected' : ''}`}
+                  >
+                    📅 Proveri raspoloživost za jul 2026
+                  </button>
+                  <button 
+                    onClick={() => handleSelectChatWidgetOption(4)} 
+                    className={`chat-option-btn ${chatWidgetOptionSelected === 4 ? 'selected' : ''}`}
+                  >
+                    💰 Najbolje cene i ponude
+                  </button>
+                </div>
+
+                <div className="chat-widget-footer">
+                  <a 
+                    href="https://wa.me/381601234567?text=Dobar%20dan%2C%20zanima%20me%20sme%C5%A1taj%20u%20Gr%C4%8Dkoj"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="chat-whatsapp-btn"
+                    onClick={() => setIsChatWidgetOpen(false)}
+                  >
+                    Nastavi preko WhatsApp →
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
     </div>
   );
