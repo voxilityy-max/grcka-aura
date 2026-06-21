@@ -238,6 +238,23 @@ const DEFAULT_INQUIRIES = [
   }
 ];
 
+const getTodayDateString = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const getTomorrowDateString = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const yyyy = tomorrow.getFullYear();
+  const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+  const dd = String(tomorrow.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 export default function App() {
   // Theme State
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -269,8 +286,8 @@ export default function App() {
         destination: 'all',
         priceCategory: 'all',
         type: 'all',
-        checkIn: '',
-        checkOut: '',
+        checkIn: getTodayDateString(),
+        checkOut: getTomorrowDateString(),
         adults: 2,
         children: 0,
         childAges: []
@@ -458,8 +475,8 @@ export default function App() {
     destination: 'all',
     priceCategory: 'all',
     type: 'all',
-    checkIn: '',
-    checkOut: '',
+    checkIn: getTodayDateString(),
+    checkOut: getTomorrowDateString(),
     adults: 2,
     children: 0,
     childAges: []
@@ -1484,8 +1501,8 @@ export default function App() {
       destination: 'all',
       priceCategory: 'all',
       type: 'all',
-      checkIn: '',
-      checkOut: '',
+      checkIn: getTodayDateString(),
+      checkOut: getTomorrowDateString(),
       adults: 2,
       children: 0,
       childAges: []
