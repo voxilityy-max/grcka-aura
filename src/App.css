@@ -7110,6 +7110,7 @@ g:hover > .pin-hover-label {
   backdrop-filter: blur(6px);
   z-index: 998;
   animation: megaFadeIn 0.2s ease-out;
+  pointer-events: auto !important;
 }
 
 @keyframes megaFadeIn {
@@ -7130,8 +7131,8 @@ g:hover > .pin-hover-label {
   left: 50%;
   transform: translateX(-50%);
   width: 92vw;
-  max-width: 1100px;
-  max-height: calc(100vh - 80px);
+  max-width: 1000px; /* Shrunk from 1100px to 1000px to make it compact and highly proportional */
+  max-height: calc(100vh - 120px);
   overflow-y: auto;
   background: rgba(7, 34, 48, 0.97);
   backdrop-filter: blur(40px) saturate(180%);
@@ -7142,11 +7143,27 @@ g:hover > .pin-hover-label {
     0 0 0 1px rgba(var(--accent-rgb), 0.06),
     0 0 60px rgba(var(--accent-rgb), 0.06);
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1.6fr 1fr;
   gap: 0;
   z-index: 999;
   animation: megaPanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 0;
+  pointer-events: auto !important;
+}
+
+/* Premium Thin Scrollbar for the Megamenu */
+.mega-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.mega-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mega-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+.mega-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb), 0.45);
 }
 
 @keyframes megaPanelIn {
@@ -7179,15 +7196,16 @@ g:hover > .pin-hover-label {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
 }
 
 .mega-close:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  transform: rotate(90deg);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 242, 254, 0.12) !important;
+  color: #00f2fe !important;
+  transform: rotate(90deg) scale(1.05);
+  border-color: #00f2fe !important;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.35) !important;
 }
 
 /* ---- LEFT COLUMN: Destinations ---- */
@@ -7208,7 +7226,7 @@ g:hover > .pin-hover-label {
 
 .mega-dest-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* 4 columns for compact desktop grid layout */
   gap: 12px;
 }
 
@@ -7216,21 +7234,24 @@ g:hover > .pin-hover-label {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 1 / 1;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 0 transparent; /* Prepared for inset glow border */
 }
 
 .mega-dest-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  border-color: rgba(var(--accent-rgb), 0.5);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(var(--accent-rgb), 0.15);
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 
+    inset 0 0 0 2px #00f2fe, /* Solid glowing border drawn on top of the photo */
+    0 16px 32px rgba(0, 0, 0, 0.5), 
+    0 0 20px rgba(0, 242, 254, 0.45) !important;
 }
 
 .mega-dest-card.active {
-  border-color: var(--accent);
-  box-shadow: 0 0 24px rgba(var(--accent-rgb), 0.3);
+  box-shadow: 
+    inset 0 0 0 3px var(--accent), /* Active border drawn on top of the photo */
+    0 0 24px rgba(var(--accent-rgb), 0.4) !important;
 }
 
 .mega-dest-active-ring {
@@ -7282,23 +7303,29 @@ g:hover > .pin-hover-label {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 1rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   z-index: 2;
 }
 
 .mega-dest-label {
   font-family: var(--font-heading);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  transition: all 0.25s ease;
+}
+
+.mega-dest-card:hover .mega-dest-label {
+  color: #00f2fe !important;
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.65), 0 2px 4px rgba(0, 0, 0, 0.6) !important;
 }
 
 .mega-dest-badge {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--accent);
   letter-spacing: 0.02em;
@@ -7318,15 +7345,18 @@ g:hover > .pin-hover-label {
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.01em;
 }
 
 .mega-show-all:hover {
-  background: rgba(var(--accent-rgb), 0.15);
-  border-color: var(--accent);
-  box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.15);
-  transform: translateY(-1px);
+  background: rgba(0, 132, 255, 0.22) !important;
+  border-color: #00f2fe !important;
+  color: #00f2fe !important;
+  box-shadow: 
+    0 4px 15px rgba(0, 132, 255, 0.35), 
+    0 0 15px rgba(0, 242, 254, 0.25) !important;
+  transform: translateY(-2px);
 }
 
 /* ---- RIGHT COLUMN ---- */
@@ -7348,18 +7378,24 @@ g:hover > .pin-hover-label {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .mega-search-box:focus-within {
-  border-color: rgba(var(--accent-rgb), 0.5);
+  border-color: #00f2fe !important;
   background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.1);
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.25) !important;
 }
 
 .mega-search-box svg {
   color: rgba(255, 255, 255, 0.35);
   flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.mega-search-box:focus-within svg {
+  color: #00f2fe !important;
+  filter: drop-shadow(0 0 5px rgba(0, 242, 254, 0.5)) !important;
 }
 
 .mega-search-input {
@@ -7407,17 +7443,26 @@ g:hover > .pin-hover-label {
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: all 0.15s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   color: #e2e8f0;
 }
 
 .mega-cat-row:hover {
-  background: rgba(var(--accent-rgb), 0.08);
+  background: rgba(0, 132, 255, 0.12) !important;
+  box-shadow: 
+    0 0 12px rgba(0, 242, 254, 0.22),
+    inset 0 0 8px rgba(0, 132, 255, 0.12) !important;
+}
+
+.mega-cat-row:hover .mega-cat-name {
+  color: #00f2fe !important;
+  text-shadow: 0 0 5px rgba(0, 242, 254, 0.4) !important;
 }
 
 .mega-cat-row:hover .mega-cat-arrow {
-  opacity: 1;
-  transform: translateX(2px);
+  opacity: 1 !important;
+  transform: translateX(4px) !important;
+  color: #00f2fe !important;
 }
 
 .mega-cat-row.active {
@@ -7438,6 +7483,13 @@ g:hover > .pin-hover-label {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.mega-cat-row:hover .mega-cat-icon {
+  background: rgba(0, 242, 254, 0.15) !important;
+  box-shadow: 0 0 8px rgba(0, 242, 254, 0.35) !important;
+  color: #00f2fe !important;
 }
 
 .mega-cat-text {
@@ -7499,19 +7551,28 @@ g:hover > .pin-hover-label {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
   width: 100%;
 }
 
 .mega-link-row:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+  background: rgba(0, 132, 255, 0.1) !important;
+  color: #00f2fe !important;
+  box-shadow: 
+    0 0 12px rgba(0, 242, 254, 0.18),
+    inset 0 0 6px rgba(0, 132, 255, 0.1) !important;
 }
 
 .mega-link-row svg {
   color: var(--accent);
   flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.mega-link-row:hover svg {
+  color: #00f2fe !important;
+  filter: drop-shadow(0 0 4px rgba(0, 242, 254, 0.5)) !important;
 }
 
 /* Live dot */
@@ -7570,6 +7631,10 @@ g:hover > .pin-hover-label {
   .mega-dest-grid {
     grid-template-columns: repeat(2, 1fr);
 }
+
+  .mega-dest-label {
+    font-size: 0.95rem; /* Tighter text on mobile */
+  }
 
   .mega-right {
     padding: 1.5rem;
@@ -9751,7 +9816,7 @@ g:hover > .pin-hover-label {
   position: absolute;
   bottom: 4.5rem;
   right: 0;
-  width: 310px;
+  width: 280px; /* Shrunk from 310px to 280px for a very sleek, compact, and proportional look */
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-hover);
@@ -9768,7 +9833,7 @@ g:hover > .pin-hover-label {
 
 .chat-widget-header {
   background: var(--bg-card) !important;
-  padding: 0.85rem 1.05rem;
+  padding: 0.75rem 0.9rem; /* Slightly reduced padding */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -9786,7 +9851,7 @@ g:hover > .pin-hover-label {
   font-size: 1.1rem;
   cursor: pointer;
   opacity: 0.85;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease;
   padding: 0;
   display: flex;
   align-items: center;
@@ -9798,46 +9863,51 @@ g:hover > .pin-hover-label {
 
 .chat-widget-close:hover {
   opacity: 1;
-  background: rgba(var(--accent-rgb), 0.08);
+  background: rgba(0, 242, 254, 0.12) !important;
+  color: #00f2fe !important;
+  box-shadow: 0 0 8px rgba(0, 242, 254, 0.25) !important;
 }
 
 .chat-widget-body {
-  padding: 0.85rem;
+  padding: 0.7rem; /* Reduced padding from 0.85rem */
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.45rem; /* Tighter gap */
   background: transparent !important;
 }
 
 .chat-options-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.4rem; /* Reduced gap from 0.5rem */
   width: 100%;
 }
 
 .chat-option-btn {
-  padding: 0.55rem 0.4rem;
+  padding: 0.5rem 0.3rem; /* Reduced padding from 0.55rem 0.4rem */
   border-radius: 10px;
   background: var(--bg-input) !important;
   border: 1px solid var(--border) !important;
   color: var(--text-main) !important;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.2rem; /* Reduced gap from 0.25rem */
   width: 100%;
   text-align: center;
 }
 
 .chat-option-btn:hover {
-  background: rgba(var(--accent-rgb), 0.08) !important;
-  border-color: var(--accent) !important;
-  color: var(--accent) !important;
+  background: rgba(0, 132, 255, 0.12) !important;
+  border-color: #00f2fe !important;
+  color: #00f2fe !important;
   transform: translateY(-2px);
+  box-shadow: 
+    0 0 12px rgba(0, 242, 254, 0.35),
+    inset 0 0 6px rgba(0, 132, 255, 0.15) !important;
 }
 
 .chat-option-btn.selected {
@@ -9897,7 +9967,7 @@ g:hover > .pin-hover-label {
   background-color: #25D366 !important;
   color: #ffffff !important;
   transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+  box-shadow: 0 0 15px rgba(37, 211, 102, 0.5), 0 4px 8px rgba(37, 211, 102, 0.3) !important;
 }
 
 .chat-social-btn.viber {
@@ -9910,7 +9980,7 @@ g:hover > .pin-hover-label {
   background-color: #7360f2 !important;
   color: #ffffff !important;
   transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 16px rgba(115, 96, 242, 0.4);
+  box-shadow: 0 0 15px rgba(115, 96, 242, 0.5), 0 4px 8px rgba(115, 96, 242, 0.3) !important;
 }
 
 .chat-social-btn.instagram {
@@ -9923,7 +9993,7 @@ g:hover > .pin-hover-label {
   background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important;
   color: #ffffff !important;
   transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 16px rgba(220, 39, 67, 0.4);
+  box-shadow: 0 0 15px rgba(220, 39, 67, 0.5), 0 4px 8px rgba(220, 39, 67, 0.3) !important;
 }
 
 .chat-social-btn.facebook {
@@ -9936,9 +10006,8 @@ g:hover > .pin-hover-label {
   background-color: #1877F2 !important;
   color: #ffffff !important;
   transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
+  box-shadow: 0 0 15px rgba(24, 119, 242, 0.5), 0 4px 8px rgba(24, 119, 242, 0.3) !important;
 }
-
 
 .chat-success-screen {
   padding: 2.5rem 1.5rem;
@@ -9991,8 +10060,8 @@ g:hover > .pin-hover-label {
   
   .chat-widget-window {
     width: calc(100vw - 2.4rem);
-    right: 1.2rem;
-    bottom: 10rem;
+    right: 0; /* Aligned with container right to center on screen */
+    bottom: 4.8rem; /* Placed directly above the trigger button */
   }
 }
 
@@ -10001,14 +10070,14 @@ g:hover > .pin-hover-label {
   background: rgba(0, 180, 216, 0.03);
   border: 1px solid rgba(0, 180, 216, 0.2);
   border-radius: 12px;
-  padding: 0.8rem 0.9rem;
+  padding: 0.6rem 0.75rem; /* Reduced padding from 0.8rem 0.9rem for compact size */
   text-align: center;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem; /* Reduced margin */
   box-shadow: inset 0 0 10px rgba(0, 180, 216, 0.03);
 }
 
 .chat-ai-locked-card h4 {
-  margin: 0 0 0.35rem 0;
+  margin: 0 0 0.25rem 0;
   color: var(--text-main);
   font-size: 0.88rem;
   display: flex;
@@ -10018,7 +10087,7 @@ g:hover > .pin-hover-label {
 }
 
 .chat-ai-locked-card p {
-  margin: 0 0 0.65rem 0;
+  margin: 0 0 0.5rem 0;
   color: var(--text-muted);
   font-size: 0.75rem;
   line-height: 1.35;
@@ -10028,7 +10097,7 @@ g:hover > .pin-hover-label {
   width: 100%;
   padding: 0.5rem;
   border-radius: 6px;
-  background: linear-gradient(135deg, #00f2fe, #00b4d8);
+  background: linear-gradient(135deg, #00f2fe, #00b4d8) !important;
   border: none;
   color: white;
   font-size: 0.8rem;
@@ -10038,8 +10107,11 @@ g:hover > .pin-hover-label {
 }
 
 .chat-ai-unlock-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 180, 216, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 15px rgba(0, 242, 254, 0.4),
+    0 0 8px rgba(0, 132, 255, 0.2) !important;
+  background: linear-gradient(135deg, #00f2fe, #00c0ff) !important;
 }
 
 /* Active AI Chat styles */

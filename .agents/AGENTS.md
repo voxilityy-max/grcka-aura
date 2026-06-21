@@ -11,3 +11,9 @@
   3. **Ocena i status (Dobro ✅ / Rizik ❌)** — jasna ocena da li je promena stabilna i bezbedna (✅) ili donosi rizik/sumnju (❌).
   4. **Rešenje i poboljšanje sistema** — kako to rešenje unapređuje rad/sigurnost celog sistema ili plan za otklanjanje rizika.
 
+
+# Pravilo o izbegavanju pretpostavki i tačnosti (Zero Assumptions & Accuracy)
+
+- Agent nikada ne sme da pretpostavlja na koje se komponente, prozore ili delove sistema odnosi korisnički zahtev ako postoji bilo kakva dvosmislenost.
+- Uvek prvo pitati i potvrditi sa korisnikom tačan prozor/komponentu pre nego što se započne izrada plana ili modifikacija koda.
+- Nema mesta greškama u interpretaciji zahteva. Svaka izmena mora biti precizno usmerena i potvrđena od strane korisnika.
