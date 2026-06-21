@@ -49,14 +49,6 @@ export default function Navbar({
         <ul className="nav-menu">
           <li>
             <a 
-              className={`nav-link ${activeTab === 'listings' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('listings'); setIsGridMenuOpen(false); }}
-            >
-              Smeštaj
-            </a>
-          </li>
-          <li>
-            <a 
               className={`nav-link ${activeTab === 'guide' ? 'active' : ''}`}
               onClick={() => { setActiveTab('guide'); setIsGridMenuOpen(false); }}
             >
