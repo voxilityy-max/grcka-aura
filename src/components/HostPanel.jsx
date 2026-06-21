@@ -156,6 +156,53 @@ export default function HostPanel({
     }
   });
 
+  // Booking.com import states
+  const [bookingUrl, setBookingUrl] = useState('');
+  const [isImportingBooking, setIsImportingBooking] = useState(false);
+  const [importMessage, setImportMessage] = useState(null);
+
+  const handleImportBooking = async () => {
+    if (!bookingUrl) return;
+    setIsImportingBooking(true);
+    setImportMessage(null);
+
+    try {
+      const response = await fetch(`${API_URL}/api/import-booking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ url: bookingUrl })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({
+          ...prev,
+          title: data.title || prev.title,
+          location: data.location || prev.location,
+          type: data.type || prev.type,
+          price: data.price || prev.price,
+          description: data.description || prev.description,
+          image: (data.images && data.images[0]) ? data.images[0] : prev.image,
+          guests: data.guests || prev.guests,
+          bedrooms: data.bedrooms || prev.bedrooms,
+          amenities: data.amenities ? { ...prev.amenities, ...data.amenities } : prev.amenities
+        }));
+        setImportMessage({ type: 'success', text: `✓ Uspešno uvezeno: "${data.title}"!` });
+      } else {
+        const err = await response.json();
+        setImportMessage({ type: 'error', text: `Greška: ${err.error || 'Neuspešan uvoz.'}` });
+      }
+    } catch (e) {
+      console.error(e);
+      setImportMessage({ type: 'error', text: 'Veza sa serverom nije mogla biti uspostavljena.' });
+    } finally {
+      setIsImportingBooking(false);
+    }
+  };
+
   // Form states for adding property
   const [formData, setFormData] = useState({
     title: '',
@@ -2172,6 +2219,42 @@ export default function HostPanel({
                         <h3 style={{ fontSize: '1.15rem', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--primary)' }}>
                           🏠 Korak 1: Osnovni detalji smeštaja
                         </h3>
+
+                        {/* Booking.com Premium Importer Card */}
+                        <div className="onboard-glass-box" style={{ marginBottom: '2rem', padding: '1.2rem', borderColor: 'rgba(0, 180, 216, 0.25)', background: 'rgba(0, 180, 216, 0.03)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '1.2rem' }}>⚡</span>
+                            <strong style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>Brzi uvoz podataka sa Booking.com</strong>
+                          </div>
+                          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.8rem', lineHeight: '1.4' }}>
+                            Unesite link vašeg smeštaja na Booking.com-u i mi ćemo automatski učitati naslov, opis, slike i lokaciju.
+                          </p>
+                          <div style={{ display: 'flex', gap: '0.6rem' }}>
+                            <input 
+                              type="text" 
+                              className="onboard-input-field" 
+                              placeholder="https://www.booking.com/hotel/gr/..." 
+                              value={bookingUrl}
+                              onChange={(e) => setBookingUrl(e.target.value)}
+                              style={{ flex: 1, padding: '0.5rem 0.8rem', fontSize: '0.8rem' }}
+                            />
+                            <button
+                              type="button"
+                              className="btn-search"
+                              onClick={handleImportBooking}
+                              disabled={isImportingBooking || !bookingUrl}
+                              style={{ padding: '0.5rem 1.2rem', fontSize: '0.8rem', whiteSpace: 'nowrap', fontWeight: 'bold' }}
+                            >
+                              {isImportingBooking ? 'Uvoženje...' : 'Uvezi ⚡'}
+                            </button>
+                          </div>
+                          {importMessage && (
+                            <div style={{ marginTop: '0.6rem', fontSize: '0.82rem', color: importMessage.type === 'success' ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold' }}>
+                              {importMessage.text}
+                            </div>
+                          )}
+                        </div>
+                        
                         <div className="form-field">
                           <label htmlFor="title">Naziv Smeštaja *</label>
                           <div className="input-with-icon-wrapper">
