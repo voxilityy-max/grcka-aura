@@ -249,9 +249,8 @@
   align-items: center;
   gap: 0.25rem;
   list-style: none;
-  flex: 1 1 auto;
-  justify-content: flex-start;
-  margin-left: 2.5rem;
+  flex: 0 1 auto;
+  justify-content: center;
 }
 
 .nav-link {
@@ -2797,7 +2796,6 @@
 
   .nav-menu {
     gap: 0.15rem;
-    margin-left: 1.5rem;
   }
 
   .nav-actions {
