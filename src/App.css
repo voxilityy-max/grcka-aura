@@ -236,7 +236,7 @@
   font-weight: 800;
   color: var(--text-light) !important;
   font-family: var(--font-heading);
-  flex: 1 1 0%;
+  flex: 0 0 auto;
   justify-content: flex-start;
 }
 
@@ -249,8 +249,9 @@
   align-items: center;
   gap: 0.25rem;
   list-style: none;
-  flex: 0 0 auto;
-  justify-content: center;
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  margin-left: 2.5rem;
 }
 
 .nav-link {
@@ -284,7 +285,7 @@
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  flex: 1 1 0%;
+  flex: 0 0 auto;
   justify-content: flex-end;
 }
 
@@ -2796,6 +2797,7 @@
 
   .nav-menu {
     gap: 0.15rem;
+    margin-left: 1.5rem;
   }
 
   .nav-actions {
@@ -2851,7 +2853,9 @@
   .nav-menu {
     gap: 0.4rem;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: center !important;
+    margin-left: 0 !important;
+    flex: 0 0 auto !important;
 }
 
   
