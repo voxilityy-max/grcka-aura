@@ -138,7 +138,7 @@ export default function InteractiveMap({ properties = [], processedProperties = 
       const coords = getCoordinates(prop.location, prop.id);
       
       const popupContent = `
-        <div style="width: 190px; font-family: system-ui, -apple-system, sans-serif;">
+        <div style="width: 190px; font-family: var(--font-body);">
           <img src="${prop.image}" alt="${prop.title}" style="width: 100%; height: 90px; object-fit: cover; border-radius: 4px; margin-bottom: 5px;" />
           <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--primary);">${prop.type}</span>
           <h4 style="font-size: 12px; font-weight: 700; margin: 2px 0 4px 0; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${prop.title}</h4>

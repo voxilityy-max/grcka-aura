@@ -137,14 +137,9 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
     const tollSrb = roundTrip ? tollSrbOneWay * 2 : tollSrbOneWay;
 
     // Macedonia Tolls / Bulgaria Vignette
-    let transitionToll;
-    if (route === 'mkd') {
-      transitionToll = 6.50; // roughly 380 Denars one way
-      if (roundTrip) transitionToll *= 2;
-    } else {
-      // Bulgaria vignette: flat cost (8 EUR for 1 week, 15 EUR for 1 month/round-trip)
-      transitionToll = roundTrip ? 15.00 : 8.00;
-    }
+    const transitionToll = route === 'mkd'
+      ? (roundTrip ? 13.00 : 6.50)
+      : (roundTrip ? 15.00 : 8.00);
 
     // Greece Tolls
     const tollGrOneWay = TRIP_DATA.greekTolls[route][destination];

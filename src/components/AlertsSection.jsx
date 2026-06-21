@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const INITIAL_BORDERS = [
   { id: 'evzoni', name: 'Evzoni (MK -> GR)', wait: 35, level: 'low' },

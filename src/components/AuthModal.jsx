@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function AuthModal({ onClose, onLogin, onRegister, registeredUsers = [], initialIsRegister = false, initialIsHost = false }) {
   const [isRegister, setIsRegister] = useState(initialIsRegister);
@@ -12,7 +12,7 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
     try {
       const saved = localStorage.getItem('saved_accounts');
       return saved ? JSON.parse(saved) : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   });
@@ -79,10 +79,13 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
   useEffect(() => {
     const savedEmail = localStorage.getItem('saved_email');
     if (savedEmail && !isRegister && !isForgotPassword) {
-      setFormData(prev => ({
-        ...prev,
-        email: savedEmail
-      }));
+      const timer = setTimeout(() => {
+        setFormData(prev => {
+          if (prev.email === savedEmail) return prev;
+          return { ...prev, email: savedEmail };
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isRegister, isForgotPassword]);
 

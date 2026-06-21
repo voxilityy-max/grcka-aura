@@ -1,15 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import Megamenu from './components/Megamenu';
 import LandingPage from './components/LandingPage';
-import Hero from './components/Hero';
 import Filters from './components/Filters';
 import PropertyCard from './components/PropertyCard';
 import PropertyDetails from './components/PropertyDetails';
 import HostPanel from './components/HostPanel';
 import BlogSection from './components/BlogSection';
-import ForumSection, { INITIAL_FORUM_POSTS } from './components/ForumSection';
+import ForumSection from './components/ForumSection';
+import { INITIAL_FORUM_POSTS } from './components/forumPostsData';
 import AlertsSection from './components/AlertsSection';
 import AuthModal from './components/AuthModal';
 import ProfileTab from './components/ProfileTab';
@@ -18,6 +18,7 @@ import InteractiveMap from './components/InteractiveMap';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const getUniqueId = () => Date.now();
 
 // Initial Mock Data
 const INITIAL_PROPERTIES = [
@@ -556,19 +557,22 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (currentUser) {
-      setChatMessages([
-        {
-          id: 1,
-          sender: 'ai',
-          text: `Zdravo, ${currentUser.name || 'goste'}! Ja sam vaš Ellinas AI Asistent. ⛵ Kako vam mogu pomoći danas? Slobodno me pitajte za preporuku smeštaja (npr. "vila na Lefkadi sa bazenom" ili "povoljan apartman na Tasosu").`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          recommendedPropertyIds: []
-        }
-      ]);
-    } else {
-      setChatMessages([]);
-    }
+    const timer = setTimeout(() => {
+      if (currentUser) {
+        setChatMessages([
+          {
+            id: 1,
+            sender: 'ai',
+            text: `Zdravo, ${currentUser.name || 'goste'}! Ja sam vaš Ellinas AI Asistent. ⛵ Kako vam mogu pomoći danas? Slobodno me pitajte za preporuku smeštaja (npr. "vila na Lefkadi sa bazenom" ili "povoljan apartman na Tasosu").`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            recommendedPropertyIds: []
+          }
+        ]);
+      } else {
+        setChatMessages([]);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [currentUser]);
 
   const handleSendAiMessage = async () => {
@@ -729,25 +733,9 @@ export default function App() {
         const dataPosts = await resPosts.json();
         setForumPosts(dataPosts);
 
-        if (currentUser && currentUser.isAdmin) {
-          try {
-            const resNotifs = await fetch(`${API_URL}/api/admin/notifications`, {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-              }
-            });
-            if (resNotifs.ok) {
-              const dataNotifs = await resNotifs.json();
-              setAdminNotifications(dataNotifs);
-            }
-          } catch (notifErr) {
-            console.warn("Failed to fetch admin notifications initially:", notifErr);
-          }
-        }
-
         setBackendActive(true);
         console.log('Uspostavljena veza sa pravim backend serverom!');
-      } catch (err) {
+      } catch {
         console.warn('Backend server nije aktivan. Aplikacija radi u lokalnom offline režimu (localStorage).');
         setBackendActive(false);
       }
@@ -769,27 +757,30 @@ export default function App() {
   // Sync URL for Admin Panel
   useEffect(() => {
     const isHost = currentUser && (currentUser.isHost || properties.some(p => p.ownerEmail === currentUser.email));
-    if (activeTab === 'host') {
-      if (currentUser && (currentUser.isAdmin || isHost)) {
-        setIsFake404Active(false);
-        if (window.location.pathname !== '/aura-vlasnik') {
+    const timer = setTimeout(() => {
+      if (activeTab === 'host') {
+        if (currentUser && (currentUser.isAdmin || isHost)) {
+          setIsFake404Active(false);
+          if (window.location.pathname !== '/aura-vlasnik') {
+            window.history.pushState({}, '', '/aura-vlasnik');
+          }
+        } else {
+          // If not admin/host, show fake 404
+          setIsFake404Active(true);
           window.history.pushState({}, '', '/aura-vlasnik');
         }
       } else {
-        // If not admin/host, show fake 404
-        setIsFake404Active(true);
-        window.history.pushState({}, '', '/aura-vlasnik');
-      }
-    } else {
-      if (window.location.pathname === '/aura-vlasnik' || window.location.pathname === '/panel') {
-        if (currentUser && (currentUser.isAdmin || isHost)) {
-          // If admin/host, reset to / when navigating away from host tab
-          window.history.pushState({}, '', '/');
-        } else {
-          setIsFake404Active(true);
+        if (window.location.pathname === '/aura-vlasnik' || window.location.pathname === '/panel') {
+          if (currentUser && (currentUser.isAdmin || isHost)) {
+            // If admin/host, reset to / when navigating away from host tab
+            window.history.pushState({}, '', '/');
+          } else {
+            setIsFake404Active(true);
+          }
         }
       }
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [activeTab, currentUser, properties]);
 
   // Listen to popstate event (back/forward browser buttons)
@@ -825,7 +816,7 @@ export default function App() {
       const updated = properties.find(p => p.id === selectedProperty.id);
       if (updated) setSelectedProperty(updated);
     }
-  }, [properties]);
+  }, [properties, selectedProperty]);
 
   // Sync Wishlist to localStorage
   useEffect(() => {
@@ -868,7 +859,7 @@ export default function App() {
     localStorage.setItem('adminNotifications', JSON.stringify(adminNotifications));
   }, [adminNotifications]);
 
-  const fetchAdminNotifications = async () => {
+  const fetchAdminNotifications = useCallback(async () => {
     if (!backendActive) return;
     if (!currentUser || !currentUser.isAdmin) return;
     try {
@@ -884,13 +875,14 @@ export default function App() {
     } catch (err) {
       console.error('Greška pri učitavanju obaveštenja:', err);
     }
-  };
+  }, [backendActive, currentUser]);
 
   useEffect(() => {
-    if (backendActive && currentUser && currentUser.isAdmin) {
+    const timer = setTimeout(() => {
       fetchAdminNotifications();
-    }
-  }, [backendActive, currentUser]);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchAdminNotifications]);
 
   const handleMarkNotificationsRead = async () => {
     if (backendActive) {
@@ -912,18 +904,18 @@ export default function App() {
     }
   };
 
-  const createMockAdminNotification = (message) => {
+  const createMockAdminNotification = useCallback((message) => {
     const newNotif = {
-      id: Date.now(),
+      id: getUniqueId(),
       message,
       timestamp: new Date().toLocaleString('sr-RS'),
       isRead: 0
     };
     setAdminNotifications(prev => [newNotif, ...prev]);
-  };
+  }, []);
 
   // Activity Logger Helper
-  const logActivity = async (user, action, type) => {
+  const logActivity = useCallback(async (user, action, type) => {
     const now = new Date();
     const formattedDate = now.toLocaleDateString('sr-RS') + ' u ' + now.toLocaleTimeString('sr-RS', {
       hour: '2-digit',
@@ -954,40 +946,36 @@ export default function App() {
         console.error('Greška pri beleženju aktivnosti:', err);
       }
     } else {
-      const localLog = { ...newLog, id: Date.now() };
+      const localLog = { ...newLog, id: getUniqueId() };
       setActivityLogs(prev => [localLog, ...prev]);
     }
-  };
+  }, [backendActive]);
   // Auth Operations
   const handleRegister = async (newUser) => {
     if (backendActive) {
-      try {
-        const res = await fetch(`${API_URL}/api/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newUser)
-        });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || 'Greška pri registraciji.');
-        }
-        const data = await res.json();
-        const registered = data.user;
-        localStorage.setItem('authToken', data.token);
-        setUsers(prev => [...prev, registered]);
-        setCurrentUser(registered);
-        setIsAuthModalOpen(false);
-        
-        const isHost = registered.isAdmin || registered.isHost || properties.some(p => p.ownerEmail === registered.email);
-        if (isHost) {
-          handleTabChange('host');
-        } else {
-          handleTabChange('profile');
-        }
-        logActivity(registered, `Registrovan novi nalog na portalu.`, 'auth');
-      } catch (err) {
-        throw err;
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser)
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Greška pri registraciji.');
       }
+      const data = await res.json();
+      const registered = data.user;
+      localStorage.setItem('authToken', data.token);
+      setUsers(prev => [...prev, registered]);
+      setCurrentUser(registered);
+      setIsAuthModalOpen(false);
+      
+      const isHost = registered.isAdmin || registered.isHost || properties.some(p => p.ownerEmail === registered.email);
+      if (isHost) {
+        handleTabChange('host');
+      } else {
+        handleTabChange('profile');
+      }
+      logActivity(registered, `Registrovan novi nalog na portalu.`, 'auth');
     } else {
       const isAdminEmail = newUser.email === 'stefan@email.com' || newUser.email === 'stefan.petrovic@gmail.com' || newUser.email === 'voxilityy@gmail.com';
       const updatedUser = isAdminEmail ? { ...newUser, isAdmin: true, isHost: true } : newUser;
@@ -1007,35 +995,31 @@ export default function App() {
 
   const handleLogin = async (loginData) => {
     if (backendActive) {
-      try {
-        const res = await fetch(`${API_URL}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: loginData.email, password: loginData.password })
-        });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || 'Pogrešan e-mail ili lozinka.');
-        }
-        const data = await res.json();
-        const loggedInUser = data.user;
-        localStorage.setItem('authToken', data.token);
-        setCurrentUser(loggedInUser);
-        setIsAuthModalOpen(false);
-        
-        const isHost = loggedInUser.isAdmin || loggedInUser.isHost || properties.some(p => p.ownerEmail === loggedInUser.email);
-        if (isHost) {
-          setIsFake404Active(false);
-          handleTabChange('host');
-          logActivity(loggedInUser, loggedInUser.isAdmin ? `Administrator se prijavio na sistem (JWT).` : `Domaćin se prijavio na sistem (JWT).`, 'auth');
-        } else {
-          handleTabChange('profile');
-          logActivity(loggedInUser, `Korisnik se prijavio na sistem (JWT).`, 'auth');
-        }
-        return loggedInUser;
-      } catch (err) {
-        throw err;
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginData.email, password: loginData.password })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Pogrešan e-mail ili lozinka.');
       }
+      const data = await res.json();
+      const loggedInUser = data.user;
+      localStorage.setItem('authToken', data.token);
+      setCurrentUser(loggedInUser);
+      setIsAuthModalOpen(false);
+      
+      const isHost = loggedInUser.isAdmin || loggedInUser.isHost || properties.some(p => p.ownerEmail === loggedInUser.email);
+      if (isHost) {
+        setIsFake404Active(false);
+        handleTabChange('host');
+        logActivity(loggedInUser, loggedInUser.isAdmin ? `Administrator se prijavio na sistem (JWT).` : `Domaćin se prijavio na sistem (JWT).`, 'auth');
+      } else {
+        handleTabChange('profile');
+        logActivity(loggedInUser, `Korisnik se prijavio na sistem (JWT).`, 'auth');
+      }
+      return loggedInUser;
     } else {
       const user = users.find(
         u => u.email.toLowerCase() === loginData.email.toLowerCase().trim() && u.password === loginData.password
@@ -1179,7 +1163,7 @@ export default function App() {
   };
 
   // Handle Add New Property (from HostPanel)
-  const handleAddProperty = async (newProperty) => {
+  const handleAddProperty = useCallback(async (newProperty) => {
     if (backendActive) {
       try {
         const res = await fetch(`${API_URL}/api/properties`, {
@@ -1199,7 +1183,7 @@ export default function App() {
       }
     } else {
       const isApproved = currentUser && currentUser.isAdmin ? 1 : 0;
-      const propertyWithApproval = { ...newProperty, isApproved, id: newProperty.id || Date.now() };
+      const propertyWithApproval = { ...newProperty, isApproved, id: newProperty.id || getUniqueId() };
       setProperties(prev => [propertyWithApproval, ...prev]);
       handleTabChange('listings');
       logActivity(currentUser, `Dodat novi smeštaj u ponudu: ${newProperty.title} (${newProperty.location}).`, 'create');
@@ -1208,7 +1192,7 @@ export default function App() {
         createMockAdminNotification(`Domaćin ${currentUser.fullName || currentUser.email} (${currentUser.email}) je kreirao novi smeštaj: '${newProperty.title}' (čeka odobrenje).`);
       }
     }
-  };
+  }, [backendActive, currentUser, logActivity, createMockAdminNotification]);
 
   // Handle Delete Property
   const handleDeleteProperty = async (propertyId) => {

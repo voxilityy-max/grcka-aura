@@ -9474,7 +9474,7 @@ g:hover > .pin-hover-label {
 
 /* Premium gradient brand text */
 .brand-logo-text {
-  font-family: 'Outfit', 'Montserrat', 'Inter', sans-serif !important;
+  font-family: var(--font-heading) !important;
   font-size: 1.6rem !important;
   font-weight: 800 !important;
   letter-spacing: -0.02em !important;

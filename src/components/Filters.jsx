@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export default function Filters({ filters, setFilters, maxPriceLimit = 250, clearFilters }) {
   const activeMaxPrice = filters.maxPrice !== null && filters.maxPrice !== undefined ? filters.maxPrice : maxPriceLimit;

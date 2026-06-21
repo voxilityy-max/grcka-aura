@@ -6,7 +6,6 @@ export default function Navbar({
   setIsDarkMode, 
   currentUser, 
   onOpenAuth,
-  isGridMenuOpen,
   setIsGridMenuOpen,
   isHost
 }) {

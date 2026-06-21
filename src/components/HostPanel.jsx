@@ -8,6 +8,7 @@ const PRESET_IMAGES = [
 ];
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const getUniqueId = () => Date.now();
 
 /*
 const DB_SCHEMAS = {
@@ -100,6 +101,20 @@ export default function HostPanel({
   const [wizardStep, setWizardStep] = useState(1); // For property adding wizard: 1, 2, 3
   const [selectedOwnerFilter, setSelectedOwnerFilter] = useState('all');
   const [previewMode, setPreviewMode] = useState('card'); // 'card' or 'detail'
+  // States for host onboarding wizard
+  const [onboardStep, setOnboardStep] = useState(1);
+  const [agreedTOS, setAgreedTOS] = useState(currentUser?.agreedToTerms === 1);
+  const [legalDetails, setLegalDetails] = useState({
+    jmbg: '',
+    address: '',
+    pib: '',
+    companyName: ''
+  });
+  const [uploadedDocs, setUploadedDocs] = useState({
+    idCard: '',
+    propertyProof: ''
+  });
+  const [isSubmittingOnboard, setIsSubmittingOnboard] = useState(false);
 
   /* SQL Terminal & Console States (Commented out to resolve unused warnings)
   const [activeTable, setActiveTable] = useState('users');
@@ -981,7 +996,7 @@ export default function HostPanel({
 
     const newProperty = {
       ...formData,
-      id: Date.now(),
+      id: getUniqueId(),
       price: priceNum,
       distanceToBeach: distNum,
       rating: 5.0,
@@ -1167,20 +1182,7 @@ export default function HostPanel({
   // Exception: Admins bypass this wizard.
   const hostVerificationStatus = currentUser.isVerified !== undefined ? Number(currentUser.isVerified) : 0;
   
-  // States for host onboarding wizard
-  const [onboardStep, setOnboardStep] = useState(1);
-  const [agreedTOS, setAgreedTOS] = useState(currentUser.agreedToTerms === 1);
-  const [legalDetails, setLegalDetails] = useState({
-    jmbg: '',
-    address: '',
-    pib: '',
-    companyName: ''
-  });
-  const [uploadedDocs, setUploadedDocs] = useState({
-    idCard: '',
-    propertyProof: ''
-  });
-  const [isSubmittingOnboard, setIsSubmittingOnboard] = useState(false);
+
 
   const handleOnboardSubmit = async (e) => {
     e.preventDefault();
