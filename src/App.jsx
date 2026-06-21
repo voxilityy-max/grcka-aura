@@ -250,7 +250,10 @@ export default function App() {
     if (window.location.pathname === '/aura-vlasnik') {
       const savedUser = localStorage.getItem('currentUser');
       const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-      if (parsedUser && parsedUser.isAdmin) {
+      const savedPropertiesRaw = localStorage.getItem('properties');
+      const savedProperties = savedPropertiesRaw ? JSON.parse(savedPropertiesRaw) : [];
+      const isHost = parsedUser && (parsedUser.isHost || savedProperties.some(p => p.ownerEmail === parsedUser.email));
+      if (parsedUser && (parsedUser.isAdmin || isHost)) {
         return 'host';
       }
     }
@@ -353,7 +356,10 @@ export default function App() {
     if (window.location.pathname === '/aura-vlasnik' || window.location.pathname === '/panel') {
       const savedUser = localStorage.getItem('currentUser');
       const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-      if (!parsedUser || !parsedUser.isAdmin) {
+      const savedPropertiesRaw = localStorage.getItem('properties');
+      const savedProperties = savedPropertiesRaw ? JSON.parse(savedPropertiesRaw) : [];
+      const isHost = parsedUser && (parsedUser.isHost || savedProperties.some(p => p.ownerEmail === parsedUser.email));
+      if (!parsedUser || (!parsedUser.isAdmin && !isHost)) {
         return true;
       }
     }
@@ -406,10 +412,25 @@ export default function App() {
 
   // Auth Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalOptions, setAuthModalOptions] = useState({ initialIsRegister: false, initialIsHost: false });
+
+  const handleOpenAuthModal = (opts = {}) => {
+    setAuthModalOptions({
+      initialIsRegister: opts.initialIsRegister || false,
+      initialIsHost: opts.initialIsHost || false
+    });
+    setIsAuthModalOpen(true);
+  };
 
   // Activity logs state (Audit Log)
   const [activityLogs, setActivityLogs] = useState(() => {
     const saved = localStorage.getItem('activityLogs');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Admin notifications state
+  const [adminNotifications, setAdminNotifications] = useState(() => {
+    const saved = localStorage.getItem('adminNotifications');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -501,6 +522,22 @@ export default function App() {
       const dataPosts = await resPosts.json();
       setForumPosts(dataPosts);
       
+      if (currentUser && currentUser.isAdmin) {
+        try {
+          const resNotifs = await fetch(`${API_URL}/api/admin/notifications`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          });
+          if (resNotifs.ok) {
+            const dataNotifs = await resNotifs.json();
+            setAdminNotifications(dataNotifs);
+          }
+        } catch (notifErr) {
+          console.warn("Failed to refresh admin notifications:", notifErr);
+        }
+      }
+      
       setBackendActive(true);
       console.log('Ažurirani podaci sa backend servera!');
     } catch (err) {
@@ -533,6 +570,22 @@ export default function App() {
         const dataPosts = await resPosts.json();
         setForumPosts(dataPosts);
 
+        if (currentUser && currentUser.isAdmin) {
+          try {
+            const resNotifs = await fetch(`${API_URL}/api/admin/notifications`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+              }
+            });
+            if (resNotifs.ok) {
+              const dataNotifs = await resNotifs.json();
+              setAdminNotifications(dataNotifs);
+            }
+          } catch (notifErr) {
+            console.warn("Failed to fetch admin notifications initially:", notifErr);
+          }
+        }
+
         setBackendActive(true);
         console.log('Uspostavljena veza sa pravim backend serverom!');
       } catch (err) {
@@ -556,28 +609,29 @@ export default function App() {
 
   // Sync URL for Admin Panel
   useEffect(() => {
+    const isHost = currentUser && (currentUser.isHost || properties.some(p => p.ownerEmail === currentUser.email));
     if (activeTab === 'host') {
-      if (currentUser && currentUser.isAdmin) {
+      if (currentUser && (currentUser.isAdmin || isHost)) {
         setIsFake404Active(false);
         if (window.location.pathname !== '/aura-vlasnik') {
           window.history.pushState({}, '', '/aura-vlasnik');
         }
       } else {
-        // If not admin, show fake 404
+        // If not admin/host, show fake 404
         setIsFake404Active(true);
         window.history.pushState({}, '', '/aura-vlasnik');
       }
     } else {
       if (window.location.pathname === '/aura-vlasnik' || window.location.pathname === '/panel') {
-        if (currentUser && currentUser.isAdmin) {
-          // If admin, reset to / when navigating away from host tab
+        if (currentUser && (currentUser.isAdmin || isHost)) {
+          // If admin/host, reset to / when navigating away from host tab
           window.history.pushState({}, '', '/');
         } else {
           setIsFake404Active(true);
         }
       }
     }
-  }, [activeTab, currentUser]);
+  }, [activeTab, currentUser, properties]);
 
   // Listen to popstate event (back/forward browser buttons)
   useEffect(() => {
@@ -586,7 +640,10 @@ export default function App() {
       if (window.location.pathname === '/aura-vlasnik' || window.location.pathname === '/panel') {
         const savedUser = localStorage.getItem('currentUser');
         const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-        if (parsedUser && parsedUser.isAdmin) {
+        const savedPropertiesRaw = localStorage.getItem('properties');
+        const savedProperties = savedPropertiesRaw ? JSON.parse(savedPropertiesRaw) : [];
+        const isHost = parsedUser && (parsedUser.isHost || savedProperties.some(p => p.ownerEmail === parsedUser.email));
+        if (parsedUser && (parsedUser.isAdmin || isHost)) {
           setIsFake404Active(false);
           setActiveTab('host');
         } else {
@@ -647,6 +704,65 @@ export default function App() {
     localStorage.setItem('activityLogs', JSON.stringify(activityLogs));
   }, [activityLogs]);
 
+  // Sync Admin Notifications to localStorage
+  useEffect(() => {
+    localStorage.setItem('adminNotifications', JSON.stringify(adminNotifications));
+  }, [adminNotifications]);
+
+  const fetchAdminNotifications = async () => {
+    if (!backendActive) return;
+    if (!currentUser || !currentUser.isAdmin) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/notifications`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAdminNotifications(data);
+      }
+    } catch (err) {
+      console.error('Greška pri učitavanju obaveštenja:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (backendActive && currentUser && currentUser.isAdmin) {
+      fetchAdminNotifications();
+    }
+  }, [backendActive, currentUser]);
+
+  const handleMarkNotificationsRead = async () => {
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/admin/notifications/mark-read`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        if (res.ok) {
+          fetchAdminNotifications();
+        }
+      } catch (err) {
+        console.error('Greška pri označavanju obaveštenja kao pročitanih:', err);
+      }
+    } else {
+      setAdminNotifications(prev => prev.map(n => ({ ...n, isRead: 1 })));
+    }
+  };
+
+  const createMockAdminNotification = (message) => {
+    const newNotif = {
+      id: Date.now(),
+      message,
+      timestamp: new Date().toLocaleString('sr-RS'),
+      isRead: 0
+    };
+    setAdminNotifications(prev => [newNotif, ...prev]);
+  };
+
   // Activity Logger Helper
   const logActivity = async (user, action, type) => {
     const now = new Date();
@@ -702,7 +818,13 @@ export default function App() {
         setUsers(prev => [...prev, registered]);
         setCurrentUser(registered);
         setIsAuthModalOpen(false);
-        handleTabChange('profile');
+        
+        const isHost = registered.isAdmin || registered.isHost || properties.some(p => p.ownerEmail === registered.email);
+        if (isHost) {
+          handleTabChange('host');
+        } else {
+          handleTabChange('profile');
+        }
         logActivity(registered, `Registrovan novi nalog na portalu.`, 'auth');
       } catch (err) {
         throw err;
@@ -713,7 +835,13 @@ export default function App() {
       setUsers(prev => [...prev, updatedUser]);
       setCurrentUser(updatedUser);
       setIsAuthModalOpen(false);
-      handleTabChange('profile');
+      
+      const isHost = updatedUser.isAdmin || updatedUser.isHost || properties.some(p => p.ownerEmail === updatedUser.email);
+      if (isHost) {
+        handleTabChange('host');
+      } else {
+        handleTabChange('profile');
+      }
       logActivity(updatedUser, `Registrovan novi nalog na portalu.`, 'auth');
     }
   };
@@ -735,10 +863,12 @@ export default function App() {
         localStorage.setItem('authToken', data.token);
         setCurrentUser(loggedInUser);
         setIsAuthModalOpen(false);
-        if (loggedInUser.isAdmin) {
+        
+        const isHost = loggedInUser.isAdmin || loggedInUser.isHost || properties.some(p => p.ownerEmail === loggedInUser.email);
+        if (isHost) {
           setIsFake404Active(false);
           handleTabChange('host');
-          logActivity(loggedInUser, `Administrator se prijavio na sistem (JWT).`, 'auth');
+          logActivity(loggedInUser, loggedInUser.isAdmin ? `Administrator se prijavio na sistem (JWT).` : `Domaćin se prijavio na sistem (JWT).`, 'auth');
         } else {
           handleTabChange('profile');
           logActivity(loggedInUser, `Korisnik se prijavio na sistem (JWT).`, 'auth');
@@ -755,10 +885,12 @@ export default function App() {
       }
       setCurrentUser(user);
       setIsAuthModalOpen(false);
-      if (user.isAdmin) {
+      
+      const isHost = user.isAdmin || user.isHost || properties.some(p => p.ownerEmail === user.email);
+      if (isHost) {
         setIsFake404Active(false);
         handleTabChange('host');
-        logActivity(user, `Administrator se prijavio na sistem.`, 'auth');
+        logActivity(user, user.isAdmin ? `Administrator se prijavio na sistem.` : `Domaćin se prijavio na sistem.`, 'auth');
       } else {
         handleTabChange('profile');
         logActivity(user, `Korisnik se prijavio na sistem.`, 'auth');
@@ -868,9 +1000,15 @@ export default function App() {
         console.error(err);
       }
     } else {
-      setProperties(prev => [newProperty, ...prev]);
+      const isApproved = currentUser && currentUser.isAdmin ? 1 : 0;
+      const propertyWithApproval = { ...newProperty, isApproved, id: newProperty.id || Date.now() };
+      setProperties(prev => [propertyWithApproval, ...prev]);
       handleTabChange('listings');
       logActivity(currentUser, `Dodat novi smeštaj u ponudu: ${newProperty.title} (${newProperty.location}).`, 'create');
+      
+      if (currentUser && !currentUser.isAdmin) {
+        createMockAdminNotification(`Domaćin ${currentUser.fullName || currentUser.email} (${currentUser.email}) je kreirao novi smeštaj: '${newProperty.title}' (čeka odobrenje).`);
+      }
     }
   };
 
@@ -895,6 +1033,50 @@ export default function App() {
     } else {
       setProperties(prev => prev.filter(p => p.id !== propertyId));
       logActivity(currentUser, `Obrisan smeštaj iz baze: ${property.title} (${property.location}).`, 'delete');
+      
+      if (currentUser && !currentUser.isAdmin) {
+        createMockAdminNotification(`Domaćin ${currentUser.fullName || currentUser.email} (${currentUser.email}) je obrisao svoj smeštaj: '${property.title}'.`);
+      }
+    }
+  };
+
+  // Handle Approve Property
+  const handleApproveProperty = async (propertyId) => {
+    if (backendActive) {
+      const query = `UPDATE properties SET isApproved = 1 WHERE id = ${propertyId};`;
+      try {
+        const response = await fetch(`${API_URL}/api/admin/query`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ query })
+        });
+        if (response.ok) {
+          alert('Smeštaj je uspešno odobren i sada je javno vidljiv!');
+          setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, isApproved: 1 } : p));
+          if (currentUser && currentUser.isAdmin) {
+            fetchAdminNotifications();
+          }
+        } else {
+          alert('Greška pri odobravanju.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Konekcija neuspešna.');
+      }
+    } else {
+      setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, isApproved: 1 } : p));
+      alert('Smeštaj je uspešno odobren (lokalno)!');
+    }
+  };
+
+  // Handle Update Property (mock database query fallback or local sync)
+  const handleUpdateProperty = (updatedProperty) => {
+    setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
+    if (currentUser && !currentUser.isAdmin) {
+      createMockAdminNotification(`Domaćin ${currentUser.fullName || currentUser.email} (${currentUser.email}) je izmenio podatke za smeštaj: '${updatedProperty.title}'.`);
     }
   };
 
@@ -982,6 +1164,94 @@ export default function App() {
         }
         return inq;
       }));
+    }
+  };
+
+  // Handle Host Verification Submit
+  const handleSendVerification = async (details, docs) => {
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/host/verify-request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ details, docs })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUser(data.user);
+          localStorage.setItem('currentUser', JSON.stringify(data.user));
+          // Refresh users list
+          handleRefreshDatabase();
+          alert('Dokumentacija uspešno poslata na pregled!');
+        } else {
+          const errData = await res.json();
+          alert('Greška: ' + (errData.error || 'Neuspešno slanje dokumenata.'));
+        }
+      } catch (err) {
+        console.error('Greška pri slanju dokumenata:', err);
+        alert('Konekcija neuspešna.');
+      }
+    } else {
+      // Mock mode fallback
+      const updatedUser = {
+        ...currentUser,
+        isVerified: 0,
+        agreedToTerms: 1,
+        verificationDetails: JSON.stringify(details),
+        verificationDocs: JSON.stringify(docs)
+      };
+      setCurrentUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+      createMockAdminNotification(`Domaćin ${updatedUser.fullName} (${updatedUser.email}) je poslao dokumentaciju na verifikaciju (Mock).`);
+      alert('Dokumentacija uspešno poslata na pregled (Lokalno)!');
+    }
+  };
+
+  // Handle Admin Host Verification Approve/Reject
+  const handleAdminVerifyHost = async (userId, status, reason) => {
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/admin/verify-host/${userId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ status, reason })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          alert(data.message);
+          handleRefreshDatabase();
+          // Ako je admin promenio status sopstvenog naloga ili ako osvežavamo
+          if (currentUser && currentUser.id === userId) {
+            const updatedUser = { ...currentUser, isVerified: status };
+            setCurrentUser(updatedUser);
+            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+          }
+        } else {
+          const errData = await res.json();
+          alert('Greška: ' + (errData.error || 'Neuspešna promena statusa.'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Konekcija neuspešna.');
+      }
+    } else {
+      // Mock mode fallback
+      setUsers(prev => prev.map(u => {
+        if (u.id === userId) {
+          const updated = { ...u, isVerified: status };
+          createMockAdminNotification(`Admin je promenio status verifikacije za ${u.username} u: ${status === 1 ? 'Odobren' : 'Odbijen'} (Lokalno).`);
+          return updated;
+        }
+        return u;
+      }));
+      alert(`Status verifikacije promenjen (Lokalno).`);
     }
   };
 
@@ -1228,6 +1498,9 @@ export default function App() {
   const getFilteredAndSortedProperties = () => {
     let items = [...properties];
 
+    // Filter by Approval: only show approved properties in public views
+    items = items.filter(p => p.isApproved === undefined || p.isApproved === 1 || p.isApproved === true || p.isApproved === '1');
+
     // Filter by Wishlist Tab
     if (activeTab === 'wishlist') {
       items = items.filter(p => wishlist.includes(p.id));
@@ -1327,7 +1600,7 @@ export default function App() {
           <div className="main-layout full-width">
             <TravelGuide 
               currentUser={currentUser}
-              onOpenAuth={() => setIsAuthModalOpen(true)}
+              onOpenAuth={handleOpenAuthModal}
             />
           </div>
         );
@@ -1371,6 +1644,15 @@ export default function App() {
               onUpdateInquiryStatus={handleUpdateInquiryStatus}
               onSendChatMessage={handleSendChatMessage}
               onRefreshDatabase={handleRefreshDatabase}
+              isHost={currentUser && (currentUser.isHost || properties.some(p => p.ownerEmail === currentUser.email))}
+              backendActive={backendActive}
+              adminNotifications={adminNotifications}
+              onMarkNotificationsRead={handleMarkNotificationsRead}
+              onApproveProperty={handleApproveProperty}
+              onUpdateProperty={handleUpdateProperty}
+              onAddMockNotification={createMockAdminNotification}
+              onSendVerification={handleSendVerification}
+              onAdminVerifyHost={handleAdminVerifyHost}
             />
           </div>
         );
@@ -1394,7 +1676,7 @@ export default function App() {
             <div style={{ textAlign: 'center', padding: '5rem 1rem' }}>
               <h3>Niste Prijavljeni</h3>
               <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Da biste pristupili kontrolnom panelu i pratili upite, molimo Vas da se prijavite.</p>
-              <button className="btn-search" onClick={() => setIsAuthModalOpen(true)} style={{ marginTop: '1.5rem', marginInline: 'auto' }}>
+              <button className="btn-search" onClick={() => handleOpenAuthModal()} style={{ marginTop: '1.5rem', marginInline: 'auto' }}>
                 Prijavi se
               </button>
             </div>
@@ -1596,11 +1878,12 @@ export default function App() {
           isDarkMode={isDarkMode}
           setIsDarkMode={setIsDarkMode}
           currentUser={currentUser}
-          onOpenAuth={() => setIsAuthModalOpen(true)}
+          onOpenAuth={handleOpenAuthModal}
           isGridMenuOpen={isGridMenuOpen}
           setIsGridMenuOpen={setIsGridMenuOpen}
           onSelectDestination={handleSelectDestination}
           onSelectCategory={handleSelectCategory}
+          isHost={currentUser && (currentUser.isHost || properties.some(p => p.ownerEmail === currentUser.email))}
         />
         <Megamenu 
           isGridMenuOpen={isGridMenuOpen}
@@ -1626,7 +1909,7 @@ export default function App() {
             onClose={() => setSelectedProperty(null)}
             onAddReview={handleAddReview}
             currentUser={currentUser}
-            onOpenAuth={() => setIsAuthModalOpen(true)}
+            onOpenAuth={handleOpenAuthModal}
             onAddInquiry={handleAddInquiry}
             onDeleteReview={handleDeleteReview}
             inquiries={inquiries}
@@ -1854,6 +2137,8 @@ export default function App() {
           onLogin={handleLogin}
           onRegister={handleRegister}
           registeredUsers={users}
+          initialIsRegister={authModalOptions.initialIsRegister}
+          initialIsHost={authModalOptions.initialIsHost}
         />
       )}
 

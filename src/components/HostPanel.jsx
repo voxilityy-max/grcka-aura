@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 
 const PRESET_IMAGES = [
   { id: 'villa-1', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80', label: 'Moderna Vila sa bazenom' },
@@ -44,16 +44,57 @@ export default function HostPanel({
   destinations, 
   propertyTypes, 
   currentUser,
-  properties = [],
-  inquiries = [],
+  properties: rawProperties = [],
+  inquiries: rawInquiries = [],
   activityLogs = [],
   onDeleteProperty,
   users = [],
   onToggleAdminStatus,
   onUpdateInquiryStatus,
   onSendChatMessage,
-  onRefreshDatabase
+  onRefreshDatabase,
+  backendActive,
+  adminNotifications = [],
+  onMarkNotificationsRead,
+  onApproveProperty,
+  onUpdateProperty,
+  onAddMockNotification,
+  onSendVerification,
+  onAdminVerifyHost
 }) {
+  const properties = useMemo(() => {
+    const orig = rawProperties;
+    if (!currentUser) return orig;
+    if (currentUser.isAdmin) return orig;
+    return orig.filter(p => p.ownerEmail && p.ownerEmail.toLowerCase().trim() === currentUser.email.toLowerCase().trim());
+  }, [rawProperties, currentUser]);
+
+  const inquiries = useMemo(() => {
+    const orig = rawInquiries;
+    if (!currentUser) return orig;
+    if (currentUser.isAdmin) return orig;
+    const myPropertyIds = new Set(properties.map(p => p.id));
+    return orig.filter(inq => myPropertyIds.has(inq.propertyId));
+  }, [rawInquiries, properties, currentUser]);
+
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const bellContainerRef = useRef(null);
+
+  const unreadCount = useMemo(() => {
+    return adminNotifications.filter(n => !n.isRead).length;
+  }, [adminNotifications]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (bellContainerRef.current && !bellContainerRef.current.contains(event.target)) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   // Navigation & View States
   const [panelTab, setPanelTab] = useState('dashboard'); // 'dashboard', 'add', 'manage', 'inquiries', 'users', 'logs', 'database'
   const [wizardStep, setWizardStep] = useState(1); // For property adding wizard: 1, 2, 3
@@ -103,6 +144,8 @@ export default function HostPanel({
 
   // Chat & Comments logic
   const [selectedInqForChat, setSelectedInqForChat] = useState(null);
+  const [selectedHostToReview, setSelectedHostToReview] = useState(null);
+  const [reviewReason, setReviewReason] = useState('');
   const [chatText, setChatText] = useState('');
   const [inquiryNotes, setInquiryNotes] = useState(() => {
     try {
@@ -125,8 +168,8 @@ export default function HostPanel({
     description: '',
     image: PRESET_IMAGES[0].url,
     icalUrl: '',
-    ownerEmail: '',
-    ownerPhone: '',
+    ownerEmail: currentUser && !currentUser.isAdmin ? currentUser.email : '',
+    ownerPhone: currentUser && !currentUser.isAdmin ? (currentUser.phone || '') : '',
     monthlyPrices: {
       may: '',
       june: '',
@@ -394,9 +437,15 @@ export default function HostPanel({
       return;
     }
     const factor = 1 + (val / 100);
-    const query = `UPDATE properties SET price = ROUND(price * ${factor}, 0);`;
+    const query = currentUser && currentUser.isAdmin
+      ? `UPDATE properties SET price = ROUND(price * ${factor}, 0);`
+      : `UPDATE properties SET price = ROUND(price * ${factor}, 0) WHERE ownerEmail = '${currentUser.email}';`;
 
-    if (!confirm(`Da li ste sigurni da želite da promenite cene svih smeštaja za ${val > 0 ? '+' : ''}${val}% globalno?`)) {
+    const confirmMsg = currentUser && currentUser.isAdmin
+      ? `Da li ste sigurni da želite da promenite cene svih smeštaja za ${val > 0 ? '+' : ''}${val}% globalno?`
+      : `Da li ste sigurni da želite da promenite cene svih vaših smeštaja za ${val > 0 ? '+' : ''}${val}%?`;
+
+    if (!confirm(confirmMsg)) {
       return;
     }
 
@@ -505,6 +554,58 @@ export default function HostPanel({
       monthlyPrices = '${monthlyPricesStr}'
       WHERE id = ${editingProperty.id};`;
 
+    if (!backendActive) {
+      const updatedProp = {
+        ...editingProperty,
+        title: editingProperty.title,
+        location: editingProperty.location,
+        type: editingProperty.type,
+        price: parseFloat(editingProperty.price) || 0,
+        distanceToBeach: parseInt(editingProperty.distanceToBeach, 10) || 0,
+        guests: parseInt(editingProperty.guests, 10) || 0,
+        bedrooms: parseInt(editingProperty.bedrooms, 10) || 0,
+        description: editingProperty.description,
+        image: editingProperty.image,
+        amenities: editingProperty.amenities,
+        icalUrl: editingProperty.icalUrl,
+        ownerEmail: editingProperty.ownerEmail,
+        ownerPhone: editingProperty.ownerPhone,
+        monthlyPrices: editingProperty.monthlyPrices
+      };
+      if (onUpdateProperty) {
+        onUpdateProperty(updatedProp);
+      }
+      alert('Smeštaj uspešno ažuriran (lokalno)!');
+      setEditingProperty(null);
+      return;
+    }
+
+    if (!backendActive) {
+      const updatedProp = {
+        ...editingProperty,
+        title: editingProperty.title,
+        location: editingProperty.location,
+        type: editingProperty.type,
+        price: parseFloat(editingProperty.price) || 0,
+        distanceToBeach: parseInt(editingProperty.distanceToBeach, 10) || 0,
+        guests: parseInt(editingProperty.guests, 10) || 0,
+        bedrooms: parseInt(editingProperty.bedrooms, 10) || 0,
+        description: editingProperty.description,
+        image: editingProperty.image,
+        amenities: editingProperty.amenities,
+        icalUrl: editingProperty.icalUrl,
+        ownerEmail: editingProperty.ownerEmail,
+        ownerPhone: editingProperty.ownerPhone,
+        monthlyPrices: editingProperty.monthlyPrices
+      };
+      if (onUpdateProperty) {
+        onUpdateProperty(updatedProp);
+      }
+      alert('Smeštaj uspešno ažuriran (lokalno)!');
+      setEditingProperty(null);
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/api/admin/query`, {
         method: 'POST',
@@ -561,6 +662,66 @@ export default function HostPanel({
     const query = `INSERT INTO rooms (propertyId, title, price, guests, bedrooms, image, description, icalUrl, bedStructure, kitchenType, monthlyPrices)
       VALUES (${editingProperty.id}, '${titleEsc}', ${parseFloat(newRoomData.price) || 0}, ${parseInt(newRoomData.guests, 10) || 1}, ${parseInt(newRoomData.bedrooms, 10) || 1}, '${newRoomData.image}', '${descEsc}', '${icalUrlEsc}', '${bedStructureEsc}', '${kitchenTypeEsc}', '${monthlyPricesStr}');`;
       
+    if (!backendActive) {
+      if (onUpdateProperty) {
+        const updatedRooms = [
+          ...(editingProperty.rooms || []),
+          {
+            id: Date.now(),
+            propertyId: editingProperty.id,
+            title: newRoomData.title,
+            price: parseFloat(newRoomData.price) || 0,
+            guests: parseInt(newRoomData.guests, 10) || 1,
+            bedrooms: parseInt(newRoomData.bedrooms, 10) || 1,
+            image: newRoomData.image,
+            description: newRoomData.description,
+            icalUrl: newRoomData.icalUrl,
+            bedStructure: newRoomData.bedStructure,
+            kitchenType: newRoomData.kitchenType,
+            monthlyPrices: newRoomData.monthlyPrices
+          }
+        ];
+        const updatedProp = { ...editingProperty, rooms: updatedRooms };
+        onUpdateProperty(updatedProp);
+        setEditingProperty(updatedProp);
+        if (currentUser && !currentUser.isAdmin) {
+          onAddMockNotification?.(`Domaćin ${currentUser.fullName || currentUser.email} je dodao novu sobu u smeštaj '${editingProperty.title}'.`);
+        }
+      }
+      alert('Soba uspešno dodata (lokalno)!');
+      return;
+    }
+
+    if (!backendActive) {
+      if (onUpdateProperty) {
+        const updatedRooms = [
+          ...(editingProperty.rooms || []),
+          {
+            id: Date.now(),
+            propertyId: editingProperty.id,
+            title: newRoomData.title,
+            price: parseFloat(newRoomData.price) || 0,
+            guests: parseInt(newRoomData.guests, 10) || 1,
+            bedrooms: parseInt(newRoomData.bedrooms, 10) || 1,
+            image: newRoomData.image,
+            description: newRoomData.description,
+            icalUrl: newRoomData.icalUrl,
+            bedStructure: newRoomData.bedStructure,
+            kitchenType: newRoomData.kitchenType,
+            monthlyPrices: newRoomData.monthlyPrices
+          }
+        ];
+        const updatedProp = { ...editingProperty, rooms: updatedRooms };
+        onUpdateProperty(updatedProp);
+        setEditingProperty(updatedProp);
+        if (currentUser && !currentUser.isAdmin) {
+          onAddMockNotification?.(`Domaćin ${currentUser.fullName || currentUser.email} je dodao novu sobu u smeštaj '${editingProperty.title}'.`);
+        }
+      }
+      alert('Soba uspešno dodata (lokalno)!');
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/api/admin/query`, {
         method: 'POST',
@@ -627,6 +788,36 @@ export default function HostPanel({
   const handleDeleteRoom = async (roomId) => {
     if (!confirm('Da li ste sigurni da želite da obrišete ovu sobu?')) return;
     const query = `DELETE FROM rooms WHERE id = ${roomId};`;
+    if (!backendActive) {
+      if (onUpdateProperty) {
+        const deletedRoom = (editingProperty.rooms || []).find(r => r.id === roomId);
+        const updatedRooms = (editingProperty.rooms || []).filter(r => r.id !== roomId);
+        const updatedProp = { ...editingProperty, rooms: updatedRooms };
+        onUpdateProperty(updatedProp);
+        setEditingProperty(updatedProp);
+        if (currentUser && !currentUser.isAdmin && deletedRoom) {
+          onAddMockNotification?.(`Domaćin ${currentUser.fullName || currentUser.email} je uklonio sobu '${deletedRoom.title}' iz smeštaja '${editingProperty.title}'.`);
+        }
+      }
+      alert('Soba uspešno obrisana (lokalno)!');
+      return;
+    }
+
+    if (!backendActive) {
+      if (onUpdateProperty) {
+        const deletedRoom = (editingProperty.rooms || []).find(r => r.id === roomId);
+        const updatedRooms = (editingProperty.rooms || []).filter(r => r.id !== roomId);
+        const updatedProp = { ...editingProperty, rooms: updatedRooms };
+        onUpdateProperty(updatedProp);
+        setEditingProperty(updatedProp);
+        if (currentUser && !currentUser.isAdmin && deletedRoom) {
+          onAddMockNotification?.(`Domaćin ${currentUser.fullName || currentUser.email} je uklonio sobu '${deletedRoom.title}' iz smeštaja '${editingProperty.title}'.`);
+        }
+      }
+      alert('Soba uspešno obrisana (lokalno)!');
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/api/admin/query`, {
         method: 'POST',
@@ -764,8 +955,8 @@ export default function HostPanel({
         description: '',
         image: PRESET_IMAGES[0].url,
         icalUrl: '',
-        ownerEmail: '',
-        ownerPhone: '',
+        ownerEmail: currentUser && !currentUser.isAdmin ? currentUser.email : '',
+        ownerPhone: currentUser && !currentUser.isAdmin ? (currentUser.phone || '') : '',
         monthlyPrices: {
           may: '',
           june: '',
@@ -903,8 +1094,9 @@ export default function HostPanel({
     ? `${linePath} L ${points[points.length - 1].x} ${chartHeight - chartPadding} L ${points[0].x} ${chartHeight - chartPadding} Z` 
     : '';
 
-  // Guard Clause for Non-Admin
-  if (!currentUser || !currentUser.isAdmin) {
+  // Guard Clause for Non-Admin / Non-Host
+  const isHostUser = currentUser && (currentUser.isHost || properties.some(p => p.ownerEmail === currentUser.email));
+  if (!currentUser || (!currentUser.isAdmin && !isHostUser)) {
     return (
       <div className="host-panel-container animate-fade" style={{ maxWidth: '800px', margin: '3rem auto' }}>
         <div className="host-header" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
@@ -914,9 +1106,392 @@ export default function HostPanel({
           </svg>
           <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)' }}>Pristup Odbijen</h3>
           <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            Nemate ovlašćenje za pristup ovoj stranici. Samo vlasnici (administratori) sajta mogu objavljivati i menjati smeštaje.
+            Nemate ovlašćenje za pristup ovoj stranici. Samo vlasnici i domaćini sajta mogu objavljivati i menjati smeštaje.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  // 1. Check host verification status. If host is NOT verified (isVerified !== 1), render onboarding wizard.
+  // Exception: Admins bypass this wizard.
+  const hostVerificationStatus = currentUser.isVerified !== undefined ? Number(currentUser.isVerified) : 0;
+  
+  // States for host onboarding wizard
+  const [onboardStep, setOnboardStep] = useState(1);
+  const [agreedTOS, setAgreedTOS] = useState(currentUser.agreedToTerms === 1);
+  const [legalDetails, setLegalDetails] = useState({
+    jmbg: '',
+    address: '',
+    pib: '',
+    companyName: ''
+  });
+  const [uploadedDocs, setUploadedDocs] = useState({
+    idCard: '',
+    propertyProof: ''
+  });
+  const [isSubmittingOnboard, setIsSubmittingOnboard] = useState(false);
+
+  const handleOnboardSubmit = async (e) => {
+    e.preventDefault();
+    if (!agreedTOS) {
+      alert('Morate prihvatiti pravni ugovor i uslove korišćenja.');
+      return;
+    }
+    if (!legalDetails.jmbg || !legalDetails.address) {
+      alert('Molimo popunite sva obavezna identifikaciona polja.');
+      return;
+    }
+    if (!uploadedDocs.idCard || !uploadedDocs.propertyProof) {
+      alert('Molimo učitajte oba obavezna dokumenta.');
+      return;
+    }
+
+    setIsSubmittingOnboard(true);
+    try {
+      if (onSendVerification) {
+        await onSendVerification(legalDetails, uploadedDocs);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmittingOnboard(false);
+    }
+  };
+
+  // Upload handlers for onboarding docs
+  const handleDocUpload = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // U realnom i mock režimu podržavamo i direktno slanje ili simulaciju
+    if (backendActive) {
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+      try {
+        const response = await fetch(`${API_URL}/api/upload`, {
+          method: 'POST',
+          body: uploadData
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUploadedDocs(prev => ({ ...prev, [type]: data.url }));
+        } else {
+          alert('Greška pri otpremanju fajla.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Konekcija sa serverom neuspešna.');
+      }
+    } else {
+      // Mock File Upload (generate ObjectURL)
+      const mockUrl = URL.createObjectURL(file);
+      setUploadedDocs(prev => ({ ...prev, [type]: mockUrl }));
+      alert('Dokument uspešno učitan (Lokalna simulacija)!');
+    }
+  };
+
+  if (!currentUser.isAdmin && hostVerificationStatus !== 1) {
+    return (
+      <div className="host-panel-container animate-fade" style={{ maxWidth: '800px', margin: '3rem auto', padding: '0', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+        {(hostVerificationStatus === 0 && !currentUser.verificationDetails) && (
+          <div className="onboard-wizard-wrapper">
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>🤝 Verifikacija Naloga Vlasnika</h2>
+              <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontSize: '0.95rem' }}>
+                Pre nego što počnete sa oglašavanjem smeštaja, potrebno je da verifikujete vaš nalog u 4 jednostavna koraka.
+              </p>
+              
+              {/* Progress Steps Indicators */}
+              <div className="onboard-step-indicator-bar">
+                <div className="onboard-progress-line" style={{ width: `${((onboardStep - 1) / 3) * 100}%` }}></div>
+                {[
+                  { step: 1, label: 'Ugovor' },
+                  { step: 2, label: 'Identitet' },
+                  { step: 3, label: 'Dokumenti' },
+                  { step: 4, label: 'Slanje' }
+                ].map(s => (
+                  <div 
+                    key={s.step} 
+                    className={`onboard-step-node ${onboardStep === s.step ? 'active' : onboardStep > s.step ? 'completed' : ''}`}
+                    onClick={() => {
+                      if (onboardStep > s.step) {
+                        setOnboardStep(s.step);
+                      }
+                    }}
+                  >
+                    <div className="onboard-step-circle">
+                      {onboardStep > s.step ? '✓' : s.step}
+                    </div>
+                    <span className="onboard-step-label">
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* STEP 1: TOS Agreement */}
+            {onboardStep === 1 && (
+              <div className="animate-fade">
+                <h4 style={{ color: 'var(--text-main)', marginBottom: '1.2rem', fontWeight: '700', fontSize: '1.1rem' }}>Ugovor o pružanju usluga i pravni uslovi</h4>
+                <div className="onboard-tos-scroll" style={{ marginBottom: '1.5rem' }}>
+                  <p style={{ marginTop: 0 }}><strong>1. Predmet ugovora:</strong> Ovaj ugovor reguliše uslove pod kojima Domaćin (oglašivač) koristi platformu GrčkaAura za oglašavanje turističkih smeštajnih kapaciteta.</p>
+                  <p><strong>2. Tačnost informacija:</strong> Domaćin se obavezuje da će svi podaci o smeštaju (cene, slobodni termini, slike, udaljenost od plaže) biti tačni i ažurni. GrčkaAura ne snosi odgovornost za netačne podatke.</p>
+                  <p><strong>3. Identitet i poreske obaveze:</strong> Domaćin je u obavezi da pruži tačne lične identifikacione podatke (JMBG/Broj pasoša, PIB). Domaćin samostalno snosi odgovornost za prijavu poreza na prihod u svojoj matičnoj državi i u državi gde se objekat nalazi.</p>
+                  <p><strong>4. Zaštita gostiju:</strong> U slučaju otkazivanja odobrene rezervacije od strane domaćina bez opravdanog razloga (viša sila), GrčkaAura zadržava pravo da privremeno ili trajno suspenduje profil domaćina.</p>
+                  <p style={{ marginBottom: 0 }}>Prihvatanjem ovog ugovora dajete saglasnost za obradu vaših ličnih podataka isključivo u svrhe provere identiteta i verifikacije vlasništva.</p>
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', marginBottom: '2rem', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <input
+                    type="checkbox"
+                    checked={agreedTOS}
+                    onChange={e => setAgreedTOS(e.target.checked)}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--accent)' }}
+                  />
+                  <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: '600' }}>
+                    Slažem se sa uslovima ugovora i dajem pristanak na obradu podataka
+                  </span>
+                </label>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    className="btn-search"
+                    disabled={!agreedTOS}
+                    onClick={() => setOnboardStep(2)}
+                    style={{ padding: '0.75rem 2rem', opacity: agreedTOS ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}
+                  >
+                    Nastavi ➡️
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Legal Details Form */}
+            {onboardStep === 2 && (
+              <div className="animate-fade">
+                <h4 style={{ color: 'var(--text-main)', marginBottom: '1.2rem', fontWeight: '700', fontSize: '1.1rem' }}>Unos identifikacionih podataka</h4>
+                <div className="host-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '2rem' }}>
+                  <div className="form-field">
+                    <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>JMBG / Broj Pasoša <span style={{ color: 'var(--danger)' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="onboard-input-field"
+                      placeholder="Unesite vaš jedinstveni broj"
+                      value={legalDetails.jmbg}
+                      onChange={e => setLegalDetails(prev => ({ ...prev, jmbg: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Adresa Stanovanja <span style={{ color: 'var(--danger)' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="onboard-input-field"
+                      placeholder="Ulica, broj, grad i država"
+                      value={legalDetails.address}
+                      onChange={e => setLegalDetails(prev => ({ ...prev, address: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>PIB / Poreski Broj (Opciono)</label>
+                    <input
+                      type="text"
+                      className="onboard-input-field"
+                      placeholder="Ako iznajmljujete kao firma/agencija"
+                      value={legalDetails.pib}
+                      onChange={e => setLegalDetails(prev => ({ ...prev, pib: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Naziv Firme (Opciono)</label>
+                    <input
+                      type="text"
+                      className="onboard-input-field"
+                      placeholder="Puni pravni naziv pravnog lica"
+                      value={legalDetails.companyName}
+                      onChange={e => setLegalDetails(prev => ({ ...prev, companyName: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <button type="button" onClick={() => setOnboardStep(1)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-main)', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Nazad</button>
+                  <button
+                    type="button"
+                    className="btn-search"
+                    disabled={!legalDetails.jmbg || !legalDetails.address}
+                    onClick={() => setOnboardStep(3)}
+                    style={{ padding: '0.75rem 2rem', opacity: (legalDetails.jmbg && legalDetails.address) ? 1 : 0.5, fontWeight: 'bold' }}
+                  >
+                    Nastavi ➡️
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Document Uploads */}
+            {onboardStep === 3 && (
+              <div className="animate-fade">
+                <h4 style={{ color: 'var(--text-main)', marginBottom: '1.2rem', fontWeight: '700', fontSize: '1.1rem' }}>Priložite verifikacione dokumente</h4>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: '1.4' }}>
+                  Molimo vas da priložite čitku fotografiju ili PDF sledećih dokumenata radi odobrenja profila:
+                </p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+                  <div className={`onboard-upload-zone ${uploadedDocs.idCard ? 'success' : ''}`}>
+                    <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>1. Lična karta ili pasoš <span style={{ color: 'var(--danger)' }}>*</span></strong>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Dokaz identiteta sa fotografijom (JPG, PNG ili PDF)</span>
+                    
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={e => handleDocUpload(e, 'idCard')}
+                      style={{ display: 'none' }}
+                      id="onboard-idcard-upload"
+                    />
+                    <label htmlFor="onboard-idcard-upload" className="btn-compare-action" style={{ padding: '0.5rem 1.2rem', fontSize: '0.82rem', cursor: 'pointer', borderRadius: '6px', marginTop: '0.5rem' }}>
+                      📁 {uploadedDocs.idCard ? 'Zameni priloženi fajl' : 'Izaberi fajl'}
+                    </label>
+                    {uploadedDocs.idCard && (
+                      <div style={{ marginTop: '0.4rem', fontSize: '0.82rem', color: 'var(--success)', fontWeight: 'bold' }}>
+                        ✓ Dokument uspešno spreman za slanje
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`onboard-upload-zone ${uploadedDocs.propertyProof ? 'success' : ''}`}>
+                    <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>2. Dokaz o vlasništvu smeštaja <span style={{ color: 'var(--danger)' }}>*</span></strong>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Izvod iz katastra, ugovor ili račun za struju/komunalije na vaše ime</span>
+                    
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={e => handleDocUpload(e, 'propertyProof')}
+                      style={{ display: 'none' }}
+                      id="onboard-proof-upload"
+                    />
+                    <label htmlFor="onboard-proof-upload" className="btn-compare-action" style={{ padding: '0.5rem 1.2rem', fontSize: '0.82rem', cursor: 'pointer', borderRadius: '6px', marginTop: '0.5rem' }}>
+                      📁 {uploadedDocs.propertyProof ? 'Zameni priloženi fajl' : 'Izaberi fajl'}
+                    </label>
+                    {uploadedDocs.propertyProof && (
+                      <div style={{ marginTop: '0.4rem', fontSize: '0.82rem', color: 'var(--success)', fontWeight: 'bold' }}>
+                        ✓ Dokument uspešno spreman za slanje
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <button type="button" onClick={() => setOnboardStep(2)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-main)', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Nazad</button>
+                  <button
+                    type="button"
+                    className="btn-search"
+                    disabled={!uploadedDocs.idCard || !uploadedDocs.propertyProof}
+                    onClick={() => setOnboardStep(4)}
+                    style={{ padding: '0.75rem 2rem', opacity: (uploadedDocs.idCard && uploadedDocs.propertyProof) ? 1 : 0.5, fontWeight: 'bold' }}
+                  >
+                    Nastavi ➡️
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Review & Submit */}
+            {onboardStep === 4 && (
+              <form onSubmit={handleOnboardSubmit} className="animate-fade">
+                <h4 style={{ color: 'var(--text-main)', marginBottom: '1.2rem', fontWeight: '700', fontSize: '1.1rem' }}>Pregled unetih podataka i slanje</h4>
+                <div className="onboard-glass-box" style={{ marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Identifikacioni broj (JMBG/Pasoš):</span> 
+                      <strong style={{ color: 'var(--text-main)' }}>{legalDetails.jmbg}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Adresa stanovanja:</span> 
+                      <strong style={{ color: 'var(--text-main)' }}>{legalDetails.address}</strong>
+                    </div>
+                    {legalDetails.pib && (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>PIB poreski broj:</span> 
+                          <strong style={{ color: 'var(--text-main)' }}>{legalDetails.pib}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Naziv firme:</span> 
+                          <strong style={{ color: 'var(--text-main)' }}>{legalDetails.companyName || '/'}</strong>
+                        </div>
+                      </>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', fontWeight: 'bold', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                      <span>✓</span> Pravni ugovor uspešno potpisan i prihvaćen
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      <span>✓</span> Priložena oba obavezna verifikaciona dokumenta
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <button type="button" onClick={() => setOnboardStep(3)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-main)', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }} disabled={isSubmittingOnboard}>Nazad</button>
+                  <button
+                    type="submit"
+                    className="btn-search"
+                    style={{ padding: '0.75rem 2.5rem', backgroundColor: 'var(--accent)', borderColor: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}
+                    disabled={isSubmittingOnboard}
+                  >
+                    {isSubmittingOnboard ? 'Slanje...' : 'Pošalji na verifikaciju 🚀'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* HOST PENDING / REVIEW STATE SCREEN */}
+        {((hostVerificationStatus === 0 && currentUser.verificationDetails) || hostVerificationStatus === 2) && (
+          <div className="onboard-pending-card">
+            <span className="onboard-pending-icon">⏳</span>
+            <h2 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '0.8rem' }}>Dokumentacija Poslata</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1rem', lineHeight: '1.7', maxWidth: '550px', margin: '0 auto 2rem auto' }}>
+              Vaš profil je trenutno u procesu provere. Administratori će pregledati priložene pravne podatke i dokumenta u najkraćem roku.
+            </p>
+            <div style={{ padding: '0.8rem 1.8rem', background: 'rgba(0, 180, 216, 0.12)', border: '1px solid rgba(0, 180, 216, 0.3)', borderRadius: '30px', display: 'inline-block', fontSize: '0.9rem', color: 'var(--accent)', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+              STATUS: NA ČEKANJU (PENDING REVIEW)
+            </div>
+          </div>
+        )}
+
+        {/* HOST REJECTED / DOPUNA SCREEN */}
+        {hostVerificationStatus === -1 && (
+          <div className="onboard-pending-card" style={{ border: '1px solid rgba(230, 57, 70, 0.35)', background: 'rgba(230, 57, 70, 0.05)' }}>
+            <span className="onboard-pending-icon" style={{ animation: 'none' }}>❌</span>
+            <h2 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--danger)', marginBottom: '0.8rem' }}>Verifikacija Odbijena</h2>
+            <p style={{ color: 'var(--text-main)', fontSize: '1rem', lineHeight: '1.7', maxWidth: '550px', margin: '0 auto 1.5rem auto' }}>
+              Nažalost, administratori su odbili priložene podatke ili dokumenta. Potrebno je da pošaljete ispravne informacije ponovo.
+            </p>
+            <div style={{ margin: '0 auto 2rem auto', padding: '1.2rem', backgroundColor: 'rgba(230, 57, 70, 0.08)', border: '1px solid rgba(230, 57, 70, 0.2)', borderRadius: '10px', maxWidth: '550px', fontSize: '0.9rem', color: 'var(--text-main)', textAlign: 'left', lineHeight: '1.5' }}>
+              <strong style={{ color: 'var(--danger)', display: 'block', marginBottom: '0.4rem' }}>Razlog odbijanja:</strong> 
+              {currentUser.verificationDetails && typeof currentUser.verificationDetails === 'string' && currentUser.verificationDetails.includes('reason') 
+                ? JSON.parse(currentUser.verificationDetails).reason 
+                : 'Neka dokumenta su nečitka ili ne odgovaraju unetim podacima. Molimo vas da priložite validnu ličnu kartu/pasoš i jasan dokaz o vlasništvu.'}
+            </div>
+            <button
+              type="button"
+              className="btn-search"
+              onClick={() => {
+                // Reset status locally to step 1 so they can re-fill
+                setOnboardStep(1);
+                if (onSendVerification) {
+                  onSendVerification(legalDetails, uploadedDocs);
+                }
+              }}
+              style={{ padding: '0.75rem 2.5rem', backgroundColor: 'var(--accent)', borderColor: 'var(--accent)', fontWeight: 'bold' }}
+            >
+              Pokreni Ponovnu Verifikaciju 🔄
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -937,19 +1512,145 @@ export default function HostPanel({
             <div className="admin-sidebar-subtitle">Control Center v2.2</div>
           </div>
 
-          <div className="admin-profile-widget">
-            <div className="admin-avatar-wrapper">
-              <img 
-                src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName || 'Admin')}&background=00b4d8&color=fff`} 
-                alt="Admin avatar" 
-                className="admin-avatar-img" 
-              />
-              <span className="pulse-status" />
+          <div className="admin-profile-widget" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.8rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <div className="admin-avatar-wrapper">
+                <img 
+                  src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName || 'Admin')}&background=00b4d8&color=fff`} 
+                  alt="Admin avatar" 
+                  className="admin-avatar-img" 
+                />
+                <span className="pulse-status" />
+              </div>
+              <div className="admin-profile-info">
+                <span className="admin-profile-name">{currentUser.fullName}</span>
+                <span className="admin-profile-role">{currentUser.isAdmin ? 'Administrator' : 'Domaćin'}</span>
+              </div>
             </div>
-            <div className="admin-profile-info">
-              <span className="admin-profile-name">{currentUser.fullName}</span>
-              <span className="admin-profile-role">Vlasnik</span>
-            </div>
+
+            {currentUser.isAdmin && (
+              <div ref={bellContainerRef} className="admin-notifications-bell-container" style={{ position: 'relative' }}>
+                <button 
+                  type="button" 
+                  className="admin-notifications-bell-btn"
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.2rem',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    padding: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'transform 0.2s',
+                    color: unreadCount > 0 ? 'var(--accent)' : 'var(--text-muted)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  🔔
+                  {unreadCount > 0 && (
+                    <span 
+                      style={{
+                        position: 'absolute',
+                        top: '-2px',
+                        right: '-2px',
+                        background: '#ef4444',
+                        color: '#fff',
+                        fontSize: '0.6rem',
+                        fontWeight: 'bold',
+                        borderRadius: '50%',
+                        width: '14px',
+                        height: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 0 6px rgba(239, 68, 68, 0.6)'
+                      }}
+                    >
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                
+                {isNotifOpen && (
+                  <div 
+                    className="admin-notifications-dropdown"
+                    style={{
+                      position: 'absolute',
+                      top: '115%',
+                      right: '-10px',
+                      width: '280px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '8px',
+                      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
+                      padding: '0.8rem',
+                      zIndex: 1000,
+                      maxHeight: '320px',
+                      overflowY: 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.6rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#fff' }}>Obaveštenja ({unreadCount})</span>
+                      {unreadCount > 0 && (
+                        <button 
+                          type="button" 
+                          onClick={onMarkNotificationsRead}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--accent)',
+                            fontSize: '0.72rem',
+                            cursor: 'pointer',
+                            padding: 0,
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          Označi kao pročitano
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {adminNotifications.length === 0 ? (
+                        <div style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          Nema novih obaveštenja
+                        </div>
+                      ) : (
+                        adminNotifications.map((notif) => (
+                          <div 
+                            key={notif.id} 
+                            style={{ 
+                              padding: '0.5rem', 
+                              borderRadius: '4px', 
+                              backgroundColor: notif.isRead ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 180, 216, 0.08)',
+                              borderLeft: notif.isRead ? '2px solid transparent' : '2px solid var(--accent)',
+                              fontSize: '0.75rem',
+                              color: notif.isRead ? '#cbd5e1' : '#fff',
+                              transition: 'background-color 0.2s',
+                              textAlign: 'left'
+                            }}
+                          >
+                            <div style={{ lineHeight: '1.3' }}>{notif.message}</div>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.3rem', textAlign: 'right' }}>
+                              🕒 {notif.timestamp}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <ul className="admin-menu-list">
@@ -989,23 +1690,27 @@ export default function HostPanel({
                 </span>
               </button>
             </li>
-            <li>
-              <button 
-                className={`admin-menu-item ${panelTab === 'users' ? 'active' : ''}`}
-                onClick={() => setPanelTab('users')}
-              >
-                <div className="admin-menu-item-left">👥 Korisnici</div>
-                <span className="admin-menu-badge">{users.length}</span>
-              </button>
-            </li>
-            <li>
-              <button 
-                className={`admin-menu-item ${panelTab === 'logs' ? 'active' : ''}`}
-                onClick={() => setPanelTab('logs')}
-              >
-                <div className="admin-menu-item-left">📋 Aktivnosti</div>
-              </button>
-            </li>
+            {currentUser && currentUser.isAdmin && (
+              <>
+                <li>
+                  <button 
+                    className={`admin-menu-item ${panelTab === 'users' ? 'active' : ''}`}
+                    onClick={() => setPanelTab('users')}
+                  >
+                    <div className="admin-menu-item-left">👥 Korisnici</div>
+                    <span className="admin-menu-badge">{users.length}</span>
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    className={`admin-menu-item ${panelTab === 'logs' ? 'active' : ''}`}
+                    onClick={() => setPanelTab('logs')}
+                  >
+                    <div className="admin-menu-item-left">📋 Aktivnosti</div>
+                  </button>
+                </li>
+              </>
+            )}
           </ul>
 
           <div className="admin-sidebar-status-box">
@@ -1562,6 +2267,7 @@ export default function HostPanel({
                                 value={formData.ownerEmail || ''} 
                                 onChange={handleChange}
                                 placeholder="npr. nikos.lefkada@gmail.com" 
+                                disabled={currentUser && !currentUser.isAdmin}
                               />
                             </div>
                           </div>
@@ -1576,6 +2282,7 @@ export default function HostPanel({
                                 value={formData.ownerPhone || ''} 
                                 onChange={handleChange}
                                 placeholder="npr. +30 691 234 5678" 
+                                disabled={currentUser && !currentUser.isAdmin}
                               />
                             </div>
                           </div>
@@ -2254,9 +2961,21 @@ export default function HostPanel({
                         <td style={{ fontWeight: '700', color: 'var(--text-main)' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                             <span>{p.title}</span>
-                            <span style={{ fontSize: '0.65rem', alignSelf: 'flex-start', padding: '0.1rem 0.35rem', backgroundColor: 'rgba(var(--accent-rgb),0.15)', color: 'var(--accent)', borderRadius: '4px', fontWeight: 'bold' }}>
-                              ID: #{p.id}
-                            </span>
+                            <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.1rem' }}>
+                              <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', backgroundColor: 'rgba(var(--accent-rgb),0.15)', color: 'var(--accent)', borderRadius: '4px', fontWeight: 'bold' }}>
+                                ID: #{p.id}
+                              </span>
+                              <span style={{ 
+                                fontSize: '0.65rem', 
+                                padding: '0.1rem 0.35rem', 
+                                backgroundColor: p.isApproved ? 'rgba(46, 196, 182, 0.15)' : 'rgba(255, 159, 67, 0.15)', 
+                                color: p.isApproved ? '#2ec4b6' : '#ff9f43', 
+                                borderRadius: '4px', 
+                                fontWeight: 'bold' 
+                              }}>
+                                {p.isApproved ? '✅ Javno' : '⏳ Čeka odobrenje'}
+                              </span>
+                            </div>
                           </div>
                         </td>
                         <td>
@@ -2396,7 +3115,17 @@ export default function HostPanel({
                         </td>
                         {/* Edit or Delete Action */}
                         <td>
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            {currentUser.isAdmin && !p.isApproved && (
+                              <button 
+                                type="button"
+                                className="btn-multiplier-action"
+                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.72rem', borderRadius: '4px', cursor: 'pointer', backgroundColor: '#2ec4b6', border: 'none', color: '#fff', fontWeight: 'bold' }}
+                                onClick={() => onApproveProperty && onApproveProperty(p.id)}
+                              >
+                                Odobri
+                              </button>
+                            )}
                             <button 
                               type="button"
                               className="btn-compare-action"
@@ -2606,7 +3335,7 @@ export default function HostPanel({
         {/* ==========================================
             TAB: USERS LIST & MANAGEMENT
             ========================================== */}
-        {panelTab === 'users' && (
+        {panelTab === 'users' && currentUser.isAdmin && (
           <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
               Roster registrovanih korisnika
@@ -2626,28 +3355,62 @@ export default function HostPanel({
                   } else if (u.isAdmin) {
                     roleClass = 'admin';
                     roleLabel = '🛠️ Admin';
+                  } else if (u.isHost) {
+                    roleClass = 'host';
+                    roleLabel = '🤝 Domaćin';
+                  }
+
+                  // Verification Badge
+                  const vStatus = u.isVerified !== undefined ? Number(u.isVerified) : 0;
+                  let verifyBadge = null;
+                  if (u.isHost) {
+                    if (vStatus === 1) {
+                      verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(46, 196, 182, 0.12)', color: '#2ec4b6', borderRadius: '4px', fontWeight: 'bold' }}>✓ Verifikovan</span>;
+                    } else if (vStatus === 0 && u.verificationDetails) {
+                      verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#d97706', borderRadius: '4px', fontWeight: 'bold' }}>⏳ Čeka pregled</span>;
+                    } else if (vStatus === -1) {
+                      verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(230, 57, 70, 0.12)', color: '#ef4444', borderRadius: '4px', fontWeight: 'bold' }}>✗ Odbijen</span>;
+                    } else {
+                      verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', borderRadius: '4px' }}>Nije poslao</span>;
+                    }
                   }
 
                   return (
-                    <div key={u.id} className="user-roster-card">
+                    <div key={u.id} className="user-roster-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       <img src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=0a4f70&color=fff`} alt="Avatar" className="roster-avatar" />
                       <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)', marginBottom: '0.2rem' }}>
                         {u.fullName}
                       </div>
-                      <div className={`roster-role-badge ${roleClass}`} style={{ marginBottom: '0.5rem' }}>
-                        {roleLabel}
+                      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
+                        <div className={`roster-role-badge ${roleClass}`}>
+                          {roleLabel}
+                        </div>
+                        {verifyBadge}
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>📧 {u.email}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>📞 {u.phone || '/'}</div>
-                      <div style={{ marginTop: 'auto', width: '100%' }}>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>📧 {u.email}</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>📞 {u.phone || '/'}</div>
+                      
+                      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.4rem', width: '100%', paddingTop: '0.5rem' }}>
+                        {/* Admin verification review button */}
+                        {u.isHost && u.verificationDetails && (
+                          <button
+                            type="button"
+                            className="btn-compare-action"
+                            style={{ padding: '0.35rem 0.7rem', fontSize: '0.75rem', width: '100%', borderRadius: '4px', cursor: 'pointer', backgroundColor: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }}
+                            onClick={() => setSelectedHostToReview(u)}
+                          >
+                            🔎 Pregledaj Dokumente
+                          </button>
+                        )}
+
                         {isOwner ? (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Glavni osnivač portala</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center' }}>Glavni osnivač portala</span>
                         ) : loggedInUserIsOwner ? (
                           <button
                             type="button"
                             className="btn-compare-action"
                             style={{ 
-                              padding: '0.4rem 0.8rem', fontSize: '0.75rem', width: '100%', borderRadius: '4px', cursor: 'pointer',
+                              padding: '0.35rem 0.7rem', fontSize: '0.75rem', width: '100%', borderRadius: '4px', cursor: 'pointer',
                               backgroundColor: u.isAdmin ? 'var(--danger)' : 'var(--success)',
                               borderColor: u.isAdmin ? 'var(--danger)' : 'var(--success)', color: '#fff'
                             }}
@@ -2663,7 +3426,7 @@ export default function HostPanel({
                             {u.isAdmin ? 'Oduzmi Admin prava' : 'Dodeli Admin prava'}
                           </button>
                         ) : (
-                          <span style={{ fontSize: '0.72rem', color: 'var(--danger)', fontWeight: '600' }}>Samo glavni vlasnik menja prava</span>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--danger)', fontWeight: '600', textAlign: 'center' }}>Samo glavni vlasnik menja prava</span>
                         )}
                       </div>
                     </div>
@@ -2681,7 +3444,7 @@ export default function HostPanel({
         {/* ==========================================
             TAB: AUDIT LOG (SYSTEM EVENTS)
             ========================================== */}
-        {panelTab === 'logs' && (
+        {panelTab === 'logs' && currentUser.isAdmin && (
           <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.8rem', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
@@ -2808,6 +3571,7 @@ export default function HostPanel({
                     value={editingProperty.ownerEmail || ''} 
                     onChange={e => setEditingProperty(p => ({ ...p, ownerEmail: e.target.value }))}
                     placeholder="npr. nikos.lefkada@gmail.com" 
+                    disabled={currentUser && !currentUser.isAdmin}
                   />
                 </div>
                 <div className="form-field">
@@ -2817,6 +3581,7 @@ export default function HostPanel({
                     value={editingProperty.ownerPhone || ''} 
                     onChange={e => setEditingProperty(p => ({ ...p, ownerPhone: e.target.value }))}
                     placeholder="npr. +30 691 234 5678" 
+                    disabled={currentUser && !currentUser.isAdmin}
                   />
                 </div>
               </div>
@@ -3368,6 +4133,130 @@ export default function HostPanel({
                 />
                 <button type="submit" className="btn-send-message">Pošalji</button>
               </form>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 4. Modal: Admin Review Host Documents & Verification Status */}
+      {selectedHostToReview && (() => {
+        let details = {};
+        let docs = {};
+        try {
+          details = typeof selectedHostToReview.verificationDetails === 'string'
+            ? JSON.parse(selectedHostToReview.verificationDetails)
+            : (selectedHostToReview.verificationDetails || {});
+          docs = typeof selectedHostToReview.verificationDocs === 'string'
+            ? JSON.parse(selectedHostToReview.verificationDocs)
+            : (selectedHostToReview.verificationDocs || {});
+        } catch (e) {
+          console.error(e);
+        }
+
+        const handleVerifyAction = async (status) => {
+          if (onAdminVerifyHost) {
+            await onAdminVerifyHost(selectedHostToReview.id, status, reviewReason);
+          }
+          setSelectedHostToReview(null);
+          setReviewReason('');
+        };
+
+        return (
+          <div className="modal-overlay" onClick={() => setSelectedHostToReview(null)}>
+            <div className="modal-container animate-scale" style={{ maxWidth: '650px', width: '95%' }} onClick={e => e.stopPropagation()}>
+              <div className="chat-header">
+                <div className="chat-header-title">
+                  <span className="chat-header-name">🔎 Verifikacija domaćina: {selectedHostToReview.fullName}</span>
+                  <span className="chat-header-status">Korisničko ime: {selectedHostToReview.username}</span>
+                </div>
+                <button type="button" className="btn-modal-close" onClick={() => setSelectedHostToReview(null)} style={{ position: 'static' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <div style={{ padding: '1.5rem', maxHeight: '500px', overflowY: 'auto' }}>
+                <h4 style={{ color: 'var(--text-main)', marginBottom: '0.8rem', fontWeight: '700' }}>Identifikacioni podaci</h4>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem', fontSize: '0.88rem' }}>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '0.5rem 0', color: 'var(--text-muted)' }}>JMBG / Pasoš:</td>
+                      <td style={{ padding: '0.5rem 0', fontWeight: 'bold', color: 'var(--text-main)' }}>{details.jmbg || '/'}</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '0.5rem 0', color: 'var(--text-muted)' }}>Adresa stanovanja:</td>
+                      <td style={{ padding: '0.5rem 0', fontWeight: 'bold', color: 'var(--text-main)' }}>{details.address || '/'}</td>
+                    </tr>
+                    {details.pib && (
+                      <>
+                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '0.5rem 0', color: 'var(--text-muted)' }}>PIB poreski broj:</td>
+                          <td style={{ padding: '0.5rem 0', fontWeight: 'bold', color: 'var(--text-main)' }}>{details.pib}</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '0.5rem 0', color: 'var(--text-muted)' }}>Pravni naziv firme:</td>
+                          <td style={{ padding: '0.5rem 0', fontWeight: 'bold', color: 'var(--text-main)' }}>{details.companyName || '/'}</td>
+                        </tr>
+                      </>
+                    )}
+                  </tbody>
+                </table>
+
+                <h4 style={{ color: 'var(--text-main)', marginBottom: '0.8rem', fontWeight: '700' }}>Priloženi pravni dokumenti</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ padding: '1rem', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-main)' }}>1. Lična karta ili pasoš</span>
+                      {docs.idCard ? (
+                        <a href={docs.idCard} target="_blank" rel="noreferrer" className="btn-compare-action" style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', textDecoration: 'none' }}>
+                          👁️ Otvori dokument
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', color: 'var(--danger)' }}>Nije priložen</span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ padding: '1rem', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-main)' }}>2. Dokaz o vlasništvu</span>
+                      {docs.propertyProof ? (
+                        <a href={docs.propertyProof} target="_blank" rel="noreferrer" className="btn-compare-action" style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', textDecoration: 'none' }}>
+                          👁️ Otvori dokument
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', color: 'var(--danger)' }}>Nije priložen</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-field" style={{ marginBottom: '1.5rem' }}>
+                  <label>Napomena / Obrazloženje odbijanja (opciono)</label>
+                  <input
+                    type="text"
+                    placeholder="Napišite obrazloženje ako odbijate verifikaciju..."
+                    value={reviewReason}
+                    onChange={e => setReviewReason(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                  <button type="button" onClick={() => setSelectedHostToReview(null)} style={{ border: '1px solid var(--border)', backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', padding: '0.45rem 1rem', cursor: 'pointer' }}>Zatvori</button>
+                  <button
+                    type="button"
+                    onClick={() => handleVerifyAction(-1)}
+                    style={{ border: 'none', backgroundColor: 'var(--danger)', color: '#fff', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', padding: '0.45rem 1.2rem', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Odbij verifikaciju ❌
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleVerifyAction(1)}
+                    style={{ border: 'none', backgroundColor: 'var(--success)', color: '#fff', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', padding: '0.45rem 1.2rem', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Odobri nalog ✓
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         );

@@ -173,8 +173,52 @@ async function initializeSchema() {
     password TEXT NOT NULL,
     phone TEXT,
     avatar TEXT,
-    isAdmin INTEGER DEFAULT 0
+    isAdmin INTEGER DEFAULT 0,
+    isHost INTEGER DEFAULT 0,
+    isVerified INTEGER DEFAULT 0,
+    verificationDetails TEXT,
+    verificationDocs TEXT,
+    agreedToTerms INTEGER DEFAULT 0
   )`);
+
+  // Add isHost column to users table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(users)");
+    const hasIsHost = columns.some(c => c.name === 'isHost');
+    if (!hasIsHost) {
+      await dbHelper.run("ALTER TABLE users ADD COLUMN isHost INTEGER DEFAULT 0");
+      console.log("Dodata kolona 'isHost' u tabelu users.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone isHost u users:", err.message);
+  }
+
+  // Add verification columns if they do not exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(users)");
+    const hasIsVerified = columns.some(c => c.name === 'isVerified');
+    if (!hasIsVerified) {
+      await dbHelper.run("ALTER TABLE users ADD COLUMN isVerified INTEGER DEFAULT 0");
+      console.log("Dodata kolona 'isVerified' u tabelu users.");
+    }
+    const hasVerificationDetails = columns.some(c => c.name === 'verificationDetails');
+    if (!hasVerificationDetails) {
+      await dbHelper.run("ALTER TABLE users ADD COLUMN verificationDetails TEXT");
+      console.log("Dodata kolona 'verificationDetails' u tabelu users.");
+    }
+    const hasVerificationDocs = columns.some(c => c.name === 'verificationDocs');
+    if (!hasVerificationDocs) {
+      await dbHelper.run("ALTER TABLE users ADD COLUMN verificationDocs TEXT");
+      console.log("Dodata kolona 'verificationDocs' u tabelu users.");
+    }
+    const hasAgreedToTerms = columns.some(c => c.name === 'agreedToTerms');
+    if (!hasAgreedToTerms) {
+      await dbHelper.run("ALTER TABLE users ADD COLUMN agreedToTerms INTEGER DEFAULT 0");
+      console.log("Dodata kolona 'agreedToTerms' u tabelu users.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje verifikacionih kolona u users:", err.message);
+  }
 
   // 2. Properties Table
   await dbHelper.run(`CREATE TABLE IF NOT EXISTS properties (
@@ -194,7 +238,8 @@ async function initializeSchema() {
     beachfront INTEGER DEFAULT 0,
     parking INTEGER DEFAULT 0,
     airConditioning INTEGER DEFAULT 0,
-    pets INTEGER DEFAULT 0
+    pets INTEGER DEFAULT 0,
+    isApproved INTEGER DEFAULT 1
   )`);
 
   // 3. Reviews Table
@@ -268,6 +313,15 @@ async function initializeSchema() {
     kitchenType TEXT,
     FOREIGN KEY (propertyId) REFERENCES properties(id) ON DELETE CASCADE
   )`);
+
+  // 9. Admin Notifications Table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS admin_notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    isRead INTEGER DEFAULT 0
+  )`);
+
 
   // Add roomTitle column to inquiries table if it doesn't exist
   try {
@@ -377,6 +431,18 @@ async function initializeSchema() {
     console.warn("Nije uspelo automatsko dodavanje kolone ownerPhone u properties:", err.message);
   }
 
+  // Add isApproved column to properties table if it doesn't exist
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(properties)");
+    const hasIsApproved = columns.some(c => c.name === 'isApproved');
+    if (!hasIsApproved) {
+      await dbHelper.run("ALTER TABLE properties ADD COLUMN isApproved INTEGER DEFAULT 1");
+      console.log("Dodata kolona 'isApproved' u tabelu properties.");
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje kolone isApproved u properties:", err.message);
+  }
+
   // Add monthlyPrices column to rooms table if it doesn't exist
   try {
     const columns = await dbHelper.all("PRAGMA table_info(rooms)");
@@ -418,12 +484,12 @@ async function seedDatabase() {
       const hashedOwnerPassword = bcrypt.hashSync('pakovanje1337', 10);
 
       const seedUsers = [
-        [999, 'stefan', 'Stefan Petrović', 'stefan@email.com', hashedPassword, '+381 60 123 4567', 'https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff', 1],
-        [1000, 'vlasnik_aura', 'Vlasnik Aura', 'voxilityy@gmail.com', hashedOwnerPassword, '+381 60 111 2233', 'https://ui-avatars.com/api/?name=Vlasnik+Aura&background=00b4d8&color=fff', 1]
+        [999, 'stefan', 'Stefan Petrović', 'stefan@email.com', hashedPassword, '+381 60 123 4567', 'https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff', 1, 0, 1],
+        [1000, 'vlasnik_aura', 'Vlasnik Aura', 'voxilityy@gmail.com', hashedOwnerPassword, '+381 60 111 2233', 'https://ui-avatars.com/api/?name=Vlasnik+Aura&background=00b4d8&color=fff', 1, 1, 1]
       ];
 
       for (const u of seedUsers) {
-        await dbHelper.run('INSERT OR REPLACE INTO users (id, username, fullName, email, password, phone, avatar, isAdmin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', u);
+        await dbHelper.run('INSERT OR REPLACE INTO users (id, username, fullName, email, password, phone, avatar, isAdmin, isHost, isVerified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', u);
       }
 
       // 2. Seed Properties
@@ -554,6 +620,69 @@ function requireAdmin(req, res, next) {
   });
 }
 
+async function requireHostOrAdmin(req, res, next) {
+  authenticateToken(req, res, async () => {
+    if (!req.user) {
+      return res.status(403).json({ error: 'Pristup odbijen.' });
+    }
+    
+    // Proveri u bazi da li je korisnik verifikovan domaćin ili admin
+    try {
+      const dbUser = await dbHelper.get('SELECT isHost, isAdmin, isVerified FROM users WHERE id = ?', [req.user.id]);
+      if (dbUser) {
+        if (dbUser.isAdmin) {
+          return next();
+        }
+        if (dbUser.isHost) {
+          if (dbUser.isVerified === 1) {
+            return next();
+          } else {
+            return res.status(403).json({ error: 'Pristup odbijen. Vaš nalog domaćina još uvek nije verifikovan od strane administratora.' });
+          }
+        }
+      }
+    } catch (err) {
+      // fallback na JWT payload ako baza baci grešku
+    }
+
+    if (req.user.isAdmin) {
+      return next();
+    }
+    
+    // Proveri da li poseduje bar jedan smeštaj po e-mailu (samo ako je verifikovan u bazi ili ako ima privilegije)
+    if (req.user.email) {
+      try {
+        const prop = await dbHelper.get('SELECT id FROM properties WHERE ownerEmail = ? LIMIT 1', [req.user.email.toLowerCase().trim()]);
+        if (prop) {
+          // Ipak mora biti verifikovan ako je isHost
+          const dbUser = await dbHelper.get('SELECT isHost, isVerified FROM users WHERE id = ?', [req.user.id]);
+          if (dbUser && dbUser.isHost && dbUser.isVerified !== 1) {
+            return res.status(403).json({ error: 'Pristup odbijen. Vaš nalog domaćina još uvek nije verifikovan.' });
+          }
+          return next();
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+    
+    return res.status(403).json({ error: 'Pristup odbijen. Potrebna su verifikovana vlasnička ili administratorska prava.' });
+  });
+}
+
+async function createAdminNotification(message) {
+  const timestamp = new Date().toLocaleString('sr-RS');
+  try {
+    await dbHelper.run(
+      'INSERT INTO admin_notifications (message, timestamp, isRead) VALUES (?, ?, 0)',
+      [message, timestamp]
+    );
+    console.log("Admin notification created:", message);
+  } catch (err) {
+    console.error('Error creating admin notification:', err.message);
+  }
+}
+
 // ----------------------------------------------------
 // REST API ROUTES (Promise-based & Unified)
 // ----------------------------------------------------
@@ -570,10 +699,11 @@ app.post('/api/auth/login', async (req, res) => {
     if (!passwordMatch) return res.status(401).json({ error: 'Pogrešna lozinka.' });
     
     user.isAdmin = !!user.isAdmin;
+    user.isHost = !!user.isHost;
     
     // Sign JWT
     const token = jwt.sign(
-      { id: user.id, username: user.username, isAdmin: user.isAdmin },
+      { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin, isHost: user.isHost },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -586,8 +716,9 @@ app.post('/api/auth/login', async (req, res) => {
 
 // 2. Auth Register
 app.post('/api/auth/register', async (req, res) => {
-  const { username, fullName, email, password, phone, avatar, isAdmin } = req.body;
+  const { username, fullName, email, password, phone, avatar, isAdmin, isHost } = req.body;
   const adminFlag = isAdmin ? 1 : 0;
+  const hostFlag = isHost ? 1 : 0;
   
   // Hash password
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -595,16 +726,17 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const defaultAvatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fullName) + '&background=0a4f70&color=fff';
     const result = await dbHelper.run(
-      'INSERT INTO users (username, fullName, email, password, phone, avatar, isAdmin) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [username, fullName, email.toLowerCase().trim(), hashedPassword, phone, avatar || defaultAvatar, adminFlag]
+      'INSERT INTO users (username, fullName, email, password, phone, avatar, isAdmin, isHost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [username, fullName, email.toLowerCase().trim(), hashedPassword, phone, avatar || defaultAvatar, adminFlag, hostFlag]
     );
     
     const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [result.lastID]);
     user.isAdmin = !!user.isAdmin;
+    user.isHost = !!user.isHost;
     
     // Sign JWT
     const token = jwt.sign(
-      { id: user.id, username: user.username, isAdmin: user.isAdmin },
+      { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin, isHost: user.isHost },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -645,23 +777,33 @@ app.get('/api/properties', async (req, res) => {
   }
 });
 
-app.post('/api/properties', requireAdmin, async (req, res) => {
+app.post('/api/properties', requireHostOrAdmin, async (req, res) => {
   const { title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, icalUrl, amenities, monthlyPrices, ownerEmail, ownerPhone } = req.body;
+  
+  const resolvedOwnerEmail = req.user.isAdmin ? (ownerEmail || null) : req.user.email;
+  const resolvedOwnerPhone = req.user.isAdmin ? (ownerPhone || null) : (ownerPhone || null);
+  const isApprovedVal = req.user.isAdmin ? 1 : 0;
   
   try {
     const result = await dbHelper.run(
-      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets, icalUrl, monthlyPrices, ownerEmail, ownerPhone)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets, icalUrl, monthlyPrices, ownerEmail, ownerPhone, isApproved)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title, type, location, price, rating || 5.0, distanceToBeach, image, guests, bedrooms, description,
         amenities.wifi ? 1 : 0, amenities.pool ? 1 : 0, amenities.beachfront ? 1 : 0, amenities.parking ? 1 : 0, amenities.airConditioning ? 1 : 0, amenities.pets ? 1 : 0,
         icalUrl || null,
         monthlyPrices ? (typeof monthlyPrices === 'object' ? JSON.stringify(monthlyPrices) : monthlyPrices) : null,
-        ownerEmail || null,
-        ownerPhone || null
+        resolvedOwnerEmail,
+        resolvedOwnerPhone,
+        isApprovedVal
       ]
     );
     
+    // Obavesti administratore o kreiranju
+    if (!req.user.isAdmin) {
+      await createAdminNotification(`Domaćin ${req.user.username} (${req.user.email}) je kreirao novi smeštaj: '${title}'.`);
+    }
+
     const prop = await dbHelper.get('SELECT * FROM properties WHERE id = ?', [result.lastID]);
     prop.amenities = amenities;
     prop.reviews = [];
@@ -672,9 +814,22 @@ app.post('/api/properties', requireAdmin, async (req, res) => {
 });
 
 // 5. Delete Property
-app.delete('/api/properties/:id', requireAdmin, async (req, res) => {
+app.delete('/api/properties/:id', requireHostOrAdmin, async (req, res) => {
   const { id } = req.params;
   try {
+    const property = await dbHelper.get('SELECT ownerEmail, title FROM properties WHERE id = ?', [id]);
+    if (!property) {
+      return res.status(404).json({ error: 'Smeštaj nije pronađen.' });
+    }
+    
+    if (!req.user.isAdmin) {
+      if (!property.ownerEmail || property.ownerEmail.toLowerCase().trim() !== req.user.email.toLowerCase().trim()) {
+        return res.status(403).json({ error: 'Pristup odbijen. Možete brisati samo svoje smeštaje.' });
+      }
+      // Obavesti administratore o brisanju
+      await createAdminNotification(`Domaćin ${req.user.username} (${req.user.email}) je obrisao svoj smeštaj: '${property.title}'.`);
+    }
+    
     const result = await dbHelper.run('DELETE FROM properties WHERE id = ?', [id]);
     res.json({ success: true, changes: result.changes });
   } catch (err) {
@@ -893,9 +1048,114 @@ app.get('/api/users', async (req, res) => {
     const users = await dbHelper.all('SELECT * FROM users');
     const mapped = users.map(u => {
       u.isAdmin = !!u.isAdmin;
+      u.isHost = !!u.isHost;
       return u;
     });
     res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper function to simulate/send emails
+async function sendEmailNotification({ to, subject, html }) {
+  console.log(`\n--- [EMAIL NOTIFICATION] ---`);
+  console.log(`To: ${to}`);
+  console.log(`Subject: ${subject}`);
+  console.log(`Body:\n${html.replace(/<[^>]*>/g, ' ').trim()}`);
+  console.log(`-----------------------------\n`);
+}
+
+// 19a. Submit Host Verification Details/Docs
+app.post('/api/host/verify-request', authenticateToken, async (req, res) => {
+  const { details, docs } = req.body;
+  try {
+    const detailsStr = typeof details === 'object' ? JSON.stringify(details) : details;
+    const docsStr = typeof docs === 'object' ? JSON.stringify(docs) : docs;
+    
+    await dbHelper.run(
+      'UPDATE users SET isVerified = 0, agreedToTerms = 1, verificationDetails = ?, verificationDocs = ? WHERE id = ?',
+      [detailsStr, docsStr, req.user.id]
+    );
+
+    // Obavesti administratore o podnošenju dokumenata
+    await createAdminNotification(`Domaćin ${req.user.username} (${req.user.email}) je poslao dokumentaciju na verifikaciju.`);
+
+    // Pošalji email administratorima
+    const admins = await dbHelper.all('SELECT email FROM users WHERE isAdmin = 1');
+    const adminEmails = admins.length > 0 ? admins.map(a => a.email).join(', ') : 'admin@grcka-aura.com';
+    
+    await sendEmailNotification({
+      to: adminEmails,
+      subject: `[GrčkaAura] Novi zahtev za verifikaciju domaćina: ${req.user.username}`,
+      html: `
+        <h3>Primljen je novi zahtev za verifikaciju domaćina</h3>
+        <p><strong>Korisnik:</strong> ${req.user.fullName} (${req.user.email})</p>
+        <p><strong>JMBG/Pasoš:</strong> ${details.jmbg || '/'}</p>
+        <p><strong>Adresa:</strong> ${details.address || '/'}</p>
+        <p>Dokumenti su uspešno priloženi i dostupni u administratorskom panelu.</p>
+      `
+    });
+
+    const updatedUser = await dbHelper.get('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    if (updatedUser) {
+      updatedUser.isAdmin = !!updatedUser.isAdmin;
+      updatedUser.isHost = !!updatedUser.isHost;
+    }
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 19b. Admin approve or reject Host Verification
+app.post('/api/admin/verify-host/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { status, reason } = req.body; // status: 1 = odobreno, -1 = odbijeno
+  try {
+    const userToVerify = await dbHelper.get('SELECT * FROM users WHERE id = ?', [id]);
+    if (!userToVerify) {
+      return res.status(404).json({ error: 'Korisnik nije pronađen.' });
+    }
+
+    await dbHelper.run(
+      'UPDATE users SET isVerified = ? WHERE id = ?',
+      [status, id]
+    );
+
+    const message = status === 1
+      ? `Profil domaćina ${userToVerify.username} je uspešno odobren/verifikovan.`
+      : `Profil domaćina ${userToVerify.username} je odbijen. Razlog: ${reason || 'Nije naveden'}`;
+
+    await createAdminNotification(`Admin je promenio status verifikacije za ${userToVerify.username} u: ${status === 1 ? 'Odobren' : 'Odbijen'}.`);
+
+    // Pošalji email potvrde domaćinu
+    const subject = status === 1 
+      ? `[GrčkaAura] Vaš profil domaćina je ODOBREN! 🎉`
+      : `[GrčkaAura] Vaš zahtev za verifikaciju je odbijen`;
+      
+    const html = status === 1
+      ? `
+        <h3>Čestitamo! Vaš profil na GrčkaAura je verifikovan</h3>
+        <p>Poštovani ${userToVerify.fullName},</p>
+        <p>Sa zadovoljstvom vas obaveštavamo da su administratori odobrili vaš nalog.</p>
+        <p>Sada imate pun pristup Vlasničkom Panelu i možete kreirati i objavljivati svoje smeštaje.</p>
+      `
+      : `
+        <h3>Vaš zahtev za verifikaciju na GrčkaAura zahteva dopunu</h3>
+        <p>Poštovani ${userToVerify.fullName},</p>
+        <p>Vaša dokumentacija je pregledana, ali nažalost ne ispunjava sve zahteve.</p>
+        <p><strong>Razlog odbijanja/dopune:</strong> ${reason || 'Nije naveden'}</p>
+        <p>Molimo vas da se prijavite na svoj nalog i ponovo pošaljete ispravna dokumenta.</p>
+      `;
+
+    await sendEmailNotification({
+      to: userToVerify.email,
+      subject,
+      html
+    });
+
+    res.json({ success: true, message });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -917,6 +1177,7 @@ app.patch('/api/users/:id', authenticateToken, async (req, res) => {
     );
     const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [id]);
     user.isAdmin = !!user.isAdmin;
+    user.isHost = !!user.isHost;
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -924,14 +1185,103 @@ app.patch('/api/users/:id', authenticateToken, async (req, res) => {
 });
 
 // 21. Real SQLite SQL Query Terminal Endpoint
-app.post('/api/admin/query', requireAdmin, async (req, res) => {
+app.post('/api/admin/query', authenticateToken, async (req, res) => {
   const { query } = req.body;
   if (!query || !query.trim()) {
     return res.status(400).json({ error: 'Nije unet SQL upit.' });
   }
 
-  const trimmed = query.trim().toUpperCase();
+  const isAdmin = req.user && req.user.isAdmin;
+  let isHost = req.user && req.user.isHost;
   
+  if (!isAdmin && !isHost && req.user && req.user.email) {
+    try {
+      const prop = await dbHelper.get('SELECT id FROM properties WHERE ownerEmail = ? LIMIT 1', [req.user.email.toLowerCase().trim()]);
+      if (prop) {
+        isHost = true;
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  if (!isAdmin && !isHost) {
+    return res.status(403).json({ error: 'Pristup odbijen. Potrebna su administratorska ili vlasnička prava.' });
+  }
+
+  const q = query.trim();
+  const trimmed = q.toUpperCase();
+
+  if (!isAdmin) {
+    let isAllowed = false;
+    let targetPropertyId = null;
+    let targetRoomId = null;
+
+    const updatePropMatch = q.match(/^UPDATE\s+properties\s+SET\s+[\s\S]+?\s+WHERE\s+id\s*=\s*(\d+);?$/i);
+    if (updatePropMatch) {
+      targetPropertyId = parseInt(updatePropMatch[1], 10);
+    }
+    
+    const updatePricesMatch = q.match(/^UPDATE\s+properties\s+SET\s+price\s*=\s*ROUND\(\s*price\s*\*\s*[\d\.]+\s*,\s*0\)\s*WHERE\s+ownerEmail\s*=\s*'([^']+)'\s*;?$/i);
+    if (updatePricesMatch) {
+      const emailInQuery = updatePricesMatch[1].toLowerCase().trim();
+      if (emailInQuery === req.user.email.toLowerCase().trim()) {
+        isAllowed = true;
+      }
+    }
+    
+    const insertRoomMatch = q.match(/^INSERT\s+INTO\s+rooms\s*\(\s*propertyId[\s\S]+?\s+VALUES\s*\(\s*(\d+)[\s\S]+?\);?$/i);
+    if (insertRoomMatch) {
+      targetPropertyId = parseInt(insertRoomMatch[1], 10);
+    }
+
+    const deleteRoomMatch = q.match(/^DELETE\s+FROM\s+rooms\s+WHERE\s+id\s*=\s*(\d+);?$/i);
+    if (deleteRoomMatch) {
+      targetRoomId = parseInt(deleteRoomMatch[1], 10);
+    }
+
+    if (targetPropertyId) {
+      try {
+        const prop = await dbHelper.get('SELECT ownerEmail, title FROM properties WHERE id = ?', [targetPropertyId]);
+        if (prop && prop.ownerEmail && prop.ownerEmail.toLowerCase().trim() === req.user.email.toLowerCase().trim()) {
+          isAllowed = true;
+          // Obaveštenje za izmenu objekta
+          await createAdminNotification(`Domaćin ${req.user.username} (${req.user.email}) je izmenio podatke/cene za smeštaj: '${prop.title}'.`);
+        }
+      } catch (err) {
+        return res.status(500).json({ error: 'Greška pri provereni vlasništva objekta: ' + err.message });
+      }
+    } else if (targetRoomId) {
+      try {
+        const row = await dbHelper.get(
+          'SELECT p.ownerEmail, p.title, r.title as roomTitle FROM properties p JOIN rooms r ON r.propertyId = p.id WHERE r.id = ?',
+          [targetRoomId]
+        );
+        if (row && row.ownerEmail && row.ownerEmail.toLowerCase().trim() === req.user.email.toLowerCase().trim()) {
+          isAllowed = true;
+          // Obaveštenje za brisanje sobe
+          if (trimmed.startsWith('DELETE')) {
+            await createAdminNotification(`Domaćin ${req.user.username} (${req.user.email}) je uklonio sobu '${row.roomTitle}' iz smeštaja '${row.title}'.`);
+          }
+        }
+      } catch (err) {
+        return res.status(500).json({ error: 'Greška pri provereni vlasništva sobe: ' + err.message });
+      }
+    }
+
+    // Za dodavanje sobe (INSERT):
+    if (insertRoomMatch && isAllowed && targetPropertyId) {
+      try {
+        const prop = await dbHelper.get('SELECT title FROM properties WHERE id = ?', [targetPropertyId]);
+        await createAdminNotification(`Domaćin ${req.user.username} (${req.user.email}) je dodao novu sobu u smeštaj '${prop.title}'.`);
+      } catch (err) {}
+    }
+
+    if (!isAllowed) {
+      return res.status(403).json({ error: 'Nedozvoljena akcija. Možete menjati samo svoje objekte i pripadajuće sobe.' });
+    }
+  }
+
   try {
     if (trimmed.startsWith('SELECT') || trimmed.startsWith('PRAGMA') || trimmed.startsWith('EXPLAIN')) {
       const rows = await dbHelper.all(query);
@@ -962,11 +1312,32 @@ app.post('/api/admin/reset-db', requireAdmin, async (req, res) => {
       await dbHelper.run('DROP TABLE IF EXISTS activity_logs');
       await dbHelper.run('DROP TABLE IF EXISTS forum_posts');
       await dbHelper.run('DROP TABLE IF EXISTS rooms');
+      await dbHelper.run('DROP TABLE IF EXISTS admin_notifications');
     });
 
     console.log('Tabele obrisane na zahtev administratora.');
     await initializeSchema();
     res.json({ success: true, message: 'Baza podataka je uspešno resetovana na fabrička podešavanja.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 22a. Get Admin Notifications
+app.get('/api/admin/notifications', requireAdmin, async (req, res) => {
+  try {
+    const rows = await dbHelper.all('SELECT * FROM admin_notifications ORDER BY id DESC LIMIT 50');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 22b. Mark Admin Notifications as Read
+app.post('/api/admin/notifications/mark-read', requireAdmin, async (req, res) => {
+  try {
+    await dbHelper.run('UPDATE admin_notifications SET isRead = 1');
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

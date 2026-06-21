@@ -7,7 +7,8 @@ export default function Navbar({
   currentUser, 
   onOpenAuth,
   isGridMenuOpen,
-  setIsGridMenuOpen
+  setIsGridMenuOpen,
+  isHost
 }) {
   return (
     <div className="navbar-wrapper-outer">
@@ -63,13 +64,13 @@ export default function Navbar({
               Stanje na Granici
             </a>
           </li>
-          {currentUser && currentUser.isAdmin && (
+          {currentUser && (currentUser.isAdmin || isHost) && (
             <li>
               <a 
                 className={`nav-link ${activeTab === 'host' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('host'); setIsGridMenuOpen(false); }}
               >
-                Admin Panel
+                {currentUser.isAdmin ? 'Admin Panel' : 'Vlasnički Panel'}
               </a>
             </li>
           )}
@@ -142,9 +143,18 @@ export default function Navbar({
           <span className="nav-username">{currentUser.fullName.split(' ')[0]}</span>
         </div>
       ) : (
-        <button className="btn-nav-login glass" onClick={() => { onOpenAuth(); setIsGridMenuOpen(false); }}>
-          Prijavi se
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button 
+            className="btn-nav-login glass" 
+            style={{ backgroundColor: 'rgba(0, 180, 216, 0.15)', borderColor: 'rgba(0, 180, 216, 0.4)', color: 'var(--accent)' }}
+            onClick={() => { onOpenAuth({ initialIsRegister: true, initialIsHost: true }); setIsGridMenuOpen(false); }}
+          >
+            🤝 Izdaj smeštaj
+          </button>
+          <button className="btn-nav-login glass" onClick={() => { onOpenAuth(); setIsGridMenuOpen(false); }}>
+            Prijavi se
+          </button>
+        </div>
       )}
     </div>
   );
