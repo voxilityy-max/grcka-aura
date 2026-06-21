@@ -10344,8 +10344,8 @@ g:hover > .pin-hover-label {
 
 .seagull {
   position: absolute;
-  width: 44px; /* Duplirana veličina (prethodno 22px) */
-  height: 22px;
+  width: 50px; /* Povećana i prilagođena veličina za premium izgled */
+  height: 30px;
   opacity: 0;
   transform-origin: center;
 }

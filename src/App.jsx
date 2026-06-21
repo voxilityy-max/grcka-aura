@@ -2356,13 +2356,13 @@ export default function App() {
         {/* Subtle Flying Seagulls (Moderate size) */}
         <div className="seagulls-container">
           <div className="seagull seagull-1">
-            <svg viewBox="0 0 20 10"><path d="M 0 5 C 3 2, 7 2, 10 5 C 13 2, 17 2, 20 5 C 16 7, 12 7, 10 5 C 8 7, 4 7, 0 5 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
+            <svg viewBox="0 0 100 60"><path d="M 50 35 C 45 35, 20 10, 0 20 C 15 25, 35 32, 45 42 C 47 44, 47 48, 48 50 C 48 53, 49 55, 50 55 C 51 55, 52 53, 52 50 C 53 48, 53 44, 55 42 C 65 32, 85 25, 100 20 C 80 10, 55 35, 50 35 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
           </div>
           <div className="seagull seagull-2">
-            <svg viewBox="0 0 20 10"><path d="M 0 5 C 3 2, 7 2, 10 5 C 13 2, 17 2, 20 5 C 16 7, 12 7, 10 5 C 8 7, 4 7, 0 5 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
+            <svg viewBox="0 0 100 60"><path d="M 50 35 C 45 35, 20 10, 0 20 C 15 25, 35 32, 45 42 C 47 44, 47 48, 48 50 C 48 53, 49 55, 50 55 C 51 55, 52 53, 52 50 C 53 48, 53 44, 55 42 C 65 32, 85 25, 100 20 C 80 10, 55 35, 50 35 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
           </div>
           <div className="seagull seagull-3">
-            <svg viewBox="0 0 20 10"><path d="M 0 5 C 3 2, 7 2, 10 5 C 13 2, 17 2, 20 5 C 16 7, 12 7, 10 5 C 8 7, 4 7, 0 5 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
+            <svg viewBox="0 0 100 60"><path d="M 50 35 C 45 35, 20 10, 0 20 C 15 25, 35 32, 45 42 C 47 44, 47 48, 48 50 C 48 53, 49 55, 50 55 C 51 55, 52 53, 52 50 C 53 48, 53 44, 55 42 C 65 32, 85 25, 100 20 C 80 10, 55 35, 50 35 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
           </div>
         </div>
 
