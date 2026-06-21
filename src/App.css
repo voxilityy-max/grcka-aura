@@ -207,7 +207,7 @@
   justify-content: center;
   gap: 0.8rem;
   width: 92vw;
-  max-width: 1200px;
+  max-width: 1320px;
   pointer-events: auto;
 }
 
@@ -216,7 +216,7 @@
   justify-content: space-between;
   align-items: center;
   flex: 1;
-  padding: 0.5rem 2.2rem;
+  padding: 0.5rem 1.6rem;
   background: rgba(7, 28, 41, 0.82) !important;
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -2766,7 +2766,7 @@
 
 }
 
-@media (min-width: 769px) and (max-width: 1200px) {
+@media (min-width: 769px) and (max-width: 1320px) {
 
   .navbar-wrapper-outer {
     width: 95vw;
@@ -2774,11 +2774,11 @@
   }
 
   .navbar {
-    padding: 0.5rem 1.8rem;
+    padding: 0.5rem 1.2rem;
   }
 
   .nav-link {
-    padding: 0.35rem 0.55rem !important;
+    padding: 0.35rem 0.5rem !important;
     font-size: 0.8rem;
   }
 
