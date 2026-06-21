@@ -288,6 +288,12 @@
   justify-content: flex-end;
 }
 
+.nav-actions > * {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  flex: 0 0 auto !important;
+}
+
 .btn-wishlist {
   display: flex;
   align-items: center;
