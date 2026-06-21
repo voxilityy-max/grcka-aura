@@ -133,7 +133,7 @@ export default function HostPanel({
   // Stats / Dashboard details
   // const [dbLatency, setDbLatency] = useState(null); // Commented out to resolve unused warning
   const [adminNote, setAdminNote] = useState(() => {
-    return localStorage.getItem('aura_admin_notepad') || 'Dobrodošli u administratorski panel GrčkaAura. Ovde možete beležiti brze zadatke i informacije...';
+    return localStorage.getItem('aura_admin_notepad') || 'Dobrodošli u administratorski panel Ellinas. Ovde možete beležiti brze zadatke i informacije...';
   });
 
   // Seasonal Multiplier state
@@ -1283,10 +1283,10 @@ export default function HostPanel({
               <div className="animate-fade">
                 <h4 style={{ color: 'var(--text-main)', marginBottom: '1.2rem', fontWeight: '700', fontSize: '1.1rem' }}>Ugovor o pružanju usluga i pravni uslovi</h4>
                 <div className="onboard-tos-scroll" style={{ marginBottom: '1.5rem' }}>
-                  <p style={{ marginTop: 0 }}><strong>1. Predmet ugovora:</strong> Ovaj ugovor reguliše uslove pod kojima Domaćin (oglašivač) koristi platformu GrčkaAura za oglašavanje turističkih smeštajnih kapaciteta.</p>
-                  <p><strong>2. Tačnost informacija:</strong> Domaćin se obavezuje da će svi podaci o smeštaju (cene, slobodni termini, slike, udaljenost od plaže) biti tačni i ažurni. GrčkaAura ne snosi odgovornost za netačne podatke.</p>
+                  <p style={{ marginTop: 0 }}><strong>1. Predmet ugovora:</strong> Ovaj ugovor reguliše uslove pod kojima Domaćin (oglašivač) koristi platformu Ellinas za oglašavanje turističkih smeštajnih kapaciteta.</p>
+                  <p><strong>2. Tačnost informacija:</strong> Domaćin se obavezuje da će svi podaci o smeštaju (cene, slobodni termini, slike, udaljenost od plaže) biti tačni i ažurni. Ellinas ne snosi odgovornost za netačne podatke.</p>
                   <p><strong>3. Identitet i poreske obaveze:</strong> Domaćin je u obavezi da pruži tačne lične identifikacione podatke (JMBG/Broj pasoša, PIB). Domaćin samostalno snosi odgovornost za prijavu poreza na prihod u svojoj matičnoj državi i u državi gde se objekat nalazi.</p>
-                  <p><strong>4. Zaštita gostiju:</strong> U slučaju otkazivanja odobrene rezervacije od strane domaćina bez opravdanog razloga (viša sila), GrčkaAura zadržava pravo da privremeno ili trajno suspenduje profil domaćina.</p>
+                  <p><strong>4. Zaštita gostiju:</strong> U slučaju otkazivanja odobrene rezervacije od strane domaćina bez opravdanog razloga (viša sila), Ellinas zadržava pravo da privremeno ili trajno suspenduje profil domaćina.</p>
                   <p style={{ marginBottom: 0 }}>Prihvatanjem ovog ugovora dajete saglasnost za obradu vaših ličnih podataka isključivo u svrhe provere identiteta i verifikacije vlasništva.</p>
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', marginBottom: '2rem', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -2199,7 +2199,7 @@ export default function HostPanel({
                 </svg>
                 <p style={{ fontWeight: '800' }}>Smeštaj je uspešno objavljen!</p>
                 <p style={{ fontWeight: 'normal', fontSize: '0.9rem', marginTop: '0.5rem', color: 'var(--text-muted)' }}>
-                  Nova nekretnina je ubačena u bazu i odmah je vidljiva posetiocima portala GrčkaAura.
+                  Nova nekretnina je ubačena u bazu i odmah je vidljiva posetiocima portala Ellinas.
                 </p>
               </div>
             ) : (
@@ -2803,7 +2803,7 @@ export default function HostPanel({
                         <div className="browser-dot green" />
                       </div>
                       <div className="browser-address-bar">
-                        {previewMode === 'card' ? 'grcka-aura.com/smestaji' : `grcka-aura.com/smestaj/${formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'vila-preview'}`}
+                        {previewMode === 'card' ? 'ellinas.com/smestaji' : `ellinas.com/smestaj/${formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'vila-preview'}`}
                       </div>
                     </div>
                     
@@ -3069,7 +3069,7 @@ export default function HostPanel({
                                   📧 {p.ownerEmail}
                                 </span>
                                 <a 
-                                  href={`mailto:${p.ownerEmail}?subject=Upit za smestaj ID %23${p.id} - GrckaAura`} 
+                                  href={`mailto:${p.ownerEmail}?subject=Upit za smestaj ID %23${p.id} - Ellinas`} 
                                   className="btn-contact-quick email" 
                                   title="Pošalji Email vlasniku"
                                   style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}

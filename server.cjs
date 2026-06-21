@@ -1083,11 +1083,11 @@ app.post('/api/host/verify-request', authenticateToken, async (req, res) => {
 
     // Pošalji email administratorima
     const admins = await dbHelper.all('SELECT email FROM users WHERE isAdmin = 1');
-    const adminEmails = admins.length > 0 ? admins.map(a => a.email).join(', ') : 'admin@grcka-aura.com';
+    const adminEmails = admins.length > 0 ? admins.map(a => a.email).join(', ') : 'admin@ellinas.com';
     
     await sendEmailNotification({
       to: adminEmails,
-      subject: `[GrčkaAura] Novi zahtev za verifikaciju domaćina: ${req.user.username}`,
+      subject: `[Ellinas] Novi zahtev za verifikaciju domaćina: ${req.user.username}`,
       html: `
         <h3>Primljen je novi zahtev za verifikaciju domaćina</h3>
         <p><strong>Korisnik:</strong> ${req.user.fullName} (${req.user.email})</p>
@@ -1131,18 +1131,18 @@ app.post('/api/admin/verify-host/:id', requireAdmin, async (req, res) => {
 
     // Pošalji email potvrde domaćinu
     const subject = status === 1 
-      ? `[GrčkaAura] Vaš profil domaćina je ODOBREN! 🎉`
-      : `[GrčkaAura] Vaš zahtev za verifikaciju je odbijen`;
+      ? `[Ellinas] Vaš profil domaćina je ODOBREN! 🎉`
+      : `[Ellinas] Vaš zahtev za verifikaciju je odbijen`;
       
     const html = status === 1
       ? `
-        <h3>Čestitamo! Vaš profil na GrčkaAura je verifikovan</h3>
+        <h3>Čestitamo! Vaš profil na Ellinas je verifikovan</h3>
         <p>Poštovani ${userToVerify.fullName},</p>
         <p>Sa zadovoljstvom vas obaveštavamo da su administratori odobrili vaš nalog.</p>
         <p>Sada imate pun pristup Vlasničkom Panelu i možete kreirati i objavljivati svoje smeštaje.</p>
       `
       : `
-        <h3>Vaš zahtev za verifikaciju na GrčkaAura zahteva dopunu</h3>
+        <h3>Vaš zahtev za verifikaciju na Ellinas zahteva dopunu</h3>
         <p>Poštovani ${userToVerify.fullName},</p>
         <p>Vaša dokumentacija je pregledana, ali nažalost ne ispunjava sve zahteve.</p>
         <p><strong>Razlog odbijanja/dopune:</strong> ${reason || 'Nije naveden'}</p>
@@ -1558,7 +1558,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
       const uploadPromise = new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { folder: 'grcka_aura' },
+          { folder: 'ellinas' },
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
@@ -1661,7 +1661,7 @@ async function performICalSyncForProperty(id, force = false) {
   // 1. Sync whole property calendar if icalUrl exists
   if (property.icalUrl && property.icalUrl.trim()) {
     try {
-      const resIcal = await fetch(property.icalUrl.trim(), { headers: { 'User-Agent': 'GrckaAura/1.0' } });
+      const resIcal = await fetch(property.icalUrl.trim(), { headers: { 'User-Agent': 'Ellinas/1.0' } });
       if (resIcal.ok) {
         const text = await resIcal.text();
         const blocks = parseICS(text);
@@ -1682,7 +1682,7 @@ async function performICalSyncForProperty(id, force = false) {
   for (const room of rooms) {
     if (room.icalUrl && room.icalUrl.trim()) {
       try {
-        const resIcal = await fetch(room.icalUrl.trim(), { headers: { 'User-Agent': 'GrckaAura/1.0' } });
+        const resIcal = await fetch(room.icalUrl.trim(), { headers: { 'User-Agent': 'Ellinas/1.0' } });
         if (resIcal.ok) {
           const text = await resIcal.text();
           const blocks = parseICS(text);
@@ -1791,7 +1791,7 @@ app.get('/api/properties/:id/export-ical', async (req, res) => {
     let ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//GrckaAura//Calendar Export 1.0//SR',
+      'PRODID:-//Ellinas//Calendar Export 1.0//SR',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH'
     ];
@@ -1800,11 +1800,11 @@ app.get('/api/properties/:id/export-ical', async (req, res) => {
       const startClean = inq.checkIn.replace(/-/g, '');
       const endClean = inq.checkOut.replace(/-/g, '');
       ics.push('BEGIN:VEVENT');
-      ics.push(`UID:inquiry-${inq.id}@grcka-aura.com`);
+      ics.push(`UID:inquiry-${inq.id}@ellinas.com`);
       ics.push(`DTSTAMP:${new Date().toISOString().substring(0, 19).replace(/[-:]/g, '')}Z`);
       ics.push(`DTSTART;VALUE=DATE:${startClean}`);
       ics.push(`DTEND;VALUE=DATE:${endClean}`);
-      ics.push('SUMMARY:Rezervisano GrckaAura');
+      ics.push('SUMMARY:Rezervisano Ellinas');
       ics.push('END:VEVENT');
     }
     
@@ -1833,7 +1833,7 @@ app.get('/api/rooms/:roomId/export-ical', async (req, res) => {
     let ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//GrckaAura//Calendar Export 1.0//SR',
+      'PRODID:-//Ellinas//Calendar Export 1.0//SR',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH'
     ];
@@ -1842,11 +1842,11 @@ app.get('/api/rooms/:roomId/export-ical', async (req, res) => {
       const startClean = inq.checkIn.replace(/-/g, '');
       const endClean = inq.checkOut.replace(/-/g, '');
       ics.push('BEGIN:VEVENT');
-      ics.push(`UID:room-inquiry-${inq.id}@grcka-aura.com`);
+      ics.push(`UID:room-inquiry-${inq.id}@ellinas.com`);
       ics.push(`DTSTAMP:${new Date().toISOString().substring(0, 19).replace(/[-:]/g, '')}Z`);
       ics.push(`DTSTART;VALUE=DATE:${startClean}`);
       ics.push(`DTEND;VALUE=DATE:${endClean}`);
-      ics.push('SUMMARY:Rezervisano GrckaAura');
+      ics.push('SUMMARY:Rezervisano Ellinas');
       ics.push('END:VEVENT');
     }
     

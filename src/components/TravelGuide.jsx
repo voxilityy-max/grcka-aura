@@ -518,7 +518,7 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
         <div className="card-tab-layout animate-fade">
           <div className="card-intro-box">
             <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', marginBottom: '0.5rem', textAlign: 'center' }}>
-              Digitalna GrčkaAura Popust Kartica
+              Digitalna Ellinas Popust Kartica
             </h3>
             <p style={{ color: 'var(--text-muted)', maxWidth: '700px', margin: '0 auto 1.5rem', textAlign: 'center' }}>
               Kao član našeg kluba, ostvarite popuste od 10% do 20% u odabranim tavernama, pekarama, rent-a-car agencijama i sportovima na vodi širom Grčke. Pokažite karticu na ekranu vašeg telefona prilikom plaćanja.
@@ -673,7 +673,7 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
             <div className="viber-invite-card">
               <div className="viber-icon-box">💜</div>
               <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'white', marginBottom: '0.5rem' }}>
-                GrčkaAura Viber Zajednica
+                Ellinas Viber Zajednica
               </h3>
               <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
                 Pridružite se grupi sa preko 20,000 vozača i putnika. Pratite informacije o vremenu čekanja na granicama (Evzoni, Bogorodica, Preševo), radarskim patrolama, radovima na putu i cenama goriva u Grčkoj uživo!

@@ -331,7 +331,7 @@ export default function App() {
         type: prev.type === catId ? 'all' : catId 
       }));
     } else if (catId === 'Hrvatska') {
-      alert('Hrvatska letovanja dolaze uskoro na GrčkaAura! Trenutno smo specijalizovani za Grčku.');
+      alert('Hrvatska letovanja dolaze uskoro na Ellinas! Trenutno smo specijalizovani za Grčku.');
     }
     setActiveTab('listings');
     setSelectedProperty(null);
@@ -2172,14 +2172,14 @@ export default function App() {
           <div className="footer-col">
             <h4>Kontakt</h4>
             <ul className="footer-links">
-              <li>E-mail: info@grckaaura.com</li>
+              <li>E-mail: info@ellinas.com</li>
               <li>Telefon: +381 60 123 4567</li>
               <li>Radno vreme: 09:00 - 17:00</li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} GrčkaAura Portal. Sva prava zadržana. Inspirisano GrčkaInfo turističkim portalom.</p>
+          <p>© {new Date().getFullYear()} Ellinas Portal. Sva prava zadržana. Inspirisano GrčkaInfo turističkim portalom.</p>
         </div>
       </footer>
 

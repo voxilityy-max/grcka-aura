@@ -598,7 +598,7 @@ export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, 
               <div className="chat-header">
                 <div className="chat-header-title">
                   <span className="chat-header-name">Ćaskanje: {propTitle}</span>
-                  <span className="chat-header-status">Domaćin: GrčkaAura Podrška</span>
+                  <span className="chat-header-status">Domaćin: Ellinas Podrška</span>
                 </div>
                 <button className="btn-modal-close" onClick={() => setSelectedInqForChat(null)} style={{ position: 'static' }}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
