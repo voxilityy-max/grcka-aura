@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Navbar from './components/Navbar';
 import Megamenu from './components/Megamenu';
 import LandingPage from './components/LandingPage';
@@ -532,6 +532,21 @@ export default function App() {
   const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
   const [chatWidgetOptionSelected, setChatWidgetOptionSelected] = useState(null);
   const [showChatWidgetSuccess, setShowChatWidgetSuccess] = useState(false);
+  const chatWidgetRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (chatWidgetRef.current && !chatWidgetRef.current.contains(event.target)) {
+        setIsChatWidgetOpen(false);
+      }
+    };
+    if (isChatWidgetOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isChatWidgetOpen]);
 
   // AI chat states
   const [chatMessages, setChatMessages] = useState([]);
@@ -2344,7 +2359,7 @@ export default function App() {
       </button>
 
       {/* Floating Chat/Booking Support Widget */}
-      <div className="chat-widget-container">
+      <div className="chat-widget-container" ref={chatWidgetRef}>
         {/* Subtle Flying Seagulls (Moderate size) */}
         <div className="seagulls-container">
           <div className="seagull seagull-1">
