@@ -13,14 +13,34 @@ export default function Navbar({
   return (
     <div className="navbar-wrapper-outer">
       <nav className="navbar glass">
-        <div className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-          <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => { setActiveTab('listings'); setIsGridMenuOpen(false); }}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
-              <line x1="4" y1="20" x2="20" y2="20" />
-              <line x1="6" y1="20" x2="6" y2="6" />
-              <line x1="12" y1="20" x2="12" y2="6" />
-              <line x1="18" y1="20" x2="18" y2="6" />
-              <path d="M5 6h14M3 6l9-4 9 4M4 20h16" />
+        <div className="nav-brand" style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="ellinas-logo-container" style={{ cursor: 'pointer' }} onClick={() => { setActiveTab('listings'); setIsGridMenuOpen(false); }}>
+            <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="38" height="38">
+              <defs>
+                <linearGradient id="logo-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00f2fe" />
+                  <stop offset="100%" stopColor="#00b4d8" />
+                </linearGradient>
+                <linearGradient id="logo-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffb703" />
+                  <stop offset="100%" stopColor="#fb8500" />
+                </linearGradient>
+              </defs>
+              {/* Outer thin orbit ring with dashes */}
+              <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0, 180, 216, 0.15)" strokeWidth="1.5" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logo-cyan)" strokeWidth="2.5" strokeDasharray="14 8" className="logo-ring-dashed" />
+              
+              {/* Main Sail - curved wind-swept shape */}
+              <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="url(#logo-cyan)" />
+              
+              {/* Jib Sail */}
+              <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="url(#logo-gold)" />
+              
+              {/* Aegean Wave lines underneath */}
+              <g className="logo-waves">
+                <path d="M25 76 C35 70 45 82 55 76 C65 70 75 82 85 76" fill="none" stroke="url(#logo-cyan)" strokeWidth="3" strokeLinecap="round" />
+                <path d="M30 83 C40 78 50 88 60 83 C70 78 80 88 90 83" fill="none" stroke="url(#logo-cyan)" strokeWidth="1.8" strokeLinecap="round" opacity="0.5" />
+              </g>
             </svg>
             <span className="brand-logo-text"><span>Elli</span>nas</span>
           </div>

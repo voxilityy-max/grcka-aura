@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
+  <!-- Outer thin orbit ring with dashes -->
+  <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(7, 28, 41, 0.15)" strokeWidth="1.5" />
+  <circle cx="50" cy="50" r="45" fill="none" stroke="#071c29" strokeWidth="2.5" strokeDasharray="14 8" />
+  
+  <!-- Main Sail -->
+  <path d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="#071c29" />
+  
+  <!-- Jib Sail -->
+  <path d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="#0b3c5d" />
+  
+  <!-- Aegean Wave lines underneath -->
+  <g>
+    <path d="M25 76 C35 70 45 82 55 76 C65 70 75 82 85 76" fill="none" stroke="#071c29" strokeWidth="3" strokeLinecap="round" />
+    <path d="M30 83 C40 78 50 88 60 83 C70 78 80 88 90 83" fill="none" stroke="#071c29" strokeWidth="1.8" strokeLinecap="round" opacity="0.5" />
+  </g>
+</svg>
