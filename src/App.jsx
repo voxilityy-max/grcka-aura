@@ -2419,7 +2419,7 @@ export default function App() {
         {showPromoBalloon && (
           <div className="chat-promo-balloon">
             <button className="chat-promo-close" onClick={handleClosePromoBalloon}>✕</button>
-            <p>{currentUser ? "Pitaj našeg AI Asistenta za preporuku i pregovore! 🤖🌴" : "Prijavi se i isprobaj našeg pametnog AI Asistenta! 🤖"}</p>
+            <p>{currentUser ? "Pitajte našeg AI asistenta za preporuku i pregovore! 🌴" : "Prijavite se i isprobajte našeg AI asistenta za brzu preporuku smeštaja! 🌴"}</p>
           </div>
         )}
 

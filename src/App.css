@@ -10375,11 +10375,11 @@ g:hover > .pin-hover-label {
   bottom: 80px;
   right: 10px;
   width: 220px;
-  background: rgba(7, 28, 41, 0.92);
-  border: 1px solid rgba(0, 180, 216, 0.4);
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 12px;
   padding: 0.8rem 1rem;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+  box-shadow: var(--shadow-hover);
   animation: floatPromo 3s ease-in-out infinite, fadeIn 0.4s ease-out;
   z-index: 10001;
 }
@@ -10399,7 +10399,7 @@ g:hover > .pin-hover-label {
 
 .chat-promo-balloon p {
   margin: 0;
-  color: var(--text-light);
+  color: var(--text-main) !important;
   font-size: 0.8rem;
   line-height: 1.4;
   text-align: left;
