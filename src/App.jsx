@@ -2243,14 +2243,19 @@ export default function App() {
           }}
           aria-label="Podrška i brza rezervacija"
         >
-          <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="38" height="38">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0, 180, 216, 0.15)" strokeWidth="1.5" />
-            <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logo-cyan)" strokeWidth="2.5" strokeDasharray="14 8" className="logo-ring-dashed" />
-            <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="url(#logo-cyan)" />
-            <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="url(#logo-gold)" />
-            <g className="logo-waves">
-              <path d="M25 76 C35 70 45 82 55 76 C65 70 75 82 85 76" fill="none" stroke="url(#logo-cyan)" strokeWidth="3" strokeLinecap="round" />
-            </g>
+          <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="20 15 60 60" width="36" height="36">
+            <defs>
+              <linearGradient id="widget-logo-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#00f2fe" />
+                <stop offset="100%" stopColor="#00b4d8" />
+              </linearGradient>
+              <linearGradient id="widget-logo-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ffb703" />
+                <stop offset="100%" stopColor="#fb8500" />
+              </linearGradient>
+            </defs>
+            <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="url(#widget-logo-cyan)" />
+            <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="url(#widget-logo-gold)" />
           </svg>
         </button>
 
