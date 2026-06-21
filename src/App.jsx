@@ -267,7 +267,10 @@ export default function App() {
         priceCategory: 'all',
         type: 'all',
         checkIn: '',
-        checkOut: ''
+        checkOut: '',
+        adults: 2,
+        children: 0,
+        childAges: []
       });
       setActivePills([]);
     }
@@ -435,7 +438,10 @@ export default function App() {
     priceCategory: 'all',
     type: 'all',
     checkIn: '',
-    checkOut: ''
+    checkOut: '',
+    adults: 2,
+    children: 0,
+    childAges: []
   });
 
   // Advanced Sidebar Filters
@@ -1209,7 +1215,10 @@ export default function App() {
       priceCategory: 'all',
       type: 'all',
       checkIn: '',
-      checkOut: ''
+      checkOut: '',
+      adults: 2,
+      children: 0,
+      childAges: []
     });
     setSortBy('recommended');
     setActivePills([]);
@@ -1232,6 +1241,12 @@ export default function App() {
     // Filter by Hero Search: Property Type
     if (searchFilters.type !== 'all') {
       items = items.filter(p => p.type.toLowerCase() === searchFilters.type.toLowerCase());
+    }
+
+    // Filter by Hero Search: Guests (Capacity)
+    const totalGuests = Number(searchFilters.adults || 2) + Number(searchFilters.children || 0);
+    if (totalGuests > 0) {
+      items = items.filter(p => p.guests >= totalGuests);
     }
 
     // Filter by Hero Search: Price Category
