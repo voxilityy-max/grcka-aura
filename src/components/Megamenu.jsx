@@ -22,11 +22,13 @@ export default function Megamenu({
     { name: 'Sitonija',    emoji: '🌊', count: '98 obj.',  image: 'https://images.unsplash.com/photo-1545231027-637d2f6210f8?auto=format&fit=crop&w=400&q=80' },
     { name: 'Kasandra',    emoji: '⛱️', count: '124 obj.', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80' },
     { name: 'Lefkada',     emoji: '🌿', count: '85 obj.',  image: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=400&q=80' },
+    { name: 'Krit',        emoji: '🏛️', count: '112 obj.', image: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=400&q=80' },
+    { name: 'Halkidiki',   emoji: '🌲', count: '156 obj.', image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80' },
     { name: 'Kefalonija',  emoji: '🏔️', count: '67 obj.',  image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=400&q=80' },
-    { name: 'Epir',        emoji: '🌅', count: '41 obj.',  image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=400&q=80' },
     { name: 'Krf',         emoji: '🌺', count: '59 obj.',  image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80' },
     { name: 'Kavala',      emoji: '🚢', count: '33 obj.',  image: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=400&q=80' },
     { name: 'Atos',        emoji: '⛪', count: '22 obj.',  image: 'https://images.unsplash.com/photo-1548625361-155de6c7f54d?auto=format&fit=crop&w=400&q=80' },
+    { name: 'Epir',        emoji: '🌅', count: '41 obj.',  image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=400&q=80' },
   ];
 
   const categories = [
@@ -97,6 +99,7 @@ export default function Megamenu({
             className="mega-show-all"
             onClick={() => {
               setSearchFilters(prev => ({ ...prev, destination: 'all' }));
+              if (setActiveTab) setActiveTab('listings');
               setIsGridMenuOpen(false);
               if (setIsSearchActive) setIsSearchActive(true);
             }}
