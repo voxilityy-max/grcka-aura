@@ -142,6 +142,9 @@ export default function HostPanel({
   // Search filter for logs
   const [logSearch, setLogSearch] = useState('');
 
+  // Search filter for user roster
+  const [rosterSearch, setRosterSearch] = useState('');
+
   // Chat & Comments logic
   const [selectedInqForChat, setSelectedInqForChat] = useState(null);
   const [selectedHostToReview, setSelectedHostToReview] = useState(null);
@@ -3420,105 +3423,149 @@ export default function HostPanel({
             ========================================== */}
         {panelTab === 'users' && currentUser.isAdmin && (
           <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-              Roster registrovanih korisnika
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.8rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
+                Roster registrovanih korisnika
+              </h3>
+              <input 
+                type="text" 
+                placeholder="Pretraži po imenu, email-u ili telefonu..." 
+                value={rosterSearch}
+                onChange={e => setRosterSearch(e.target.value)}
+                className="forum-search-input"
+                style={{ width: '320px', padding: '0.45rem 0.8rem', fontSize: '0.85rem' }}
+              />
+            </div>
 
-            {users.length > 0 ? (
-              <div className="user-roster-grid">
-                {users.map(u => {
-                  const isOwner = u.email === 'voxilityy@gmail.com';
-                  const loggedInUserIsOwner = currentUser.email === 'voxilityy@gmail.com';
+            {users.length > 0 ? (() => {
+              const filteredUsers = users.filter(u => {
+                const q = rosterSearch.toLowerCase();
+                return (
+                  (u.fullName && u.fullName.toLowerCase().includes(q)) ||
+                  (u.email && u.email.toLowerCase().includes(q)) ||
+                  (u.phone && u.phone.toLowerCase().includes(q))
+                );
+              });
 
-                  let roleClass = 'user';
-                  let roleLabel = '👥 Klijent (Gost)';
-                  if (isOwner) {
-                    roleClass = 'owner';
-                    roleLabel = '👑 Vlasnik';
-                  } else if (u.isAdmin) {
-                    roleClass = 'admin';
-                    roleLabel = '🛠️ Admin';
-                  } else if (u.isHost) {
-                    roleClass = 'host';
-                    roleLabel = '🤝 Domaćin';
-                  }
+              return filteredUsers.length > 0 ? (
+                <div className="inquiries-table-wrapper">
+                  <table className="inquiries-table">
+                    <thead>
+                      <tr>
+                        <th>Korisnik</th>
+                        <th>Uloga i Status</th>
+                        <th>Email adresa</th>
+                        <th>Broj telefona</th>
+                        <th>Upravljanje / Akcije</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map(u => {
+                        const isOwner = u.email === 'voxilityy@gmail.com';
+                        const loggedInUserIsOwner = currentUser.email === 'voxilityy@gmail.com';
 
-                  // Verification Badge
-                  const vStatus = u.isVerified !== undefined ? Number(u.isVerified) : 0;
-                  let verifyBadge = null;
-                  if (u.isHost) {
-                    if (vStatus === 1) {
-                      verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(46, 196, 182, 0.12)', color: '#2ec4b6', borderRadius: '4px', fontWeight: 'bold' }}>✓ Verifikovan</span>;
-                    } else if (vStatus === 0 && u.verificationDetails) {
-                      verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#d97706', borderRadius: '4px', fontWeight: 'bold' }}>⏳ Čeka pregled</span>;
-                    } else if (vStatus === -1) {
-                      verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(230, 57, 70, 0.12)', color: '#ef4444', borderRadius: '4px', fontWeight: 'bold' }}>✗ Odbijen</span>;
-                    } else {
-                      verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', borderRadius: '4px' }}>Nije poslao</span>;
-                    }
-                  }
+                        let roleClass = 'user';
+                        let roleLabel = '👥 Klijent (Gost)';
+                        if (isOwner) {
+                          roleClass = 'owner';
+                          roleLabel = '👑 Vlasnik';
+                        } else if (u.isAdmin) {
+                          roleClass = 'admin';
+                          roleLabel = '🛠️ Admin';
+                        } else if (u.isHost) {
+                          roleClass = 'host';
+                          roleLabel = '🤝 Domaćin';
+                        }
 
-                  return (
-                    <div key={u.id} className="user-roster-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      <img src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=0a4f70&color=fff`} alt="Avatar" className="roster-avatar" />
-                      <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)', marginBottom: '0.2rem' }}>
-                        {u.fullName}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
-                        <div className={`roster-role-badge ${roleClass}`}>
-                          {roleLabel}
-                        </div>
-                        {verifyBadge}
-                      </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>📧 {u.email}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>📞 {u.phone || '/'}</div>
-                      
-                      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.4rem', width: '100%', paddingTop: '0.5rem' }}>
-                        {/* Admin verification review button */}
-                        {u.isHost && u.verificationDetails && (
-                          <button
-                            type="button"
-                            className="btn-compare-action"
-                            style={{ padding: '0.35rem 0.7rem', fontSize: '0.75rem', width: '100%', borderRadius: '4px', cursor: 'pointer', backgroundColor: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }}
-                            onClick={() => setSelectedHostToReview(u)}
-                          >
-                            🔎 Pregledaj Dokumente
-                          </button>
-                        )}
+                        // Verification Badge
+                        const vStatus = u.isVerified !== undefined ? Number(u.isVerified) : 0;
+                        let verifyBadge = null;
+                        if (u.isHost) {
+                          if (vStatus === 1) {
+                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(46, 196, 182, 0.12)', color: '#2ec4b6', borderRadius: '4px', fontWeight: 'bold', marginLeft: '0.4rem' }}>✓ Verifikovan</span>;
+                          } else if (vStatus === 0 && u.verificationDetails) {
+                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#d97706', borderRadius: '4px', fontWeight: 'bold', marginLeft: '0.4rem' }}>⏳ Čeka pregled</span>;
+                          } else if (vStatus === -1) {
+                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(230, 57, 70, 0.12)', color: '#ef4444', borderRadius: '4px', fontWeight: 'bold', marginLeft: '0.4rem' }}>✗ Odbijen</span>;
+                          } else {
+                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', borderRadius: '4px', marginLeft: '0.4rem' }}>Nije poslao</span>;
+                          }
+                        }
 
-                        {isOwner ? (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center' }}>Glavni osnivač portala</span>
-                        ) : loggedInUserIsOwner ? (
-                          <button
-                            type="button"
-                            className="btn-compare-action"
-                            style={{ 
-                              padding: '0.35rem 0.7rem', fontSize: '0.75rem', width: '100%', borderRadius: '4px', cursor: 'pointer',
-                              backgroundColor: u.isAdmin ? 'var(--danger)' : 'var(--success)',
-                              borderColor: u.isAdmin ? 'var(--danger)' : 'var(--success)', color: '#fff'
-                            }}
-                            onClick={() => {
-                              const confirmMsg = u.isAdmin 
-                                ? `Da li ste sigurni da želite da oduzmete administratorska prava korisniku ${u.fullName}?` 
-                                : `Da li ste sigurni da želite da dodelite administratorska prava korisniku ${u.fullName}?`;
-                              if (confirm(confirmMsg)) {
-                                onToggleAdminStatus(u.id);
-                              }
-                            }}
-                          >
-                            {u.isAdmin ? 'Oduzmi Admin prava' : 'Dodeli Admin prava'}
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: '0.72rem', color: 'var(--danger)', fontWeight: '600', textAlign: 'center' }}>Samo glavni vlasnik menja prava</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
+                        return (
+                          <tr key={u.id}>
+                            <td style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.75rem 1rem' }}>
+                              <img 
+                                src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=0a4f70&color=fff`} 
+                                alt="Avatar" 
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
+                              />
+                              <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{u.fullName}</span>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.3rem' }}>
+                                <span className={`roster-role-badge ${roleClass}`}>
+                                  {roleLabel}
+                                </span>
+                                {verifyBadge}
+                              </div>
+                            </td>
+                            <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{u.email}</td>
+                            <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{u.phone || '/'}</td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                {u.isHost && u.verificationDetails && (
+                                  <button
+                                    type="button"
+                                    className="btn-compare-action"
+                                    style={{ padding: '0.35rem 0.7rem', fontSize: '0.75rem', borderRadius: '4px', cursor: 'pointer', backgroundColor: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }}
+                                    onClick={() => setSelectedHostToReview(u)}
+                                  >
+                                    🔎 Pregledaj Dokumente
+                                  </button>
+                                )}
+
+                                {isOwner ? (
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Glavni osnivač portala</span>
+                                ) : loggedInUserIsOwner ? (
+                                  <button
+                                    type="button"
+                                    className="btn-compare-action"
+                                    style={{ 
+                                      padding: '0.35rem 0.7rem', fontSize: '0.75rem', borderRadius: '4px', cursor: 'pointer',
+                                      backgroundColor: u.isAdmin ? 'var(--danger)' : 'var(--success)',
+                                      borderColor: u.isAdmin ? 'var(--danger)' : 'var(--success)', color: '#fff'
+                                    }}
+                                    onClick={() => {
+                                      const confirmMsg = u.isAdmin 
+                                        ? `Da li ste sigurni da želite da oduzmete administratorska prava korisniku ${u.fullName}?` 
+                                        : `Da li ste sigurni da želite da dodelite administratorska prava korisniku ${u.fullName}?`;
+                                      if (confirm(confirmMsg)) {
+                                        onToggleAdminStatus(u.id);
+                                      }
+                                    }}
+                                  >
+                                    {u.isAdmin ? 'Oduzmi Admin prava' : 'Dodeli Admin prava'}
+                                  </button>
+                                ) : (
+                                  <span style={{ fontSize: '0.72rem', color: 'var(--danger)', fontWeight: '600' }}>Samo glavni vlasnik menja prava</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                  Nema registrovanih korisnika koji odgovaraju pretrazi.
+                </div>
+              );
+            })() : (
               <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                Nema korisnika u bazi.
+                Nema registrovanih korisnika u bazi.
               </div>
             )}
           </div>
