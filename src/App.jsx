@@ -670,11 +670,53 @@ export default function App() {
 
   const handleSelectChatWidgetOption = (optionId) => {
     setChatWidgetOptionSelected(optionId);
+    
+    // Execute actual filters based on selected quick support option
+    if (optionId === 1) {
+      handleSelectDestination('Tasos');
+    } else if (optionId === 2) {
+      handleSelectDestination('Sitonija');
+    } else if (optionId === 3) {
+      setSearchFilters(prev => ({
+        ...prev,
+        destination: 'all',
+        checkIn: '2026-07-01',
+        checkOut: '2026-07-08'
+      }));
+      setActiveTab('listings');
+      setIsSearchActive(true);
+      setSelectedProperty(null);
+      setTimeout(() => {
+        const listingsEl = document.getElementById('listings-section');
+        if (listingsEl) {
+          listingsEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else if (optionId === 4) {
+      setSearchFilters(prev => ({
+        ...prev,
+        priceCategory: 'budget'
+      }));
+      setSortBy('priceLow');
+      setActiveTab('listings');
+      setIsSearchActive(true);
+      setSelectedProperty(null);
+      setTimeout(() => {
+        const listingsEl = document.getElementById('listings-section');
+        if (listingsEl) {
+          listingsEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+
     setTimeout(() => {
       setShowChatWidgetSuccess(true);
       setTimeout(() => {
         setIsChatWidgetOpen(false);
-      }, 2500);
+        // Reset success states for next open
+        setShowChatWidgetSuccess(false);
+        setChatWidgetOptionSelected(null);
+      }, 1500);
     }, 300);
   };
 
@@ -2457,8 +2499,12 @@ export default function App() {
             {showChatWidgetSuccess ? (
               <div className="chat-success-screen">
                 <div className="success-checkmark-circle">✓</div>
-                <h3>Zahtev je poslat!</h3>
-                <p>Hvala vam. Vaš zahtev je uspešno zabeležen. Naš tim podrške će vas kontaktirati u najkraćem roku.</p>
+                <h3>{chatWidgetOptionSelected ? "Filter je primenjen!" : "Zahtev je poslat!"}</h3>
+                <p>
+                  {chatWidgetOptionSelected 
+                    ? "Pronašli smo odgovarajuće smeštaje. Rezultati su prikazani na stranici." 
+                    : "Hvala vam. Vaš zahtev je uspešno zabeležen. Naš tim podrške će vas kontaktirati u najkraćem roku."}
+                </p>
               </div>
             ) : currentUser ? (
               /* Active AI Chat Mode for logged-in users */
