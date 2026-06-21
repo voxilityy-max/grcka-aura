@@ -2573,8 +2573,8 @@ export default function App() {
               <>
                 <div className="chat-widget-body">
                   <div className="chat-ai-locked-card">
-                    <h4>🤖 Povežite se sa AI Asistentom</h4>
-                    <p>Otključajte asistenta koji pretražuje i pregovara za vas!</p>
+                    <h4>🤖 Ellinas Live Chat & AI</h4>
+                    <p>Prijavite se da otključate AI asistenta i četujete uživo sa našim timom!</p>
                     <button 
                       className="chat-ai-unlock-btn"
                       onClick={() => {
@@ -2582,7 +2582,7 @@ export default function App() {
                         setIsAuthModalOpen(true);
                       }}
                     >
-                      Prijavi se za AI Chat
+                      Prijavite se i četujte
                     </button>
                   </div>
 
