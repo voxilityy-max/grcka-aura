@@ -2344,20 +2344,45 @@ export default function App() {
           }}
           aria-label="Podrška i brza rezervacija"
         >
-          <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="20 15 60 60" width="36" height="36">
-            <defs>
-              <linearGradient id="widget-logo-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#00f2fe" />
-                <stop offset="100%" stopColor="#00b4d8" />
-              </linearGradient>
-              <linearGradient id="widget-logo-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ffb703" />
-                <stop offset="100%" stopColor="#fb8500" />
-              </linearGradient>
-            </defs>
-            <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="url(#widget-logo-cyan)" />
-            <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="url(#widget-logo-gold)" />
-          </svg>
+          {currentUser ? (
+            /* Premium Animating Palm Tree in Brand Logo Colors for Logged-in Users */
+            <svg className="palm-tree-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="36" height="36">
+              <defs>
+                <linearGradient id="widget-logo-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00f2fe" />
+                  <stop offset="100%" stopColor="#00b4d8" />
+                </linearGradient>
+                <linearGradient id="widget-logo-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffb703" />
+                  <stop offset="100%" stopColor="#fb8500" />
+                </linearGradient>
+              </defs>
+              <path d="M48 82 C53 60 50 40 45 30 C47 40 49 60 48 82 Z" fill="url(#widget-logo-gold)" />
+              <path d="M45 30 C30 35 15 45 12 55 C22 48 35 38 45 30 Z" fill="url(#widget-logo-cyan)" opacity="0.9" />
+              <path d="M45 30 C30 20 18 15 22 5 C30 15 38 22 45 30 Z" fill="url(#widget-logo-cyan)" />
+              <path d="M45 30 C50 12 55 5 62 5 C58 18 52 25 45 30 Z" fill="url(#widget-logo-cyan)" />
+              <path d="M45 30 C65 22 75 22 80 15 C72 26 60 30 45 30 Z" fill="url(#widget-logo-cyan)" opacity="0.95" />
+              <path d="M45 30 C65 35 78 45 78 55 C65 48 55 38 45 30 Z" fill="url(#widget-logo-cyan)" opacity="0.85" />
+              <path d="M45 30 C35 42 22 58 25 65 C32 55 38 42 45 30 Z" fill="url(#widget-logo-cyan)" opacity="0.8" />
+            </svg>
+          ) : (
+            /* Branded Sails for Guests */
+            <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="20 15 60 60" width="36" height="36">
+              <defs>
+                <linearGradient id="widget-logo-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00f2fe" />
+                  <stop offset="100%" stopColor="#00b4d8" />
+                </linearGradient>
+                <linearGradient id="widget-logo-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffb703" />
+                  <stop offset="100%" stopColor="#fb8500" />
+                </linearGradient>
+              </defs>
+              <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="url(#widget-logo-cyan)" />
+              <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="url(#widget-logo-gold)" />
+            </svg>
+          )}
+          <span className="floating-tooltip">{currentUser ? "Pitaj AI Asistenta! 🌴" : "Podrška i rezervacija"}</span>
         </button>
 
         {isChatWidgetOpen && (

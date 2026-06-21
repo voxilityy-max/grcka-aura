@@ -10310,6 +10310,27 @@ g:hover > .pin-hover-label {
   border-color: #e2e8f0;
 }
 
+/* Palm Tree Swaying Animation */
+@keyframes palmSway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(5deg) scale(1.02); }
+}
+
+.palm-tree-svg {
+  animation: palmSway 3.5s ease-in-out infinite;
+  transform-origin: bottom center;
+  filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.25));
+}
+
+.chat-widget-trigger:hover .palm-tree-svg {
+  animation: palmSway 1.5s ease-in-out infinite; /* Brže njihanje na hover za interaktivan osećaj */
+}
+
+.chat-widget-trigger:hover .floating-tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 
 
 
