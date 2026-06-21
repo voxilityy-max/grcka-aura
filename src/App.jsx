@@ -670,6 +670,13 @@ export default function App() {
 
   const handleSelectChatWidgetOption = (optionId) => {
     setChatWidgetOptionSelected(optionId);
+    setShowChatWidgetSuccess(true);
+    
+    // Auto-close chat widget after a brief delay so the user sees the applied filters
+    setTimeout(() => {
+      setIsChatWidgetOpen(false);
+      setShowChatWidgetSuccess(false);
+    }, 2200);
     
     // Execute actual filters based on selected quick support option
     if (optionId === 1) {
@@ -708,16 +715,6 @@ export default function App() {
         }
       }, 100);
     }
-
-    setTimeout(() => {
-      setShowChatWidgetSuccess(true);
-      setTimeout(() => {
-        setIsChatWidgetOpen(false);
-        // Reset success states for next open
-        setShowChatWidgetSuccess(false);
-        setChatWidgetOptionSelected(null);
-      }, 1500);
-    }, 300);
   };
 
   const handleRefreshDatabase = async () => {
@@ -2137,6 +2134,7 @@ export default function App() {
           handleSelectCategory={handleSelectCategory}
           setActiveTab={handleTabChange}
           setIsSearchActive={setIsSearchActive}
+          onOpenAuth={handleOpenAuthModal}
         />
       </header>
 

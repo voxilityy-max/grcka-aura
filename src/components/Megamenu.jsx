@@ -11,7 +11,8 @@ export default function Megamenu({
   handleSelectDestination,
   handleSelectCategory,
   setActiveTab,
-  setIsSearchActive
+  setIsSearchActive,
+  onOpenAuth
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -175,7 +176,15 @@ export default function Megamenu({
             </button>
             <button className="mega-link-row" onClick={() => {
               setIsGridMenuOpen(false);
-              if (currentUser) { setActiveTab('profile'); } else { setIsAuthModalOpen(true); }
+              if (currentUser) { 
+                setActiveTab('host'); 
+              } else { 
+                if (onOpenAuth) {
+                  onOpenAuth({ initialIsRegister: true, initialIsHost: true });
+                } else {
+                  setIsAuthModalOpen(true);
+                }
+              }
             }}>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
               <span>Dodajte smeštaj</span>
