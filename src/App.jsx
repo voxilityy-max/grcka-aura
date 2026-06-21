@@ -2482,13 +2482,13 @@ export default function App() {
             <div className="chat-widget-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
-                  <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-                  <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="#ffffff" />
-                  <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="#ffb703" />
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border)" strokeWidth="1.5" />
+                  <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="var(--primary)" />
+                  <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="var(--secondary)" />
                 </svg>
                 <div style={{ textAlign: 'left' }}>
-                  <strong style={{ fontSize: '0.95rem', color: '#fff' }}>Ellinas Podrška</strong><br />
-                  <span style={{ fontSize: '0.75rem', color: '#a7f3d0', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <strong style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>Ellinas Podrška</strong><br />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span> Online
                   </span>
                 </div>
