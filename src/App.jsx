@@ -2573,7 +2573,12 @@ export default function App() {
               <>
                 <div className="chat-widget-body">
                   <div className="chat-ai-locked-card">
-                    <h4>🤖 Ellinas Live Chat & Podrška Inteligencije</h4>
+                    <h4 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00f2fe" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 3px rgba(0, 242, 254, 0.4))' }}>
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                      Ellinas Live Chat & Podrška Inteligencije
+                    </h4>
                     <p>Prijavite se da otključate AI asistenta i četujete uživo sa našim timom!</p>
                     <button 
                       className="chat-ai-unlock-btn"
