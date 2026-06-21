@@ -9,3 +9,4 @@
   1. **Prethodno stanje (Šta nije bilo pre)**
   2. **Nove izmene (Šta smo dodali/promenili)**
   3. **Poboljšanje sistema (Kako smo unapredili rad/sigurnost)**
+- U tabeli, ispred stavki koje predstavljaju uspešne i dobre promene treba staviti zelenu kvačicu (✅), a ispred stavki koje donose sumnju, rizik ili su privremena rešenja staviti crveni krstić (❌).
