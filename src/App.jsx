@@ -2573,7 +2573,7 @@ export default function App() {
               <>
                 <div className="chat-widget-body">
                   <div className="chat-ai-locked-card">
-                    <h4>🤖 Ellinas Live Chat & AI</h4>
+                    <h4>🤖 Ellinas Live Chat & Podrška Inteligencije</h4>
                     <p>Prijavite se da otključate AI asistenta i četujete uživo sa našim timom!</p>
                     <button 
                       className="chat-ai-unlock-btn"
