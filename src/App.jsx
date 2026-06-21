@@ -349,7 +349,7 @@ export default function App() {
   useEffect(() => {
     const handleDocumentClick = (e) => {
       // Proveri da li klik potiče od samog grid launcher dugmeta ili unutar megamenija
-      if (e.target.closest('.btn-grid-launcher') || e.target.closest('.mega-panel')) return;
+      if (e.target.closest('.floating-brand-launcher') || e.target.closest('.mega-panel')) return;
       setIsGridMenuOpen(false);
     };
     const handleKeyDown = (e) => {
@@ -2196,6 +2196,24 @@ export default function App() {
           initialIsHost={authModalOptions.initialIsHost}
         />
       )}
+
+      {/* Floating Brand Explorer Launcher */}
+      <button 
+        className={`floating-brand-launcher ${isGridMenuOpen ? 'active' : ''}`}
+        onClick={(e) => { e.stopPropagation(); setIsGridMenuOpen(!isGridMenuOpen); }}
+        aria-label="Istraži regije"
+      >
+        <svg className="ellinas-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="40">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(0, 180, 216, 0.15)" strokeWidth="1.5" />
+          <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logo-cyan)" strokeWidth="2.5" strokeDasharray="14 8" className="logo-ring-dashed" />
+          <path className="logo-main-sail" d="M47 22 C32 38 32 62 47 70 C42 55 42 35 47 22 Z" fill="url(#logo-cyan)" />
+          <path className="logo-jib-sail" d="M53 32 C58 42 66 52 53 64 C51 52 51 40 53 32 Z" fill="url(#logo-gold)" />
+          <g className="logo-waves">
+            <path d="M25 76 C35 70 45 82 55 76 C65 70 75 82 85 76" fill="none" stroke="url(#logo-cyan)" strokeWidth="3" strokeLinecap="round" />
+          </g>
+        </svg>
+        <span className="floating-tooltip">Istraži Regije</span>
+      </button>
 
     </div>
   );

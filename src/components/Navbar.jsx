@@ -100,26 +100,6 @@ export default function Navbar({
         </ul>
         
         <div className="nav-actions">
-          <button 
-            className={`btn-grid-launcher ${isGridMenuOpen ? 'active' : ''}`}
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              setIsGridMenuOpen(!isGridMenuOpen); 
-            }}
-            aria-label="Brzi meni regija"
-          >
-            <svg viewBox="0 0 24 24" className="grid-launcher-icon" fill="currentColor">
-              <circle cx="6" cy="6" r="2" />
-              <circle cx="12" cy="6" r="2" />
-              <circle cx="18" cy="6" r="2" />
-              <circle cx="6" cy="12" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="18" cy="12" r="2" />
-              <circle cx="6" cy="18" r="2" />
-              <circle cx="12" cy="18" r="2" />
-              <circle cx="18" cy="18" r="2" />
-            </svg>
-          </button>
 
           <button 
             className="btn-theme-toggle"
@@ -157,28 +137,28 @@ export default function Navbar({
             <span>Sačuvano</span>
             {wishlistCount > 0 && <span className="wishlist-count">{wishlistCount}</span>}
           </button>
+
+          {currentUser ? (
+            <div className="nav-user-profile glass" onClick={() => { setActiveTab('profile'); setIsGridMenuOpen(false); }}>
+              <img src={currentUser.avatar} alt={currentUser.fullName} className="nav-avatar-img" />
+              <span className="nav-username">{currentUser.fullName.split(' ')[0]}</span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="btn-nav-login glass" 
+                style={{ backgroundColor: 'rgba(0, 180, 216, 0.15)', borderColor: 'rgba(0, 180, 216, 0.4)', color: 'var(--accent)' }}
+                onClick={() => { onOpenAuth({ initialIsRegister: true, initialIsHost: true }); setIsGridMenuOpen(false); }}
+              >
+                🤝 Izdaj smeštaj
+              </button>
+              <button className="btn-nav-login glass" onClick={() => { onOpenAuth(); setIsGridMenuOpen(false); }}>
+                Prijavi se
+              </button>
+            </div>
+          )}
         </div>
       </nav>
-
-      {currentUser ? (
-        <div className="nav-user-profile glass" onClick={() => { setActiveTab('profile'); setIsGridMenuOpen(false); }}>
-          <img src={currentUser.avatar} alt={currentUser.fullName} className="nav-avatar-img" />
-          <span className="nav-username">{currentUser.fullName.split(' ')[0]}</span>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button 
-            className="btn-nav-login glass" 
-            style={{ backgroundColor: 'rgba(0, 180, 216, 0.15)', borderColor: 'rgba(0, 180, 216, 0.4)', color: 'var(--accent)' }}
-            onClick={() => { onOpenAuth({ initialIsRegister: true, initialIsHost: true }); setIsGridMenuOpen(false); }}
-          >
-            🤝 Izdaj smeštaj
-          </button>
-          <button className="btn-nav-login glass" onClick={() => { onOpenAuth(); setIsGridMenuOpen(false); }}>
-            Prijavi se
-          </button>
-        </div>
-      )}
     </div>
   );
 }
