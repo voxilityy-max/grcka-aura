@@ -9584,6 +9584,116 @@ g:hover > .pin-hover-label {
   transform: translateX(0);
 }
 
+/* Saved Accounts List / Account Chooser Styles */
+.saved-accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin: 1.5rem 0;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.saved-account-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.saved-account-card:hover {
+  background: rgba(0, 180, 216, 0.08);
+  border-color: rgba(0, 180, 216, 0.35);
+  transform: translateY(-2px);
+}
+
+.saved-account-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+}
+
+.saved-account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+}
+
+.saved-account-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.saved-account-email {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.btn-remove-account {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.btn-remove-account:hover {
+  background: rgba(230, 57, 70, 0.15);
+  color: var(--danger);
+  transform: scale(1.1);
+}
+
+/* Password screen selected account styling */
+.selected-account-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.selected-account-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 180, 216, 0.25);
+  margin-bottom: 0.8rem;
+}
+
+.selected-account-name-label {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.2rem;
+}
+
+.selected-account-email-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+
 
 
 

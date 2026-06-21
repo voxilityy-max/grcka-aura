@@ -890,6 +890,7 @@ export default function App() {
           handleTabChange('profile');
           logActivity(loggedInUser, `Korisnik se prijavio na sistem (JWT).`, 'auth');
         }
+        return loggedInUser;
       } catch (err) {
         throw err;
       }
@@ -912,6 +913,7 @@ export default function App() {
         handleTabChange('profile');
         logActivity(user, `Korisnik se prijavio na sistem.`, 'auth');
       }
+      return user;
     }
   };
 

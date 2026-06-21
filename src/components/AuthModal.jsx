@@ -6,6 +6,54 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
   const [googleCustomEmail, setGoogleCustomEmail] = useState(false);
   const [customGmail, setCustomGmail] = useState('');
   const [customGmailName, setCustomGmailName] = useState('');
+
+  // Saved accounts state & helpers for quick login
+  const [savedAccounts, setSavedAccounts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('saved_accounts');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [selectedSavedAccount, setSelectedSavedAccount] = useState(null);
+  const [saveProfileOnDevice, setSaveProfileOnDevice] = useState(true);
+  const [showManualLogin, setShowManualLogin] = useState(false);
+
+  const saveAccountToDevice = (user) => {
+    try {
+      const saved = localStorage.getItem('saved_accounts');
+      let accounts = saved ? JSON.parse(saved) : [];
+      const exists = accounts.some(acc => acc.email.toLowerCase() === user.email.toLowerCase());
+      if (!exists) {
+        accounts.push({
+          email: user.email,
+          fullName: user.fullName,
+          avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=0a4f70&color=fff`,
+          isGoogleUser: !!user.isGoogleUser
+        });
+        localStorage.setItem('saved_accounts', JSON.stringify(accounts));
+        setSavedAccounts(accounts);
+      }
+    } catch (e) {
+      console.error('Failed to save account to device:', e);
+    }
+  };
+
+  const removeSavedAccount = (email) => {
+    try {
+      const saved = localStorage.getItem('saved_accounts');
+      let accounts = saved ? JSON.parse(saved) : [];
+      accounts = accounts.filter(acc => acc.email.toLowerCase() !== email.toLowerCase());
+      localStorage.setItem('saved_accounts', JSON.stringify(accounts));
+      setSavedAccounts(accounts);
+      if (selectedSavedAccount && selectedSavedAccount.email.toLowerCase() === email.toLowerCase()) {
+        setSelectedSavedAccount(null);
+      }
+    } catch (e) {
+      console.error('Failed to remove saved account:', e);
+    }
+  };
   
   // New auth system states
   const [showPassword, setShowPassword] = useState(false);
@@ -56,8 +104,24 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
         u => u.email.toLowerCase() === email.toLowerCase().trim()
       );
 
+      const onRegisterPromise = (userObj) => {
+        return Promise.resolve(onRegister(userObj)).then(() => userObj);
+      };
+      
+      const onLoginPromise = (userObj) => {
+        return Promise.resolve(onLogin(userObj)).then(() => userObj);
+      };
+
       if (existingUser) {
-        onLogin(existingUser);
+        onLoginPromise(existingUser)
+          .then((user) => {
+            setIsLoading(false);
+            if (saveProfileOnDevice) saveAccountToDevice(user);
+          })
+          .catch(err => {
+            setError(err.message || 'Greška pri prijavi.');
+            setIsLoading(false);
+          });
       } else {
         const isOwner = email.toLowerCase().trim() === 'voxilityy@gmail.com';
         const newGoogleUser = {
@@ -72,9 +136,16 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
           isAdmin: isOwner
         };
 
-        onRegister(newGoogleUser);
+        onRegisterPromise(newGoogleUser)
+          .then((user) => {
+            setIsLoading(false);
+            if (saveProfileOnDevice) saveAccountToDevice(user);
+          })
+          .catch(err => {
+            setError(err.message || 'Greška pri registraciji.');
+            setIsLoading(false);
+          });
       }
-      setIsLoading(false);
     }, 800);
   };
 
@@ -147,7 +218,12 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
         }
 
         Promise.resolve(onLogin({ email: formData.email.trim(), password: formData.password }))
-          .then(() => setIsLoading(false))
+          .then((loggedInUser) => {
+            setIsLoading(false);
+            if (saveProfileOnDevice && loggedInUser) {
+              saveAccountToDevice(loggedInUser);
+            }
+          })
           .catch(err => {
             setError(err.message || 'Pogrešan e-mail ili lozinka.');
             setIsLoading(false);
@@ -396,6 +472,202 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
     );
   }
 
+  // RENDER SCREEN: Saved Accounts Chooser
+  if (!isRegister && !isForgotPassword && savedAccounts.length > 0 && !showManualLogin && !selectedSavedAccount) {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-container auth-modal-card animate-scale" onClick={e => e.stopPropagation()}>
+          <button className="btn-modal-close" onClick={onClose} aria-label="Zatvori">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <div className="auth-header-box">
+            <h2>Izaberite nalog</h2>
+            <p>Prijavite se brzo jednim klikom na sačuvani profil na ovom uređaju.</p>
+          </div>
+
+          <div className="saved-accounts-list">
+            {savedAccounts.map(account => (
+              <div 
+                key={account.email} 
+                className="saved-account-card"
+                onClick={() => {
+                  setSelectedSavedAccount(account);
+                  setFormData(prev => ({
+                    ...prev,
+                    email: account.email,
+                    password: ''
+                  }));
+                  setError('');
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                  <img src={account.avatar} alt={account.fullName} className="saved-account-avatar" />
+                  <div className="saved-account-info">
+                    <span className="saved-account-name">{account.fullName}</span>
+                    <span className="saved-account-email">{account.email}</span>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  className="btn-remove-account" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeSavedAccount(account.email);
+                  }}
+                  aria-label="Ukloni profil"
+                  title="Ukloni ovaj profil sa uređaja"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button 
+            type="button" 
+            className="btn-compare-cancel" 
+            style={{ width: '100%', marginTop: '1.2rem', padding: '0.75rem' }} 
+            onClick={() => setShowManualLogin(true)}
+          >
+            Prijavi se sa drugim nalogom
+          </button>
+          
+          <div className="auth-toggle-link" style={{ marginTop: '1.2rem' }}>
+            Nemate profil? <span onClick={() => { setIsRegister(true); setError(''); }}>Registrujte se besplatno</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // RENDER SCREEN: Password input for selected saved account
+  if (!isRegister && !isForgotPassword && selectedSavedAccount) {
+    const handleSelectedAccountSubmit = (e) => {
+      e.preventDefault();
+      setError('');
+      
+      if (formData.password.length < 5) {
+        setError('Lozinka mora imati najmanje 5 karaktera.');
+        return;
+      }
+      
+      setIsLoading(true);
+      
+      setTimeout(() => {
+        Promise.resolve(onLogin({ email: selectedSavedAccount.email, password: formData.password }))
+          .then(() => setIsLoading(false))
+          .catch(err => {
+            setError(err.message || 'Pogrešna lozinka.');
+            setIsLoading(false);
+          });
+      }, 850);
+    };
+
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-container auth-modal-card animate-scale" onClick={e => e.stopPropagation()}>
+          <button className="btn-modal-close" onClick={onClose} aria-label="Zatvori">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <div className="selected-account-header">
+            <img src={selectedSavedAccount.avatar} alt={selectedSavedAccount.fullName} className="selected-account-avatar-large" />
+            <h3 className="selected-account-name-label">{selectedSavedAccount.fullName}</h3>
+            <p className="selected-account-email-label">{selectedSavedAccount.email}</p>
+          </div>
+
+          {error && (
+            <div style={{ color: 'var(--danger)', fontSize: '0.85rem', fontWeight: '600', padding: '0.6rem', backgroundColor: 'rgba(230, 57, 70, 0.08)', borderRadius: '4px', marginBottom: '1.2rem', textAlign: 'center' }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSelectedAccountSubmit} className="inquiry-form">
+            <div className="form-field">
+              <label htmlFor="saved-auth-password">Unesite lozinku *</label>
+              <div className="password-input-wrapper">
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  id="saved-auth-password" 
+                  name="password" 
+                  value={formData.password} 
+                  onChange={handleChange}
+                  placeholder="••••••••" 
+                  required 
+                  disabled={isLoading}
+                  autoFocus
+                />
+                <button 
+                  type="button" 
+                  className="btn-toggle-password" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
+                >
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="auth-helper-row" style={{ marginTop: '0.4rem', marginBottom: '0.8rem' }}>
+              <span className="forgot-password-link" onClick={() => setIsForgotPassword(true)}>
+                Zaboravili ste lozinku?
+              </span>
+            </div>
+
+            <button 
+              type="submit" 
+              className={`btn-submit-inquiry ${isLoading ? 'btn-submit-loading' : ''}`}
+              disabled={isLoading}
+              style={{ marginTop: '1.2rem' }}
+            >
+              {isLoading ? (
+                <>
+                  <div className="auth-spinner"></div>
+                  Prijavljivanje...
+                </>
+              ) : (
+                'Prijavi se'
+              )}
+            </button>
+
+            <button 
+              type="button" 
+              className="btn-compare-cancel" 
+              style={{ width: '100%', marginTop: '0.8rem', padding: '0.75rem' }} 
+              onClick={() => {
+                setSelectedSavedAccount(null);
+                setError('');
+              }}
+              disabled={isLoading}
+            >
+              Nazad na listu profila
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container auth-modal-card animate-scale" onClick={e => e.stopPropagation()}>
@@ -542,16 +814,27 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
 
           {/* Remember me & Forgot Password Row */}
           {!isRegister && (
-            <div className="auth-helper-row">
-              <label className="remember-me-checkbox">
-                <input 
-                  type="checkbox" 
-                  checked={rememberMe} 
-                  onChange={(e) => setRememberMe(e.target.checked)} 
-                />
-                <span>Zapamti me</span>
-              </label>
-              <span className="forgot-password-link" onClick={() => setIsForgotPassword(true)}>
+            <div className="auth-helper-row" style={{ flexDirection: 'column', gap: '0.6rem', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', gap: '1.2rem', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="remember-me-checkbox">
+                  <input 
+                    type="checkbox" 
+                    checked={rememberMe} 
+                    onChange={(e) => setRememberMe(e.target.checked)} 
+                  />
+                  <span>Zapamti me</span>
+                </label>
+                
+                <label className="remember-me-checkbox">
+                  <input 
+                    type="checkbox" 
+                    checked={saveProfileOnDevice} 
+                    onChange={(e) => setSaveProfileOnDevice(e.target.checked)} 
+                  />
+                  <span title="Sačuvaj nalog za brzu prijavu na ovom pretraživaču">Sačuvaj profil</span>
+                </label>
+              </div>
+              <span className="forgot-password-link" style={{ alignSelf: 'flex-end', marginTop: '-0.2rem' }} onClick={() => setIsForgotPassword(true)}>
                 Zaboravili ste lozinku?
               </span>
             </div>
