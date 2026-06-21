@@ -2574,7 +2574,7 @@ export default function App() {
                 <div className="chat-widget-body">
                   <div className="chat-ai-locked-card">
                     <h4>🤖 Povežite se sa AI Asistentom</h4>
-                    <p>Otključajte personalnog asistenta koji pretražuje smeštaje, odgovara na pitanja i pregovara za vas!</p>
+                    <p>Otključajte asistenta koji pretražuje i pregovara za vas!</p>
                     <button 
                       className="chat-ai-unlock-btn"
                       onClick={() => {
@@ -2586,30 +2586,36 @@ export default function App() {
                     </button>
                   </div>
 
-                  <button 
-                    onClick={() => handleSelectChatWidgetOption(1)} 
-                    className={`chat-option-btn ${chatWidgetOptionSelected === 1 ? 'selected' : ''}`}
-                  >
-                    🏖️ Tražim smeštaj na Tasosu
-                  </button>
-                  <button 
-                    onClick={() => handleSelectChatWidgetOption(2)} 
-                    className={`chat-option-btn ${chatWidgetOptionSelected === 2 ? 'selected' : ''}`}
-                  >
-                    🏨 Tražim smeštaj na Sitoniji
-                  </button>
-                  <button 
-                    onClick={() => handleSelectChatWidgetOption(3)} 
-                    className={`chat-option-btn ${chatWidgetOptionSelected === 3 ? 'selected' : ''}`}
-                  >
-                    📅 Proveri raspoloživost za jul 2026
-                  </button>
-                  <button 
-                    onClick={() => handleSelectChatWidgetOption(4)} 
-                    className={`chat-option-btn ${chatWidgetOptionSelected === 4 ? 'selected' : ''}`}
-                  >
-                    💰 Najbolje cene i ponude
-                  </button>
+                  <div className="chat-options-grid">
+                    <button 
+                      onClick={() => handleSelectChatWidgetOption(1)} 
+                      className={`chat-option-btn ${chatWidgetOptionSelected === 1 ? 'selected' : ''}`}
+                    >
+                      <span className="chat-option-icon">🏖️</span>
+                      <span className="chat-option-text">Tasos</span>
+                    </button>
+                    <button 
+                      onClick={() => handleSelectChatWidgetOption(2)} 
+                      className={`chat-option-btn ${chatWidgetOptionSelected === 2 ? 'selected' : ''}`}
+                    >
+                      <span className="chat-option-icon">🏨</span>
+                      <span className="chat-option-text">Sitonija</span>
+                    </button>
+                    <button 
+                      onClick={() => handleSelectChatWidgetOption(3)} 
+                      className={`chat-option-btn ${chatWidgetOptionSelected === 3 ? 'selected' : ''}`}
+                    >
+                      <span className="chat-option-icon">📅</span>
+                      <span className="chat-option-text">Jul 2026</span>
+                    </button>
+                    <button 
+                      onClick={() => handleSelectChatWidgetOption(4)} 
+                      className={`chat-option-btn ${chatWidgetOptionSelected === 4 ? 'selected' : ''}`}
+                    >
+                      <span className="chat-option-icon">💰</span>
+                      <span className="chat-option-text">Najbolje cene</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="chat-widget-footer">

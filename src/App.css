@@ -9748,9 +9748,9 @@ g:hover > .pin-hover-label {
 }
 
 .chat-widget-window {
-  position: fixed;
-  bottom: 11.5rem;
-  right: 2rem;
+  position: absolute;
+  bottom: 4.5rem;
+  right: 0;
   width: 310px;
   border-radius: 16px;
   overflow: hidden;
@@ -9765,6 +9765,7 @@ g:hover > .pin-hover-label {
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  max-height: calc(100vh - 12rem);
 }
 
 .chat-widget-header {
@@ -9810,27 +9811,34 @@ g:hover > .pin-hover-label {
   background: rgba(11, 33, 47, 0.4);
 }
 
+.chat-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+}
+
 .chat-option-btn {
-  padding: 0.7rem 0.9rem;
+  padding: 0.55rem 0.4rem;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-light);
-  text-align: left;
-  font-size: 0.84rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.25rem;
   width: 100%;
+  text-align: center;
 }
 
 .chat-option-btn:hover {
   background: rgba(0, 180, 216, 0.12);
   border-color: rgba(0, 180, 216, 0.4);
-  transform: translateX(4px);
+  transform: translateY(-2px);
 }
 
 .chat-option-btn.selected {
@@ -9838,6 +9846,16 @@ g:hover > .pin-hover-label {
   color: white !important;
   border-color: var(--accent) !important;
   box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+}
+
+.chat-option-icon {
+  font-size: 1.15rem;
+}
+
+.chat-option-text {
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .chat-widget-footer {
