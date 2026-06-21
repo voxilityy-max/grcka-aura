@@ -528,6 +528,24 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInputText, setChatInputText] = useState('');
   const [isAiTyping, setIsAiTyping] = useState(false);
+  const [showPromoBalloon, setShowPromoBalloon] = useState(false);
+  const [hasUnreadMessage, setHasUnreadMessage] = useState(true);
+
+  useEffect(() => {
+    const isClosed = sessionStorage.getItem('chat_promo_closed') === 'true';
+    if (!isClosed) {
+      const timer = setTimeout(() => {
+        setShowPromoBalloon(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleClosePromoBalloon = (e) => {
+    e.stopPropagation();
+    setShowPromoBalloon(false);
+    sessionStorage.setItem('chat_promo_closed', 'true');
+  };
 
   useEffect(() => {
     if (currentUser) {
@@ -2335,15 +2353,40 @@ export default function App() {
 
       {/* Floating Chat/Booking Support Widget */}
       <div className="chat-widget-container">
+        {/* Subtle Flying Seagulls (Moderate size) */}
+        <div className="seagulls-container">
+          <div className="seagull seagull-1">
+            <svg viewBox="0 0 20 10"><path d="M 0 5 C 3 2, 7 2, 10 5 C 13 2, 17 2, 20 5 C 16 7, 12 7, 10 5 C 8 7, 4 7, 0 5 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
+          </div>
+          <div className="seagull seagull-2">
+            <svg viewBox="0 0 20 10"><path d="M 0 5 C 3 2, 7 2, 10 5 C 13 2, 17 2, 20 5 C 16 7, 12 7, 10 5 C 8 7, 4 7, 0 5 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
+          </div>
+          <div className="seagull seagull-3">
+            <svg viewBox="0 0 20 10"><path d="M 0 5 C 3 2, 7 2, 10 5 C 13 2, 17 2, 20 5 C 16 7, 12 7, 10 5 C 8 7, 4 7, 0 5 Z" fill="rgba(255, 255, 255, 0.8)" /></svg>
+          </div>
+        </div>
+
+        {/* Promo Speech Balloon */}
+        {showPromoBalloon && (
+          <div className="chat-promo-balloon">
+            <button className="chat-promo-close" onClick={handleClosePromoBalloon}>✕</button>
+            <p>{currentUser ? "Pitaj našeg AI Asistenta za preporuku i pregovore! 🤖🌴" : "Prijavi se i isprobaj našeg pametnog AI Asistenta! 🤖"}</p>
+          </div>
+        )}
+
         <button 
           className={`chat-widget-trigger ${isChatWidgetOpen ? 'active' : ''}`}
           onClick={() => {
             setIsChatWidgetOpen(!isChatWidgetOpen);
             setShowChatWidgetSuccess(false);
             setChatWidgetOptionSelected(null);
+            setHasUnreadMessage(false);
+            setShowPromoBalloon(false);
           }}
           aria-label="Podrška i brza rezervacija"
         >
+          {/* Notification Badge */}
+          {hasUnreadMessage && <span className="chat-pulse-badge"></span>}
           {currentUser ? (
             /* Premium Animating Palm Tree in Brand Logo Colors for Logged-in Users */
             <svg className="palm-tree-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="36" height="36">

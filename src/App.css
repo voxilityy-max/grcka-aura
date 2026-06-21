@@ -10331,6 +10331,138 @@ g:hover > .pin-hover-label {
   transform: translateX(0);
 }
 
+/* Seagulls container and items */
+.seagulls-container {
+  position: absolute;
+  top: -150px;
+  left: -220px;
+  width: 220px;
+  height: 150px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.seagull {
+  position: absolute;
+  width: 15px; /* Smanjeno na 15px za diskretan izgled */
+  height: 8px;
+  opacity: 0;
+  transform-origin: center;
+}
+
+.seagull svg {
+  width: 100%;
+  height: 100%;
+  animation: wingFlap 0.9s ease-in-out infinite; /* Usporeno kucanje krilima */
+}
+
+/* Wing Flapping */
+@keyframes wingFlap {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.4); }
+}
+
+/* Flight paths (Total loop is 25 seconds) */
+@keyframes seagullFly1 {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  10% { opacity: 0.75; }
+  25% { opacity: 0.75; }
+  35% { transform: translate(180px, 120px) scale(0.85); opacity: 0; }
+  100% { transform: translate(180px, 120px) scale(0.85); opacity: 0; }
+}
+
+@keyframes seagullFly2 {
+  0% { transform: translate(20px, -20px) scale(0.5); opacity: 0; }
+  10% { opacity: 0.7; }
+  25% { opacity: 0.7; }
+  35% { transform: translate(190px, 105px) scale(0.75); opacity: 0; }
+  100% { transform: translate(190px, 105px) scale(0.75); opacity: 0; }
+}
+
+@keyframes seagullFly3 {
+  0% { transform: translate(-20px, 15px) scale(0.7); opacity: 0; }
+  10% { opacity: 0.8; }
+  25% { opacity: 0.8; }
+  35% { transform: translate(175px, 130px) scale(0.9); opacity: 0; }
+  100% { transform: translate(175px, 130px) scale(0.9); opacity: 0; }
+}
+
+.seagull-1 {
+  animation: seagullFly1 25s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-delay: 3s;
+}
+
+.seagull-2 {
+  animation: seagullFly2 25s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-delay: 3.8s;
+}
+
+.seagull-3 {
+  animation: seagullFly3 25s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-delay: 4.4s;
+}
+
+/* Pulsing Notification Badge */
+.chat-pulse-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background-color: #00f2fe;
+  border: 2px solid rgba(7, 28, 41, 0.9);
+  border-radius: 50%;
+  animation: pulseDot 2s infinite;
+  z-index: 10;
+}
+
+@keyframes pulseDot {
+  0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(0, 242, 254, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); }
+}
+
+/* Promo balloon styles */
+.chat-promo-balloon {
+  position: absolute;
+  bottom: 80px;
+  right: 10px;
+  width: 220px;
+  background: rgba(7, 28, 41, 0.92);
+  border: 1px solid rgba(0, 180, 216, 0.4);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+  animation: floatPromo 3s ease-in-out infinite, fadeIn 0.4s ease-out;
+  z-index: 10001;
+}
+
+.chat-promo-close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 5px;
+  line-height: 1;
+}
+
+.chat-promo-balloon p {
+  margin: 0;
+  color: var(--text-light);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+@keyframes floatPromo {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
 
 
 
