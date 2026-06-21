@@ -9,7 +9,7 @@ const AVATAR_PRESETS = [
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
-export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, onCancelInquiry, onLogout, properties = [], onViewPropertyDetails, onSendChatMessage, onNavigate }) {
+export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, onCancelInquiry, onLogout, properties = [], onViewPropertyDetails, onSendChatMessage, onNavigate, onUpgradeToHost }) {
   const [formData, setFormData] = useState({
     fullName: currentUser.fullName,
     phone: currentUser.phone,
@@ -73,24 +73,65 @@ export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, 
           </div>
         </div>
 
-        {currentUser.isAdmin && (
-          <button 
-            className="btn-profile-logout" 
-            style={{ 
-              backgroundColor: 'var(--primary)', 
-              color: '#ffffff', 
-              marginBottom: '0.75rem', 
-              cursor: 'pointer',
-              borderColor: 'var(--primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem'
-            }}
-            onClick={() => onNavigate('host')}
-          >
-            ⚙️ Otvori Admin Panel
-          </button>
+        {currentUser.isAdmin ? (
+          <button 
+            className="btn-profile-logout" 
+            style={{ 
+              backgroundColor: 'var(--primary)', 
+              color: '#ffffff', 
+              marginBottom: '0.75rem', 
+              cursor: 'pointer',
+              borderColor: 'var(--primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+            onClick={() => onNavigate('host')}
+          >
+            ⚙️ Otvori Admin Panel
+          </button>
+        ) : currentUser.isHost ? (
+          <button 
+            className="btn-profile-logout" 
+            style={{ 
+              backgroundColor: 'var(--accent)', 
+              color: '#ffffff', 
+              marginBottom: '0.75rem', 
+              cursor: 'pointer',
+              borderColor: 'var(--accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+            onClick={() => onNavigate('host')}
+          >
+            🏠 Otvori Vlasnički Panel
+          </button>
+        ) : (
+          <button 
+            className="btn-profile-logout" 
+            style={{ 
+              backgroundColor: 'var(--success)', 
+              color: '#ffffff', 
+              marginBottom: '0.75rem', 
+              cursor: 'pointer',
+              borderColor: 'var(--success)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              fontWeight: 'bold'
+            }}
+            onClick={() => {
+              if (confirm('Da li želite da postanete domaćin i oglašavate svoje smeštaje? Proći ćete kratak proces verifikacije.')) {
+                if (onUpgradeToHost) onUpgradeToHost();
+              }
+            }}
+          >
+            🤝 Postani Domaćin
+          </button>
         )}
 
         <button className="btn-profile-logout" onClick={onLogout}>

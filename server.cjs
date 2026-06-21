@@ -1161,6 +1161,24 @@ app.post('/api/admin/verify-host/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// Become Host Upgrade Endpoint
+app.post('/api/users/become-host', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await dbHelper.run(
+      'UPDATE users SET isHost = 1, isVerified = 0 WHERE id = ?',
+      [userId]
+    );
+    const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [userId]);
+    user.isAdmin = !!user.isAdmin;
+    user.isHost = !!user.isHost;
+    console.log(`Korisnik ${user.email} je prešao u ulogu domaćina (isHost = 1)`);
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 20. Update User Info
 app.patch('/api/users/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;

@@ -951,6 +951,43 @@ export default function App() {
     }
   };
 
+  const handleUpgradeToHost = async () => {
+    if (!currentUser) return;
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/users/become-host`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        if (res.ok) {
+          const saved = await res.json();
+          setUsers(prev => prev.map(u => u.id === saved.id ? saved : u));
+          setCurrentUser(saved);
+          logActivity(saved, `Korisnik je postao domaćin (poslat na onboarding).`, 'role');
+          handleTabChange('host');
+        }
+      } catch (err) {
+        console.error('Greška pri prelasku u ulogu domaćina:', err);
+      }
+    } else {
+      const updated = {
+        ...currentUser,
+        isHost: true,
+        isVerified: 0,
+        agreedToTerms: 0,
+        verificationDetails: '',
+        verificationDocs: ''
+      };
+      setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+      setCurrentUser(updated);
+      logActivity(updated, `Korisnik je postao domaćin (poslat na onboarding - lokalna simulacija).`, 'role');
+      handleTabChange('host');
+    }
+  };
+
   // Inquiry Operations
   const handleAddInquiry = async (newInquiry) => {
     if (backendActive) {
@@ -1686,6 +1723,7 @@ export default function App() {
               onViewPropertyDetails={setSelectedProperty}
               onSendChatMessage={handleSendChatMessage}
               onNavigate={handleTabChange}
+              onUpgradeToHost={handleUpgradeToHost}
             />
           </div>
         ) : (
