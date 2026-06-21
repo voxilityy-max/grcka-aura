@@ -1,0 +1,187 @@
+=== ESLINT ERROR AUDIT ===
+
+File: src\App.jsx (14 issues)
+  [ERROR] Line 2:8 | no-unused-vars | 'React' is defined but never used.
+  [ERROR] Line 6:8 | no-unused-vars | 'Hero' is defined but never used.
+  [ERROR] Line 560:7 | react-hooks/set-state-in-effect | Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  558 |   useEffect(() => {
+  559 |     if (currentUser) {
+> 560 |       setChatMessages([
+      |       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  561 |         {
+  562 |           id: 1,
+  563 |           sender: 'ai',
+  [ERROR] Line 750:16 | no-unused-vars | 'err' is defined but never used.
+  [WARNING] Line 756:6 | react-hooks/exhaustive-deps | React Hook useEffect has a missing dependency: 'currentUser'. Either include it or remove the dependency array.
+  [ERROR] Line 774:9 | react-hooks/set-state-in-effect | Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  772 |     if (activeTab === 'host') {
+  773 |       if (currentUser && (currentUser.isAdmin || isHost)) {
+> 774 |         setIsFake404Active(false);
+      |         ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  775 |         if (window.location.pathname !== '/aura-vlasnik') {
+  776 |           window.history.pushState({}, '', '/aura-vlasnik');
+  777 |         }
+  [WARNING] Line 828:6 | react-hooks/exhaustive-deps | React Hook useEffect has a missing dependency: 'selectedProperty'. Either include it or remove the dependency array.
+  [ERROR] Line 891:7 | react-hooks/set-state-in-effect | Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  889 |   useEffect(() => {
+  890 |     if (backendActive && currentUser && currentUser.isAdmin) {
+> 891 |       fetchAdminNotifications();
+      |       ^^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  892 |     }
+  893 |   }, [backendActive, currentUser]);
+  894 |
+  [WARNING] Line 893:6 | react-hooks/exhaustive-deps | React Hook useEffect has a missing dependency: 'fetchAdminNotifications'. Either include it or remove the dependency array.
+  [ERROR] Line 917:11 | react-hooks/purity | Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  915 |   const createMockAdminNotification = (message) => {
+  916 |     const newNotif = {
+> 917 |       id: Date.now(),
+      |           ^^^^^^^^^^ Cannot call impure function
+  918 |       message,
+  919 |       timestamp: new Date().toLocaleString('sr-RS'),
+  920 |       isRead: 0
+  [ERROR] Line 957:41 | react-hooks/purity | Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  955 |       }
+  956 |     } else {
+> 957 |       const localLog = { ...newLog, id: Date.now() };
+      |                                         ^^^^^^^^^^ Cannot call impure function
+  958 |       setActivityLogs(prev => [localLog, ...prev]);
+  959 |     }
+  960 |   };
+  [ERROR] Line 964:7 | no-useless-catch | Unnecessary try/catch wrapper.
+  [ERROR] Line 1010:7 | no-useless-catch | Unnecessary try/catch wrapper.
+  [ERROR] Line 1202:88 | react-hooks/purity | Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  1200 |     } else {
+  1201 |       const isApproved = currentUser && currentUser.isAdmin ? 1 : 0;
+> 1202 |       const propertyWithApproval = { ...newProperty, isApproved, id: newProperty.id || Date.now() };
+       |                                                                                        ^^^^^^^^^^ Cannot call impure function
+  1203 |       setProperties(prev => [propertyWithApproval, ...prev]);
+  1204 |       handleTabChange('listings');
+  1205 |       logActivity(currentUser, `Dodat novi sme┼ítaj u ponudu: ${newProperty.title} (${newProperty.location}).`, 'create');
+
+File: src\components\AlertsSection.jsx (1 issues)
+  [ERROR] Line 1:8 | no-unused-vars | 'React' is defined but never used.
+
+File: src\components\AuthModal.jsx (3 issues)
+  [ERROR] Line 1:8 | no-unused-vars | 'React' is defined but never used.
+  [ERROR] Line 15:14 | no-unused-vars | 'e' is defined but never used.
+  [ERROR] Line 82:7 | react-hooks/set-state-in-effect | Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  80 |     const savedEmail = localStorage.getItem('saved_email');
+  81 |     if (savedEmail && !isRegister && !isForgotPassword) {
+> 82 |       setFormData(prev => ({
+     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  83 |         ...prev,
+  84 |         email: savedEmail
+  85 |       }));
+
+File: src\components\BlogSection.jsx (1 issues)
+  [ERROR] Line 1:8 | no-unused-vars | 'React' is defined but never used.
+
+File: src\components\Filters.jsx (1 issues)
+  [ERROR] Line 1:8 | no-unused-vars | 'React' is defined but never used.
+
+File: src\components\ForumSection.jsx (2 issues)
+  [ERROR] Line 1:8 | no-unused-vars | 'React' is defined but never used.
+  [ERROR] Line 5:14 | react-refresh/only-export-components | Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+
+File: src\components\HostPanel.jsx (1 issues)
+  [ERROR] Line 1186:10 | None | Parsing error: Identifier 'onboardStep' has already been declared
+
+File: src\components\LandingPage.jsx (1 issues)
+  [ERROR] Line 1:8 | no-unused-vars | 'React' is defined but never used.
+
+File: src\components\Megamenu.jsx (1 issues)
+  [ERROR] Line 1:8 | no-unused-vars | 'React' is defined but never used.
+
+File: src\components\Navbar.jsx (1 issues)
+  [ERROR] Line 9:3 | no-unused-vars | 'isGridMenuOpen' is defined but never used.
+
+File: src\components\ProfileTab.jsx (2 issues)
+  [ERROR] Line 1:8 | no-unused-vars | 'React' is defined but never used.
+  [ERROR] Line 372:30 | no-unused-vars | 'err' is defined but never used.
+
+File: src\components\PropertyDetails.jsx (4 issues)
+  [ERROR] Line 291:9 | react-hooks/set-state-in-effect | Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  289 |     // Force map size update (avoids gray tiles bug in hidden containers)
+  290 |
+> 291 |     setTimeout(() => {
+      |         ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  292 |
+  293 |       map.invalidateSize();
+  294 |
+  [ERROR] Line 402:7 | react-hooks/set-state-in-effect | Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  400 |
+  401 |       { id: 'bbq', label: 'Ro┼ítilj', active: hasBbq, icon: '­ƒìû' },
+> 402 |
+      | ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  403 |       { id: 'safe', label: 'Sef u sobi', active: hasSafe, icon: '­ƒöÆ' },
+  404 |
+  405 |       { id: 'pets', label: 'Ljubimci dozvoljeni', active: !!amenities.pets, icon: '­ƒÉ¥' }
+  [ERROR] Line 415:7 | react-hooks/set-state-in-effect | Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  413 |   // Booking Form State
+  414 |
+> 415 |   const todayStr = new Date().toISOString().split('T')[0];
+      |       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  416 |
+  417 |   
+  418 |
+  [WARNING] Line 587:6 | react-hooks/exhaustive-deps | React Hook useEffect has a missing dependency: 'selectedRoom?.id'. Either include it or remove the dependency array.
+
+Total: 28 errors, 4 warnings
