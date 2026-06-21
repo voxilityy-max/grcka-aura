@@ -2152,7 +2152,7 @@ export default function App() {
         <div className="footer-grid">
           <div className="footer-col">
             <div className="footer-logo">
-              <span>Grčka</span>Aura
+              <span>Elli</span>nas
             </div>
             <p className="footer-desc">
               Najlepši smeštaji u Grčkoj na dlanu. Rezervišite bez posrednika, direktno od vlasnika sa najboljim uslovima.

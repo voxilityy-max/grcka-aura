@@ -1554,7 +1554,7 @@ export default function HostPanel({
         <aside className="admin-sidebar">
           <div className="admin-sidebar-branding">
             <div className="admin-sidebar-title">
-              🏝️ <span>Grčka</span>Aura
+              🏝️ <span>Elli</span>nas
             </div>
             <div className="admin-sidebar-subtitle">Control Center v2.2</div>
           </div>

@@ -532,7 +532,7 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
                 <div className="club-card-glow"></div>
                 <div className="club-card-header">
                   <div className="club-card-brand">
-                    <span>Grčka</span>Aura Club
+                    <span>Elli</span>nas Club
                   </div>
                   <span className="club-card-status">AKTIVNA KARTICA</span>
                 </div>
@@ -599,7 +599,7 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
                 </div>
                 
                 <div className="club-card-header" style={{ opacity: 0.2 }}>
-                  <div className="club-card-brand"><span>Grčka</span>Aura Club</div>
+                  <div className="club-card-brand"><span>Elli</span>nas Club</div>
                 </div>
                 <div className="club-card-body" style={{ opacity: 0.2 }}>
                   <div className="club-card-user-info">

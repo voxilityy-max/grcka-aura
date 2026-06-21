@@ -452,7 +452,7 @@ export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px dashed var(--border)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
                 <div>
                   <h2 style={{ fontSize: '1.8rem', color: 'var(--primary)', margin: 0, fontWeight: '800' }}>
-                    <span style={{ color: 'var(--accent)' }}>Grčka</span>Aura
+                    <span style={{ color: 'var(--accent)' }}>Elli</span>nas
                   </h2>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>ZVANIČNA POTVRDA REZERVACIJE</span>
                 </div>
