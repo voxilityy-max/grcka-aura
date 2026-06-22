@@ -298,6 +298,19 @@ export default function App() {
         childAges: []
       });
       setActivePills([]);
+    } else if (tabName === 'all-listings') {
+      setIsSearchActive(true);
+      setSearchFilters({
+        destination: 'all',
+        priceCategory: 'all',
+        type: 'all',
+        checkIn: getTodayDateString(),
+        checkOut: getTomorrowDateString(),
+        adults: 2,
+        children: 0,
+        childAges: []
+      });
+      setActivePills([]);
     }
   };
 
@@ -309,7 +322,7 @@ export default function App() {
       ...prev, 
       destination: destName 
     }));
-    setActiveTab('listings');
+    setActiveTab('all-listings');
     setSelectedProperty(null);
     setIsGridMenuOpen(false);
     setIsSearchActive(true);
@@ -338,7 +351,7 @@ export default function App() {
     } else if (catId === 'Hrvatska') {
       alert('Hrvatska letovanja dolaze uskoro na Ellinas! Trenutno smo specijalizovani za Grčku.');
     }
-    setActiveTab('listings');
+    setActiveTab('all-listings');
     setSelectedProperty(null);
     setIsGridMenuOpen(false);
     setIsSearchActive(true);
@@ -692,7 +705,7 @@ export default function App() {
         checkIn: '2026-07-01',
         checkOut: '2026-07-08'
       }));
-      setActiveTab('listings');
+      setActiveTab('all-listings');
       setIsSearchActive(true);
       setSelectedProperty(null);
       setTimeout(() => {
@@ -707,7 +720,7 @@ export default function App() {
         priceCategory: 'budget'
       }));
       setSortBy('priceLow');
-      setActiveTab('listings');
+      setActiveTab('all-listings');
       setIsSearchActive(true);
       setSelectedProperty(null);
       setTimeout(() => {
@@ -1934,7 +1947,12 @@ export default function App() {
               destinations={derivedDestinations}
               propertyTypes={PROPERTY_TYPES}
               properties={properties}
-              setIsSearchActive={setIsSearchActive}
+              setIsSearchActive={(val) => {
+                if (val) {
+                  setActiveTab('all-listings');
+                }
+                setIsSearchActive(val);
+              }}
               onSelectDestination={handleSelectDestination}
               setActiveTab={handleTabChange}
               setSelectedProperty={setSelectedProperty}
@@ -1945,7 +1963,7 @@ export default function App() {
         return (
           <div className="listings-tab-wrapper">
             {/* Visual Destination Grid */}
-            {activeTab === 'listings' && (
+            {(activeTab === 'listings' || activeTab === 'all-listings') && (
               <div className="destination-grid-section animate-fade">
                 <h2 className="section-title-nikana">Gde želite da putujete?</h2>
                 <div className="destination-cards-container">
@@ -1978,7 +1996,7 @@ export default function App() {
             )}
 
             {/* Quick filter capsules */}
-            {activeTab === 'listings' && (
+            {(activeTab === 'listings' || activeTab === 'all-listings') && (
               <div className="quick-filters-section animate-fade">
                 <div className="quick-filters-scroll">
                   {[
@@ -2023,7 +2041,7 @@ export default function App() {
                   </div>
 
                 {/* View Mode Toggle Switch */}
-                {activeTab === 'listings' && (
+                {(activeTab === 'listings' || activeTab === 'all-listings') && (
                   <div className="view-mode-toggle-container">
                     <button 
                       className={`btn-view-toggle ${viewMode === 'list' ? 'active' : ''}`}
@@ -2055,7 +2073,7 @@ export default function App() {
                 </div>
               </div>
 
-              {viewMode === 'map' && activeTab === 'listings' ? (
+              {viewMode === 'map' && (activeTab === 'listings' || activeTab === 'all-listings') ? (
                 <InteractiveMap 
                   properties={properties}
                   processedProperties={processedProperties}
@@ -2072,6 +2090,7 @@ export default function App() {
                       onToggleWishlist={handleToggleWishlist}
                       isCompared={comparedIds.includes(prop.id)}
                       onToggleCompare={handleToggleCompare}
+                      showCompare={activeTab === 'all-listings'}
                     />
                   ))}
                 </div>
@@ -2166,7 +2185,7 @@ export default function App() {
       </main>
 
       {/* Floating Comparison Drawer */}
-      {comparedIds.length > 0 && (
+      {comparedIds.length > 0 && activeTab === 'all-listings' && (
         <div className="compare-drawer animate-fade">
           <div className="compare-drawer-info">
             <span className="compare-drawer-title">Poređenje smeštaja ({comparedIds.length}/3)</span>
@@ -2350,7 +2369,8 @@ export default function App() {
           <div className="footer-col">
             <h4>Brzi Linkovi</h4>
             <ul className="footer-links">
-              <li><a onClick={() => { handleTabChange('listings'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Svi Smeštaji</a></li>
+              <li><a onClick={() => { handleTabChange('listings'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Početna</a></li>
+              <li><a onClick={() => { handleTabChange('all-listings'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Svi Smeštaji</a></li>
               <li><a onClick={() => { handleTabChange('guide'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Putni Vodič</a></li>
               <li><a onClick={() => { handleTabChange('wishlist'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Sačuvani Smeštaj</a></li>
               <li><a onClick={() => { handleTabChange('blog'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Vodiči i Saveti</a></li>

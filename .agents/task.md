@@ -1,0 +1,15 @@
+- [x] Implementacija stranice "Svi smeštaji" sa selektivnim poređenjem
+    - [x] Izmena u `src/components/PropertyCard.jsx` za uslovno prikazivanje `card-compare-badge`
+    - [x] Izmena u `src/components/Navbar.jsx` za dodavanje linka "Svi smeštaji" u meni
+    - [x] Izmene u `src/App.jsx`:
+        - [x] Ažuriranje `handleTabChange` za podršku tabu `all-listings` i pretrage sa početne strane
+        - [x] Ažuriranje `renderTabContent` i pratećih delova koda za katalog na tabu `all-listings`
+        - [x] Sakrivanje `compare-drawer` osim na tabu `all-listings`
+        - [x] Prosleđivanje `showCompare` u `PropertyCard`
+    - [x] Verifikacija sa `npm.cmd run build` i testiranjem
+
+- [x] Implementacija taba "Kamere & Stanje na Granicama" u Putnom Vodiču (Opcija 1)
+    - [x] Kreiranje komponente `BorderStatus.jsx` sa CCTV simulatorom i putničkim izveštajima
+    - [x] Integracija i renderovanje u `TravelGuide.jsx`
+    - [x] Dodavanje stilova u `App.css`
+    - [x] Uspešan build projekta (`npm.cmd run build`)

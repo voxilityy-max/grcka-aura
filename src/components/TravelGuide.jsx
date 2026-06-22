@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import RoadPlanner from './RoadPlanner';
+import BorderStatus from './BorderStatus';
 
 const GREECE_PRICES = [
   { item: 'Giros pita', price: '4.20€ - 4.80€', category: 'restoran', icon: '🌯', desc: 'Prosečna cena u brzim hranama i tavernama.' },
@@ -64,6 +65,12 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
           🚗 Pametni Planer Puta
         </button>
         <button 
+          className={`btn-filter-item ${subTab === 'borders' ? 'active' : ''}`}
+          onClick={() => setSubTab('borders')}
+        >
+          🚧 Kamere & Stanje na Granicama
+        </button>
+        <button 
           className={`btn-filter-item ${subTab === 'prices' ? 'active' : ''}`}
           onClick={() => setSubTab('prices')}
         >
@@ -86,6 +93,10 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
       {/* Content Render based on SubTab */}
       {subTab === 'calculator' && (
         <RoadPlanner currentUser={currentUser} onOpenAuth={onOpenAuth} />
+      )}
+
+      {subTab === 'borders' && (
+        <BorderStatus />
       )}
 
       {/* Prices List Tab */}

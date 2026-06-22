@@ -11122,3 +11122,496 @@ g:hover > .pin-hover-label {
   font-size: 0.9rem;
   text-align: center;
 }
+
+/* ==========================================================================
+   Border Crossing Dashboard & CCTV Live Simulator
+   ========================================================================== */
+
+.borders-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+.borders-intro-box {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.borders-main-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff 0%, #00b4d8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.75rem;
+}
+
+.borders-subtitle {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.borders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 2rem;
+}
+
+.border-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  background: rgba(10, 25, 41, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.border-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px 0 rgba(0, 180, 216, 0.15);
+  border-color: rgba(0, 180, 216, 0.25);
+}
+
+.border-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.75rem;
+}
+
+.border-card-flags {
+  font-size: 1.3rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.border-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.border-directions-times {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1.25rem;
+}
+
+.dir-time-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.dir-time-box:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dir-time-box.active {
+  background: rgba(0, 242, 254, 0.08);
+  border-color: var(--accent, #00f2fe);
+  box-shadow: inset 0 0 12px rgba(0, 242, 254, 0.05);
+}
+
+.dir-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.dir-time-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.dir-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.dir-status-dot.prohodno {
+  background-color: #10b981; /* Green */
+  box-shadow: 0 0 8px #10b981;
+}
+
+.dir-status-dot.umereno {
+  background-color: #f59e0b; /* Yellow */
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.dir-status-dot.guzva {
+  background-color: #ef4444; /* Red */
+  box-shadow: 0 0 8px #ef4444;
+}
+
+/* CCTV Viewport */
+.cctv-viewport {
+  position: relative;
+  height: 180px;
+  background-color: #0d1b2a;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.25rem;
+}
+
+.cctv-overlay-live {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(239, 68, 68, 0.85);
+  color: #ffffff;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  z-index: 10;
+}
+
+.cctv-live-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  animation: blink-rec 1s infinite alternate;
+}
+
+@keyframes blink-rec {
+  from { opacity: 0.2; }
+  to { opacity: 1; }
+}
+
+.cctv-overlay-info {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: monospace;
+  font-size: 0.65rem;
+  line-height: 1.3;
+  z-index: 10;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.cctv-cam-name {
+  font-weight: 700;
+}
+
+.cctv-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 27, 42, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 20;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cctv-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent, #00f2fe);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* CRT Scanlines and Noise Filter */
+.cctv-scanlines {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 3px 100%;
+  z-index: 8;
+  pointer-events: none;
+}
+
+/* Road Simulation UI */
+.cctv-road-simulation {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #1b263b; /* Dark gray road color */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.road-stripes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0px, rgba(255, 255, 255, 0.1) 20px, transparent 20px, transparent 40px);
+  top: 15px;
+  opacity: 0.4;
+}
+
+.road-lanes {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.road-lane-line {
+  width: 100%;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0px, rgba(255, 255, 255, 0.2) 15px, transparent 15px, transparent 30px);
+}
+
+.sim-border-gate {
+  position: absolute;
+  right: 25px;
+  top: 0;
+  bottom: 0;
+  width: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+}
+
+.gate-booth {
+  width: 18px;
+  height: 40px;
+  background: #415a77;
+  border: 2px solid #778da9;
+  border-radius: 3px;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.gate-booth::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  background: #00f2fe;
+  opacity: 0.6;
+}
+
+.gate-barrier {
+  width: 3px;
+  height: 120px;
+  background: repeating-linear-gradient(0deg, #ef4444 0px, #ef4444 8px, #ffffff 8px, #ffffff 16px);
+  position: absolute;
+  left: -2px;
+  top: 10px;
+  transform: rotate(-10deg);
+  transform-origin: bottom center;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+}
+
+.sim-car {
+  position: absolute;
+  height: 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  transition: left 1s ease-in-out;
+}
+
+.sim-car.car {
+  border-bottom: 2px solid rgba(0,0,0,0.2);
+}
+
+.sim-car.truck {
+  height: 20px;
+  border-radius: 2px;
+}
+
+.sim-car-windshield {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 4px;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 1px;
+}
+
+.sim-car-headlights {
+  position: absolute;
+  right: -2px;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sim-car-headlights::before,
+.sim-car-headlights::after {
+  content: '';
+  width: 3px;
+  height: 3px;
+  background: #ffd14d;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #ffd14d;
+}
+
+/* Actions */
+.cctv-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1.25rem;
+}
+
+.btn-refresh-cam {
+  flex: 1;
+  padding: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-cam:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-report-wait {
+  flex: 1;
+  padding: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #071e2b;
+  background: var(--accent, #00f2fe);
+  border: 1px solid var(--accent, #00f2fe);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-report-wait:hover {
+  background: #00b4d8;
+  border-color: #00b4d8;
+  transform: translateY(-1px);
+}
+
+/* Passenger Reports inside Card */
+.border-passenger-reports {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  margin-top: auto;
+}
+
+.reports-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent, #00f2fe);
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reports-list-scroll {
+  max-height: 110px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 0.25rem;
+}
+
+.reports-list-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.reports-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.passenger-report-bubble {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  border-left: 2px solid var(--accent, #00f2fe);
+}
+
+.report-bubble-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.bubble-user {
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+}
+
+.bubble-text {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.no-reports-placeholder {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 1rem 0;
+  font-style: italic;
+}
+

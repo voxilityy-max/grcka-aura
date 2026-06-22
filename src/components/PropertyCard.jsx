@@ -1,5 +1,5 @@
 
-export default function PropertyCard({ property, onViewDetails, isWishlisted, onToggleWishlist, isCompared, onToggleCompare }) {
+export default function PropertyCard({ property, onViewDetails, isWishlisted, onToggleWishlist, isCompared, onToggleCompare, showCompare = false }) {
   const { id, title, type, location, price, rating, distanceToBeach, image, guests, bedrooms } = property;
 
   const handleWishlistClick = (e) => {
@@ -39,15 +39,17 @@ export default function PropertyCard({ property, onViewDetails, isWishlisted, on
         </button>
 
         {/* Floating Compare Checkbox Badge */}
-        <div className="card-compare-badge" onClick={handleCompareClick}>
-          <input 
-            type="checkbox" 
-            checked={isCompared} 
-            onChange={() => {}} // Controlled by outer div click
-            style={{ pointerEvents: 'none' }}
-          />
-          <span>Uporedi</span>
-        </div>
+        {showCompare && (
+          <div className="card-compare-badge" onClick={handleCompareClick}>
+            <input 
+              type="checkbox" 
+              checked={isCompared} 
+              onChange={() => {}} // Controlled by outer div click
+              style={{ pointerEvents: 'none' }}
+            />
+            <span>Uporedi</span>
+          </div>
+        )}
       </div>
 
       <div className="card-content">
