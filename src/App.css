@@ -11615,3 +11615,126 @@ g:hover > .pin-hover-label {
   font-style: italic;
 }
 
+/* ==========================================================================
+   Premium Destinations Section - Circular Neon Styling
+   ========================================================================== */
+
+.destinations-section-neon {
+  position: relative;
+  padding: 3rem 0;
+  overflow: hidden;
+  background-color: transparent;
+  transition: background-color 0.3s ease;
+}
+
+.destinations-neon-radial {
+  display: none;
+}
+
+.destinations-neon-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.destinations-neon-subtitle {
+  font-size: 0.95rem;
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 650px;
+  margin: 0.25rem auto 1.5rem;
+  line-height: 1.6;
+}
+
+.destinations-neon-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem 2.5rem;
+  margin-top: 1.5rem;
+}
+
+.dest-neon-item {
+  text-align: center;
+  cursor: pointer;
+}
+
+.dest-neon-img-container {
+  position: relative;
+  margin: 0 auto;
+  width: 5.5rem; /* 88px */
+  height: 5.5rem; /* 88px */
+}
+
+.dest-neon-img {
+  width: 5.5rem;
+  height: 5.5rem;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: none;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover Neon Glow Effect */
+.dest-neon-item:hover .dest-neon-img {
+  transform: scale(1.15);
+  box-shadow: 0 0 35px #22d3ee, 
+              0 0 60px #67e8f9, 
+              0 0 90px #bae6fd;
+}
+
+.dest-neon-name {
+  margin-top: 0.75rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  transition: color 0.3s ease;
+}
+
+.dest-neon-item:hover .dest-neon-name {
+  color: var(--accent);
+}
+
+.dest-neon-filters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 10;
+}
+
+.dest-neon-filter-btn {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 50px;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dest-neon-filter-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--text-main);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.dest-neon-filter-btn.active {
+  background-color: var(--accent);
+  color: var(--text-light);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(0, 132, 255, 0.4);
+}
+
+

@@ -3458,6 +3458,7 @@ export default function HostPanel({
                         <th>Uloga i Status</th>
                         <th>Email adresa</th>
                         <th>Broj telefona</th>
+                        <th>Sačuvani smeštaji</th>
                         <th>Upravljanje / Akcije</th>
                       </tr>
                     </thead>
@@ -3514,6 +3515,23 @@ export default function HostPanel({
                             </td>
                             <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{u.email}</td>
                             <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{u.phone || '/'}</td>
+                            <td>
+                              {(() => {
+                                const userWishlistIds = u.wishlist ? (Array.isArray(u.wishlist) ? u.wishlist : JSON.parse(u.wishlist)) : [];
+                                const wishlistedProps = rawProperties.filter(p => userWishlistIds.includes(p.id));
+                                return wishlistedProps.length > 0 ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxWidth: '220px' }}>
+                                    {wishlistedProps.map(p => (
+                                      <span key={p.id} style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.title}>
+                                        🏖️ {p.title}
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Nema sačuvanih</span>
+                                );
+                              })()}
+                            </td>
                             <td>
                               <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                                 {u.isHost && u.verificationDetails && (

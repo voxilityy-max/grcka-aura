@@ -216,8 +216,13 @@ async function initializeSchema() {
       await dbHelper.run("ALTER TABLE users ADD COLUMN agreedToTerms INTEGER DEFAULT 0");
       console.log("Dodata kolona 'agreedToTerms' u tabelu users.");
     }
+    const hasWishlist = columns.some(c => c.name === 'wishlist');
+    if (!hasWishlist) {
+      await dbHelper.run("ALTER TABLE users ADD COLUMN wishlist TEXT");
+      console.log("Dodata kolona 'wishlist' u tabelu users.");
+    }
   } catch (err) {
-    console.warn("Nije uspelo automatsko dodavanje verifikacionih kolona u users:", err.message);
+    console.warn("Nije uspelo automatsko dodavanje verifikacionih/wishlist kolona u users:", err.message);
   }
 
   // 2. Properties Table
@@ -734,6 +739,9 @@ app.post('/api/auth/register', async (req, res) => {
     user.isAdmin = !!user.isAdmin;
     user.isHost = !!user.isHost;
     
+    // Create admin notification
+    await createAdminNotification(`Novi korisnik se registrovao: ${fullName} (${email.toLowerCase().trim()})`);
+
     // Sign JWT
     const token = jwt.sign(
       { id: user.id, username: user.username, email: user.email, isAdmin: user.isAdmin, isHost: user.isHost },
@@ -1049,6 +1057,11 @@ app.get('/api/users', async (req, res) => {
     const mapped = users.map(u => {
       u.isAdmin = !!u.isAdmin;
       u.isHost = !!u.isHost;
+      try {
+        u.wishlist = u.wishlist ? JSON.parse(u.wishlist) : [];
+      } catch (e) {
+        u.wishlist = [];
+      }
       return u;
     });
     res.json(mapped);
@@ -1174,6 +1187,18 @@ app.post('/api/users/become-host', authenticateToken, async (req, res) => {
     user.isHost = !!user.isHost;
     console.log(`Korisnik ${user.email} je prešao u ulogu domaćina (isHost = 1)`);
     res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Save user wishlist
+app.post('/api/users/wishlist', authenticateToken, async (req, res) => {
+  const { wishlist } = req.body;
+  try {
+    const wishlistJson = JSON.stringify(wishlist || []);
+    await dbHelper.run('UPDATE users SET wishlist = ? WHERE id = ?', [wishlistJson, req.user.id]);
+    res.json({ success: true, wishlist });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1421,7 +1446,7 @@ app.post('/api/ai/chat', async (req, res) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama3-8b-8192',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             {
               role: 'system',

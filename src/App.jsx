@@ -790,6 +790,39 @@ export default function App() {
         const dataUsers = await resUsers.json();
         setUsers(dataUsers);
 
+        // Sync local user profile and wishlist with fresh database data on mount
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+          const parsed = JSON.parse(savedUser);
+          const freshUser = dataUsers.find(u => u.id === parsed.id);
+          if (freshUser) {
+            freshUser.isAdmin = !!freshUser.isAdmin;
+            freshUser.isHost = !!freshUser.isHost;
+            setCurrentUser(freshUser);
+            localStorage.setItem('currentUser', JSON.stringify(freshUser));
+
+            // Sync wishlist state (merge local and database wishlists)
+            const dbWishlist = freshUser.wishlist ? (Array.isArray(freshUser.wishlist) ? freshUser.wishlist : JSON.parse(freshUser.wishlist)) : [];
+            const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+            const mergedWishlist = Array.from(new Set([...localWishlist, ...dbWishlist]));
+            setWishlist(mergedWishlist);
+            localStorage.setItem('wishlist', JSON.stringify(mergedWishlist));
+            
+            // Sync merged wishlist back to backend
+            const token = localStorage.getItem('authToken');
+            if (token) {
+              fetch(`${API_URL}/api/users/wishlist`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ wishlist: mergedWishlist })
+              }).catch(err => console.error('Failed to sync merged wishlist on mount:', err));
+            }
+          }
+        }
+
         const resInqs = await fetch(`${API_URL}/api/inquiries`);
         const dataInqs = await resInqs.json();
         setInquiries(dataInqs);
@@ -1031,10 +1064,23 @@ export default function App() {
         const errData = await res.json();
         throw new Error(errData.error || 'Greška pri registraciji.');
       }
-      const data = await res.json();
       const registered = data.user;
       localStorage.setItem('authToken', data.token);
       setUsers(prev => [...prev, registered]);
+      
+      // Sync local wishlist with new user profile in backend
+      const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      if (localWishlist.length > 0) {
+        fetch(`${API_URL}/api/users/wishlist`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.token}`
+          },
+          body: JSON.stringify({ wishlist: localWishlist })
+        }).catch(err => console.error('Failed to sync wishlist on registration:', err));
+      }
+      
       setCurrentUser(registered);
       setIsAuthModalOpen(false);
       
@@ -1076,6 +1122,24 @@ export default function App() {
       const data = await res.json();
       const loggedInUser = data.user;
       localStorage.setItem('authToken', data.token);
+
+      // Sync and merge wishlist on login
+      const dbWishlist = loggedInUser.wishlist ? (Array.isArray(loggedInUser.wishlist) ? loggedInUser.wishlist : JSON.parse(loggedInUser.wishlist)) : [];
+      const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      const mergedWishlist = Array.from(new Set([...localWishlist, ...dbWishlist]));
+      setWishlist(mergedWishlist);
+      localStorage.setItem('wishlist', JSON.stringify(mergedWishlist));
+      
+      // Save merged wishlist to database
+      fetch(`${API_URL}/api/users/wishlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${data.token}`
+        },
+        body: JSON.stringify({ wishlist: mergedWishlist })
+      }).catch(err => console.error('Failed to sync merged wishlist on login:', err));
+
       setCurrentUser(loggedInUser);
       setIsAuthModalOpen(false);
       
@@ -1691,14 +1755,34 @@ export default function App() {
     }
   };
 
+  // Sync wishlist to database helper
+  const syncWishlistToBackend = async (newWishlist) => {
+    const loggedInUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!loggedInUser) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    try {
+      await fetch(`${API_URL}/api/users/wishlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ wishlist: newWishlist })
+      });
+    } catch (err) {
+      console.error('Nije uspelo sinhronizovanje liste želja:', err);
+    }
+  };
+
   // Toggle Wishlist
   const handleToggleWishlist = (id) => {
     setWishlist(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(item => item !== id);
-      } else {
-        return [...prev, id];
-      }
+      const updated = prev.includes(id)
+        ? prev.filter(item => item !== id)
+        : [...prev, id];
+      syncWishlistToBackend(updated);
+      return updated;
     });
   };
 
