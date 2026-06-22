@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react';
 
 export default function RoadPlanner({ currentUser, onOpenAuth }) {
+  const [startCountry, setStartCountry] = useState('Srbija');
   const [startPoint, setStartPoint] = useState('Beograd');
   const [destination, setDestination] = useState('Sitonija');
   const [routeType, setRouteType] = useState('MKD'); // 'MKD' (preko Makedonije) or 'BGR' (preko Bugarske)
   const [fuelType, setFuelType] = useState('dizel'); // 'benzin', 'dizel', 'lpg'
   const [consumption, setConsumption] = useState(6.5); // l/100km
 
-  const isRomanianStart = ['Temišvar', 'Bukurešt', 'Kluž', 'Krajova'].includes(startPoint);
+  const isRomanianStart = startCountry === 'Rumunija';
 
   // Default average fuel prices (in EUR) per country and fuel type
   const defaultFuelPrices = {
@@ -37,7 +38,18 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
     });
   };
 
-  const startingPoints = ['Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Subotica', 'Skoplje', 'Temišvar', 'Bukurešt', 'Kluž', 'Krajova'];
+  const startingPointsByCountry = {
+    Srbija: ['Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Subotica'],
+    Rumunija: ['Temišvar', 'Bukurešt', 'Kluž', 'Krajova'],
+    'Severna Makedonija': ['Skoplje']
+  };
+
+  const handleCountryChange = (e) => {
+    const country = e.target.value;
+    setStartCountry(country);
+    const defaultCity = startingPointsByCountry[country][0];
+    setStartPoint(defaultCity);
+  };
 
   const destinations = [
     { id: 'Sitonija',    name: 'Sitonija (Halkidiki)' },
@@ -377,32 +389,46 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
 
           <div className="form-group-grid">
             <div className="form-group">
-              <label htmlFor="start-point">Polazište</label>
+              <label htmlFor="start-country">Država polaska</label>
+              <select 
+                id="start-country" 
+                value={startCountry} 
+                onChange={handleCountryChange}
+                className="planner-select"
+              >
+                <option value="Srbija">🇷🇸 Srbija</option>
+                <option value="Rumunija">🇷🇴 Rumunija</option>
+                <option value="Severna Makedonija">🇲🇰 S. Makedonija</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="start-point">Polazište (Grad)</label>
               <select 
                 id="start-point" 
                 value={startPoint} 
                 onChange={(e) => setStartPoint(e.target.value)}
                 className="planner-select"
               >
-                {startingPoints.map(point => (
+                {startingPointsByCountry[startCountry].map(point => (
                   <option key={point} value={point}>{point}</option>
                 ))}
               </select>
             </div>
+          </div>
 
-            <div className="form-group">
-              <label htmlFor="destination">Odredište</label>
-              <select 
-                id="destination" 
-                value={destination} 
-                onChange={(e) => setDestination(e.target.value)}
-                className="planner-select"
-              >
-                {destinations.map(dest => (
-                  <option key={dest.id} value={dest.id}>{dest.name}</option>
-                ))}
-              </select>
-            </div>
+          <div className="form-group">
+            <label htmlFor="destination">Odredište (u Grčkoj)</label>
+            <select 
+              id="destination" 
+              value={destination} 
+              onChange={(e) => setDestination(e.target.value)}
+              className="planner-select"
+            >
+              {destinations.map(dest => (
+                <option key={dest.id} value={dest.id}>{dest.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Route Options (Transit choice) */}
