@@ -881,6 +881,27 @@ export default function App() {
         const dataPosts = await resPosts.json();
         setForumPosts(dataPosts);
 
+        const savedUserJson = localStorage.getItem('currentUser');
+        if (savedUserJson) {
+          const parsed = JSON.parse(savedUserJson);
+          if (parsed.isAdmin) {
+            const token = localStorage.getItem('authToken');
+            try {
+              const resReqs = await fetch(`${API_URL}/api/admin/action-requests`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+              if (resReqs.ok) {
+                const dataReqs = await resReqs.json();
+                setActionRequests(dataReqs);
+              }
+            } catch (e) {
+              console.warn("Failed to fetch initial action requests:", e);
+            }
+          }
+        }
+
         setBackendActive(true);
         console.log('Uspostavljena veza sa pravim backend serverom!');
       } catch {
@@ -908,7 +929,7 @@ export default function App() {
           }
         });
 
-        // 2. If Admin, poll updated user list & notifications to see online users in real-time
+        // 2. If Admin, poll updated user list, notifications & action requests to see updates in real-time
         if (currentUser.isAdmin) {
           const resUsers = await fetch(`${API_URL}/api/users`);
           if (resUsers.ok) {
@@ -924,6 +945,16 @@ export default function App() {
           if (resNotifs.ok) {
             const dataNotifs = await resNotifs.json();
             setAdminNotifications(dataNotifs);
+          }
+
+          const resReqs = await fetch(`${API_URL}/api/admin/action-requests`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (resReqs.ok) {
+            const dataReqs = await resReqs.json();
+            setActionRequests(dataReqs);
           }
         }
       } catch (err) {
@@ -1953,6 +1984,36 @@ export default function App() {
     }
   };
 
+  // Handle Edit Forum Post (Moderation)
+  const handleEditForumPost = async (postId, updatedTitle, updatedContent) => {
+    const postToEdit = forumPosts.find(p => p.id === postId);
+    if (!postToEdit) return;
+
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/forum-posts/${postId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ title: updatedTitle, content: updatedContent })
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Nije uspela izmena objave.');
+        }
+        setForumPosts(prev => prev.map(p => p.id === postId ? { ...p, title: updatedTitle, content: updatedContent } : p));
+        logActivity(currentUser, `Izmenjen post na forumu: "${updatedTitle}".`, 'update');
+      } catch (err) {
+        alert(err.message);
+      }
+    } else {
+      setForumPosts(prev => prev.map(p => p.id === postId ? { ...p, title: updatedTitle, content: updatedContent } : p));
+      logActivity(currentUser, `Izmenjen post na forumu: "${updatedTitle}" (lokalno).`, 'update');
+    }
+  };
+
   // Add a review and update average rating
   const handleAddReview = async (propertyId, newReview) => {
     if (backendActive) {
@@ -2195,6 +2256,7 @@ export default function App() {
               onAddForumPost={handleAddForumPost} 
               currentUser={currentUser}
               onDeleteForumPost={handleDeleteForumPost}
+              onEditForumPost={handleEditForumPost}
               onSendActionRequest={handleCreateActionRequest}
               actionRequests={actionRequests}
             />

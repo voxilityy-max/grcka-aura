@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 
 const PRESET_IMAGES = [
   { id: 'villa-1', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80', label: 'Moderna Vila sa bazenom' },
@@ -61,7 +61,10 @@ export default function HostPanel({
   onUpdateProperty,
   onAddMockNotification,
   onSendVerification,
-  onAdminVerifyHost
+  onAdminVerifyHost,
+  actionRequests = [],
+  onUpdateAdminPermissions,
+  onProcessActionRequest
 }) {
   const properties = useMemo(() => {
     const orig = rawProperties;
@@ -69,6 +72,17 @@ export default function HostPanel({
     if (currentUser.isAdmin) return orig;
     return orig.filter(p => p.ownerEmail && p.ownerEmail.toLowerCase().trim() === currentUser.email.toLowerCase().trim());
   }, [rawProperties, currentUser]);
+
+  const isOwner = useMemo(() => {
+    return currentUser && currentUser.email === 'voxilityy@gmail.com';
+  }, [currentUser]);
+
+  const hasPermission = useCallback((perm) => {
+    if (!currentUser) return false;
+    if (isOwner) return true;
+    if (!currentUser.isAdmin) return false;
+    return currentUser.adminPermissions && currentUser.adminPermissions.includes(perm);
+  }, [currentUser, isOwner]);
 
   const inquiries = useMemo(() => {
     const orig = rawInquiries;
@@ -1742,54 +1756,86 @@ export default function HostPanel({
                 <div className="admin-menu-item-left">📈 Dashboard</div>
               </button>
             </li>
-            <li>
-              <button 
-                className={`admin-menu-item ${panelTab === 'add' ? 'active' : ''}`}
-                onClick={() => { setPanelTab('add'); setWizardStep(1); }}
-              >
-                <div className="admin-menu-item-left">➕ Dodaj Smeštaj</div>
-              </button>
-            </li>
-            <li>
-              <button 
-                className={`admin-menu-item ${panelTab === 'manage' ? 'active' : ''}`}
-                onClick={() => setPanelTab('manage')}
-              >
-                <div className="admin-menu-item-left">🏡 Objekti</div>
-                <span className="admin-menu-badge">{totalProperties}</span>
-              </button>
-            </li>
-            <li>
-              <button 
-                className={`admin-menu-item ${panelTab === 'inquiries' ? 'active' : ''}`}
-                onClick={() => setPanelTab('inquiries')}
-              >
-                <div className="admin-menu-item-left">📩 Rezervacije</div>
-                <span className="admin-menu-badge" style={{ backgroundColor: pendingCount > 0 ? 'var(--accent)' : 'var(--border)' }}>
-                  {inquiries.length}
-                </span>
-              </button>
-            </li>
-            {currentUser && currentUser.isAdmin && (
+            {(!currentUser.isAdmin || hasPermission('properties')) && (
               <>
                 <li>
                   <button 
-                    className={`admin-menu-item ${panelTab === 'users' ? 'active' : ''}`}
-                    onClick={() => setPanelTab('users')}
+                    className={`admin-menu-item ${panelTab === 'add' ? 'active' : ''}`}
+                    onClick={() => { setPanelTab('add'); setWizardStep(1); }}
                   >
-                    <div className="admin-menu-item-left">👥 Korisnici</div>
-                    <span className="admin-menu-badge">{users.length}</span>
+                    <div className="admin-menu-item-left">➕ Dodaj Smeštaj</div>
                   </button>
                 </li>
                 <li>
                   <button 
-                    className={`admin-menu-item ${panelTab === 'logs' ? 'active' : ''}`}
-                    onClick={() => setPanelTab('logs')}
+                    className={`admin-menu-item ${panelTab === 'manage' ? 'active' : ''}`}
+                    onClick={() => setPanelTab('manage')}
                   >
-                    <div className="admin-menu-item-left">📋 Aktivnosti</div>
+                    <div className="admin-menu-item-left">🏡 Objekti</div>
+                    <span className="admin-menu-badge">{totalProperties}</span>
                   </button>
                 </li>
               </>
+            )}
+            {(!currentUser.isAdmin || hasPermission('inquiries')) && (
+              <li>
+                <button 
+                  className={`admin-menu-item ${panelTab === 'inquiries' ? 'active' : ''}`}
+                  onClick={() => setPanelTab('inquiries')}
+                >
+                  <div className="admin-menu-item-left">📩 Rezervacije</div>
+                  <span className="admin-menu-badge" style={{ backgroundColor: pendingCount > 0 ? 'var(--accent)' : 'var(--border)' }}>
+                    {inquiries.length}
+                  </span>
+                </button>
+              </li>
+            )}
+            {currentUser && currentUser.isAdmin && hasPermission('users') && (
+              <li>
+                <button 
+                  className={`admin-menu-item ${panelTab === 'users' ? 'active' : ''}`}
+                  onClick={() => setPanelTab('users')}
+                >
+                  <div className="admin-menu-item-left">👥 Korisnici</div>
+                  <span className="admin-menu-badge">{users.length}</span>
+                </button>
+              </li>
+            )}
+            {currentUser && currentUser.isAdmin && hasPermission('logs') && (
+              <li>
+                <button 
+                  className={`admin-menu-item ${panelTab === 'logs' ? 'active' : ''}`}
+                  onClick={() => setPanelTab('logs')}
+                >
+                  <div className="admin-menu-item-left">📋 Aktivnosti</div>
+                </button>
+              </li>
+            )}
+            {isOwner && (
+              <li>
+                <button 
+                  className={`admin-menu-item ${panelTab === 'admin_roles' ? 'active' : ''}`}
+                  onClick={() => setPanelTab('admin_roles')}
+                >
+                  <div className="admin-menu-item-left">👑 Admin Prava</div>
+                  <span className="admin-menu-badge" style={{ backgroundColor: 'var(--accent)' }}>
+                    {users.filter(u => u.isAdmin).length}
+                  </span>
+                </button>
+              </li>
+            )}
+            {currentUser && currentUser.isAdmin && (hasPermission('forum_edit') || hasPermission('forum_delete')) && (
+              <li>
+                <button 
+                  className={`admin-menu-item ${panelTab === 'action_requests' ? 'active' : ''}`}
+                  onClick={() => setPanelTab('action_requests')}
+                >
+                  <div className="admin-menu-item-left">⚖️ Odobrenja</div>
+                  <span className="admin-menu-badge" style={{ backgroundColor: actionRequests.filter(r => r.status === 'pending').length > 0 ? 'var(--accent)' : 'var(--border)' }}>
+                    {actionRequests.filter(r => r.status === 'pending').length}
+                  </span>
+                </button>
+              </li>
             )}
           </ul>
 
@@ -3688,6 +3734,284 @@ export default function HostPanel({
             ) : (
               <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
                 Nema pronađenih logova aktivnosti.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ==========================================
+            TAB: OWNER ADMIN PERMISSIONS MANAGEMENT
+            ========================================== */}
+        {panelTab === 'admin_roles' && isOwner && (
+          <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
+            <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.8rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
+                👑 Vlasnički panel: Upravljanje administratorima
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem', marginBottom: 0 }}>
+                Dodela/oduzimanje administratorskih privilegija i odabir specifičnih ovlašćenja za svakog administratora portala.
+              </p>
+            </div>
+
+            {users.length > 0 ? (() => {
+              const allAdmins = users.filter(u => u.isAdmin);
+              return allAdmins.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.25rem' }}>
+                  {allAdmins.map(u => {
+                    const isTargetOwner = u.email === 'voxilityy@gmail.com';
+                    const perms = u.adminPermissions || [];
+                    
+                    const togglePermissionLocal = (perm) => {
+                      if (isTargetOwner) return;
+                      let newPerms;
+                      if (perms.includes(perm)) {
+                        newPerms = perms.filter(p => p !== perm);
+                      } else {
+                        newPerms = [...perms, perm];
+                      }
+                      if (onUpdateAdminPermissions) {
+                        onUpdateAdminPermissions(u.id, newPerms);
+                      }
+                    };
+
+                    return (
+                      <div key={u.id} className="timeline-card" style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.015)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                          <img 
+                            src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=0a4f70&color=fff`} 
+                            alt="Avatar" 
+                            style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover' }} 
+                          />
+                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem' }}>{u.fullName}</span>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</span>
+                          </div>
+                        </div>
+
+                        {isTargetOwner ? (
+                          <div style={{ padding: '0.75rem', background: 'rgba(46,196,182,0.08)', borderRadius: '8px', border: '1px dashed #2ec4b6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#2ec4b6', fontWeight: 'bold' }}>👑 Glavni Vlasnik (Sva prava su trajno aktivna)</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', borderTop: '1px solid var(--border)', paddingTop: '0.8rem' }}>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.2rem' }}>
+                                Specifična ovlašćenja (Permisije):
+                              </span>
+                              
+                              {[
+                                { key: 'properties', label: '🏡 Smeštaji i sobe' },
+                                { key: 'inquiries', label: '📩 Rezervacije i chat' },
+                                { key: 'users', label: '👥 Korisnici i verifikacija' },
+                                { key: 'logs', label: '📋 Logovi aktivnosti' },
+                                { key: 'forum_edit', label: '✏️ Izmena foruma' },
+                                { key: 'forum_delete', label: '🗑️ Brisanje foruma' }
+                              ].map(item => {
+                                const active = perms.includes(item.key);
+                                return (
+                                  <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>{item.label}</span>
+                                    <div 
+                                      onClick={() => togglePermissionLocal(item.key)}
+                                      style={{
+                                        width: '42px',
+                                        height: '22px',
+                                        borderRadius: '11px',
+                                        backgroundColor: active ? '#2ec4b6' : 'rgba(255,255,255,0.08)',
+                                        border: active ? '1px solid #2ec4b6' : '1px solid var(--border)',
+                                        position: 'relative',
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.25s, border-color 0.25s'
+                                      }}
+                                    >
+                                      <div style={{
+                                        width: '16px',
+                                        height: '16px',
+                                        borderRadius: '50%',
+                                        backgroundColor: '#fff',
+                                        position: 'absolute',
+                                        top: '2px',
+                                        left: active ? '22px' : '2px',
+                                        transition: 'left 0.25s',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                                      }} />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.8rem', marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
+                              <button
+                                type="button"
+                                className="btn-cancel-inquiry"
+                                style={{ margin: 0, padding: '0.4rem 0.8rem', fontSize: '0.78rem', borderRadius: '6px', backgroundColor: 'var(--danger)', color: '#fff', cursor: 'pointer' }}
+                                onClick={() => {
+                                  if (confirm(`Da li ste sigurni da želite da uklonite ulogu administratora za ${u.fullName}?`)) {
+                                    onToggleAdminStatus(u.id);
+                                  }
+                                }}
+                              >
+                                ❌ Ukloni Admin prava
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                  Nema drugih administratora u bazi.
+                </div>
+              );
+            })() : (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                Nema registrovanih korisnika.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ==========================================
+            TAB: ACTION REQUESTS APPROVAL WORKFLOW
+            ========================================== */}
+        {panelTab === 'action_requests' && currentUser.isAdmin && (
+          <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
+            <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.8rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
+                ⚖️ Zahtevi za odobrenje (Approval Action Requests)
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem', marginBottom: 0 }}>
+                Pregled i obrada zahteva koje su poslali drugi administratori bez odgovarajućih dozvola za forum.
+              </p>
+            </div>
+
+            {actionRequests.length > 0 ? (() => {
+              const pendingReqs = actionRequests.filter(r => r.status === 'pending');
+              const resolvedReqs = actionRequests.filter(r => r.status !== 'pending');
+              
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  {/* Sekcija 1: Nerešeni zahtevi */}
+                  <div>
+                    <h4 style={{ fontSize: '1rem', color: 'var(--accent)', fontWeight: 'bold', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.4rem' }}>
+                      ⏳ Čeka na odluku ({pendingReqs.length})
+                    </h4>
+                    {pendingReqs.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {pendingReqs.map(req => {
+                          const canHandle = isOwner || hasPermission(req.actionType);
+                          return (
+                            <div key={req.id} className="timeline-card" style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.8rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Podnosilac zahteva:</span>
+                                  <strong style={{ color: 'var(--text-main)' }}>{req.requesterName}</strong>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Vreme podnošenja:</span>
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{req.timestamp}</span>
+                                </div>
+                              </div>
+
+                              <div style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', borderLeft: '3px solid var(--accent)', marginBottom: '1rem' }}>
+                                <div style={{ marginBottom: '0.4rem' }}>
+                                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 'bold', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(29,115,232,0.1)', color: 'var(--accent)' }}>
+                                    {req.actionType === 'forum_delete' ? 'Brisanje Objave' : 'Izmena Objave'}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                                  Objava: "{req.targetTitle}"
+                                </div>
+                                {req.proposedContent && req.actionType === 'forum_edit' && (
+                                  <div style={{ fontSize: '0.82rem', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid var(--border)', marginTop: '0.5rem' }}>
+                                    <strong>Predloženi novi naslov:</strong> {req.proposedContent.title} <br/>
+                                    <strong>Predloženi novi sadržaj:</strong> <br/>
+                                    <div style={{ marginTop: '0.2rem', color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>{req.proposedContent.content}</div>
+                                  </div>
+                                )}
+                                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                  <strong>Razlog:</strong> {req.reason || 'Nije naveden.'}
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem' }}>
+                                {canHandle ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => onProcessActionRequest(req.id, 'rejected')}
+                                      style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', borderRadius: '6px', cursor: 'pointer', backgroundColor: 'transparent', border: '1px solid var(--danger)', color: 'var(--danger)' }}
+                                    >
+                                      Odbij ❌
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => onProcessActionRequest(req.id, 'approved')}
+                                      style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', borderRadius: '6px', cursor: 'pointer', backgroundColor: '#2ec4b6', border: '1px solid #2ec4b6', color: '#fff', fontWeight: 'bold' }}
+                                    >
+                                      Odobri i Izvrši ✅
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span style={{ fontSize: '0.78rem', color: 'var(--danger)', fontStyle: 'italic', display: 'flex', alignItems: 'center' }}>
+                                    ⚠️ Nemate dozvolu '{req.actionType}' za odobravanje ovog zahteva.
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px dashed var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        Nema nerešenih zahteva za odobrenje.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sekcija 2: Prethodno rešeni zahtevi */}
+                  <div>
+                    <h4 style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.4rem' }}>
+                      📋 Istorija odluka ({resolvedReqs.length})
+                    </h4>
+                    {resolvedReqs.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        {resolvedReqs.map(req => {
+                          const approved = req.status === 'approved';
+                          return (
+                            <div key={req.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.005)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.82rem' }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{req.requesterName}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>je tražio/la {req.actionType === 'forum_delete' ? 'brisanje' : 'izmenu'} za "{req.targetTitle}"</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{req.timestamp}</span>
+                                <span style={{ 
+                                  fontSize: '0.75rem', fontWeight: 'bold', padding: '0.15rem 0.45rem', borderRadius: '4px',
+                                  backgroundColor: approved ? 'rgba(46, 196, 182, 0.12)' : 'rgba(230, 57, 70, 0.12)',
+                                  color: approved ? '#2ec4b6' : '#ef4444'
+                                }}>
+                                  {approved ? 'ODOBRENO' : 'ODBIJENO'}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        Nema rešenih zahteva u istoriji.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })() : (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                Nema nijednog zahteva za odobrenje u sistemu.
               </div>
             )}
           </div>

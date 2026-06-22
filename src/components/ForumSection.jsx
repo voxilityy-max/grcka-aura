@@ -5,7 +5,15 @@ const GREEK_TOWNS = ['Nikiti', 'Pefkohori', 'Nidri (Lefkada)', 'Golden Beach (Ta
 
 
 
-export default function ForumSection({ forumPosts = INITIAL_FORUM_POSTS, onAddForumPost, currentUser, onDeleteForumPost }) {
+export default function ForumSection({ 
+  forumPosts = INITIAL_FORUM_POSTS, 
+  onAddForumPost, 
+  currentUser, 
+  onDeleteForumPost, 
+  onEditForumPost, 
+  onSendActionRequest, 
+  actionRequests = [] 
+}) {
 
   const [selectedDest, setSelectedDest] = useState('Sve');
 
@@ -26,6 +34,12 @@ export default function ForumSection({ forumPosts = INITIAL_FORUM_POSTS, onAddFo
   });
 
   const [submitted, setSubmitted] = useState(false);
+
+  const [activeModal, setActiveModal] = useState(null); // null, 'delete_request', 'edit', 'edit_request'
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [modalReason, setModalReason] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
 
 
@@ -97,6 +111,76 @@ export default function ForumSection({ forumPosts = INITIAL_FORUM_POSTS, onAddFo
 
     setTimeout(() => setSubmitted(false), 3000);
 
+  };
+
+  const isOwner = currentUser && currentUser.email === 'voxilityy@gmail.com';
+  
+  const hasPermission = (perm) => {
+    if (!currentUser) return false;
+    if (isOwner) return true;
+    if (!currentUser.isAdmin) return false;
+    return currentUser.adminPermissions && currentUser.adminPermissions.includes(perm);
+  };
+
+  const handleOpenDelete = (post) => {
+    if (hasPermission('forum_delete')) {
+      if (confirm(`Da li ste sigurni da želite da obrišete priču "${post.title}"?`)) {
+        onDeleteForumPost(post.id);
+      }
+    } else {
+      setSelectedPost(post);
+      setModalReason('');
+      setActiveModal('delete_request');
+    }
+  };
+
+  const handleOpenEdit = (post) => {
+    setSelectedPost(post);
+    setEditTitle(post.title);
+    setEditContent(post.content);
+    setModalReason('');
+    
+    if (hasPermission('forum_edit')) {
+      setActiveModal('edit');
+    } else {
+      setActiveModal('edit_request');
+    }
+  };
+
+  const handleModalSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedPost) return;
+
+    if (activeModal === 'edit') {
+      if (onEditForumPost) {
+        onEditForumPost(selectedPost.id, editTitle, editContent);
+      }
+    } else if (activeModal === 'edit_request') {
+      if (onSendActionRequest) {
+        onSendActionRequest({
+          actionType: 'forum_edit',
+          targetId: selectedPost.id,
+          targetTitle: selectedPost.title,
+          proposedContent: { title: editTitle, content: editContent },
+          reason: modalReason
+        });
+      }
+    } else if (activeModal === 'delete_request') {
+      if (onSendActionRequest) {
+        onSendActionRequest({
+          actionType: 'forum_delete',
+          targetId: selectedPost.id,
+          targetTitle: selectedPost.title,
+          reason: modalReason
+        });
+      }
+    }
+
+    setActiveModal(null);
+    setSelectedPost(null);
+    setModalReason('');
+    setEditTitle('');
+    setEditContent('');
   };
 
 
@@ -183,49 +267,56 @@ export default function ForumSection({ forumPosts = INITIAL_FORUM_POSTS, onAddFo
 
                     </div>
 
-                    {currentUser && currentUser.isAdmin && (
+                    {currentUser && currentUser.isAdmin && (() => {
+                      const pendingReq = actionRequests.find(r => r.targetId === post.id && r.status === 'pending');
+                      if (pendingReq) {
+                        return (
+                          <span style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#d97706', borderRadius: '4px', fontWeight: 'bold' }}>
+                            ⏳ Čeka odobrenje ({pendingReq.actionType === 'forum_delete' ? 'brisanje' : 'izmena'})
+                          </span>
+                        );
+                      }
 
-                      <button
+                      return (
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          <button
+                            type="button"
+                            className="btn-compare-action"
+                            style={{ 
+                              padding: '0.25rem 0.5rem', 
+                              fontSize: '0.7rem', 
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              marginTop: 0,
+                              backgroundColor: hasPermission('forum_edit') ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
+                              borderColor: hasPermission('forum_edit') ? 'var(--accent)' : 'var(--border)',
+                              color: '#ffffff'
+                            }}
+                            onClick={() => handleOpenEdit(post)}
+                          >
+                            {hasPermission('forum_edit') ? '✏️ Izmeni' : '✏️ Izmeni (Zatraži)'}
+                          </button>
 
-                        type="button"
-
-                        className="btn-cancel-inquiry"
-
-                        style={{ 
-
-                          padding: '0.25rem 0.5rem', 
-
-                          fontSize: '0.7rem', 
-
-                          borderRadius: '4px',
-
-                          cursor: 'pointer',
-
-                          marginTop: 0,
-
-                          backgroundColor: 'var(--danger)',
-
-                          color: '#ffffff'
-
-                        }}
-
-                        onClick={() => {
-
-                          if (confirm(`Da li ste sigurni da želite da obrišete priču "${post.title}"?`)) {
-
-                            onDeleteForumPost(post.id);
-
-                          }
-
-                        }}
-
-                      >
-
-                        Obriši priču
-
-                      </button>
-
-                    )}
+                          <button
+                            type="button"
+                            className="btn-cancel-inquiry"
+                            style={{ 
+                              padding: '0.25rem 0.5rem', 
+                              fontSize: '0.7rem', 
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              marginTop: 0,
+                              backgroundColor: hasPermission('forum_delete') ? 'var(--danger)' : 'rgba(255,255,255,0.06)',
+                              borderColor: hasPermission('forum_delete') ? 'var(--danger)' : 'var(--border)',
+                              color: '#ffffff'
+                            }}
+                            onClick={() => handleOpenDelete(post)}
+                          >
+                            {hasPermission('forum_delete') ? '🗑️ Obriši' : '🗑️ Obriši (Zatraži)'}
+                          </button>
+                        </div>
+                      );
+                    })()}
 
                   </div>
 
@@ -448,6 +539,93 @@ export default function ForumSection({ forumPosts = INITIAL_FORUM_POSTS, onAddFo
         </div>
 
       </div>
+
+      {/* Modals for Action Requests & Direct Editing */}
+      {activeModal && selectedPost && (
+        <div className="modal-overlay" onClick={() => { setActiveModal(null); setSelectedPost(null); }}>
+          <div className="modal-container animate-scale" style={{ maxWidth: '600px', width: '95%' }} onClick={e => e.stopPropagation()}>
+            <div className="chat-header">
+              <div className="chat-header-title">
+                <span className="chat-header-name">
+                  {activeModal === 'edit' && '✏️ Direktna izmena objave'}
+                  {activeModal === 'edit_request' && '⚖️ Zatraži izmenu objave'}
+                  {activeModal === 'delete_request' && '🗑️ Zatraži brisanje objave'}
+                </span>
+                <span className="chat-header-status">
+                  Post ID: {selectedPost.id}
+                </span>
+              </div>
+              <button 
+                type="button" 
+                className="btn-modal-close" 
+                onClick={() => { setActiveModal(null); setSelectedPost(null); }}
+                style={{ position: 'static' }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleModalSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              
+              {(activeModal === 'edit' || activeModal === 'edit_request') && (
+                <>
+                  <div className="form-field" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-main)' }}>Naslov objave</label>
+                    <input 
+                      type="text" 
+                      value={editTitle} 
+                      onChange={e => setEditTitle(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                  <div className="form-field" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-main)' }}>Sadržaj objave</label>
+                    <textarea 
+                      value={editContent} 
+                      onChange={e => setEditContent(e.target.value)} 
+                      rows="6" 
+                      required 
+                    />
+                  </div>
+                </>
+              )}
+
+              {(activeModal === 'edit_request' || activeModal === 'delete_request') && (
+                <div className="form-field" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-main)' }}>Razlog i obrazloženje zahteva *</label>
+                  <textarea 
+                    value={modalReason} 
+                    onChange={e => setModalReason(e.target.value)} 
+                    placeholder="Unesite razlog zašto tražite ovu akciju..." 
+                    rows="3" 
+                    required 
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
+                <button 
+                  type="button" 
+                  onClick={() => { setActiveModal(null); setSelectedPost(null); }}
+                  className="btn-cancel-inquiry"
+                  style={{ margin: 0, padding: '0.5rem 1.25rem', fontSize: '0.85rem', cursor: 'pointer', borderRadius: '6px' }}
+                >
+                  Otkaži
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-submit-inquiry"
+                  style={{ margin: 0, padding: '0.5rem 1.25rem', fontSize: '0.85rem', cursor: 'pointer', borderRadius: '6px' }}
+                >
+                  {activeModal === 'edit' && 'Sačuvaj izmene'}
+                  {activeModal === 'edit_request' && 'Pošalji zahtev'}
+                  {activeModal === 'delete_request' && 'Pošalji zahtev'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
 

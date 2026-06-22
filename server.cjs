@@ -1146,6 +1146,21 @@ app.delete('/api/forum-posts/:id', requirePermission('forum_delete'), async (req
   }
 });
 
+// 17b. Update Forum Post (Requires forum_edit permission)
+app.put('/api/forum-posts/:id', requirePermission('forum_edit'), async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+  try {
+    const result = await dbHelper.run(
+      'UPDATE forum_posts SET title = ?, content = ? WHERE id = ?',
+      [title, content, id]
+    );
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 18. Toggle User Admin Status (Requires Owner)
 app.patch('/api/users/:id/role', requireOwner, async (req, res) => {
   const { id } = req.params;
