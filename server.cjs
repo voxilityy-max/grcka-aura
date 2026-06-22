@@ -1727,6 +1727,36 @@ app.post('/api/ai/chat', async (req, res) => {
       return p;
     });
 
+    const propertiesTextList = properties.map(p => {
+      const amenitiesList = Object.entries(p.amenities)
+        .filter(([_, val]) => val)
+        .map(([key, _]) => {
+          const names = {
+            wifi: 'WiFi',
+            pool: 'Bazen',
+            beachfront: 'Na samoj plaži',
+            parking: 'Parking',
+            airConditioning: 'Klima',
+            pets: 'Dozvoljeni ljubimci'
+          };
+          return names[key] || key;
+        }).join(', ');
+
+      const roomsText = p.rooms.map(r => 
+        `  * ${r.title} (${r.price}€/noć, za ${r.guests} osoba, kreveti: ${r.bedStructure || 'Nije navedeno'}, kuhinja: ${r.kitchenType || 'Nije navedeno'})`
+      ).join('\n');
+
+      return `SMEŠTAJ #${p.id}: ${p.title} (${p.type})
+- Lokacija: ${p.location}
+- Cena: ${p.price}€/noć
+- Ocena: ${p.rating}, Udaljenost od plaže: ${p.distanceToBeach}m
+- Maksimalno gostiju: ${p.guests}, Spavaće sobe: ${p.bedrooms}
+- Pogodnosti: ${amenitiesList || 'Nema posebnih pogodnosti'}
+- Opis: ${p.description || ''}
+- Dostupne sobe:
+${roomsText || '  * Nema registrovanih soba'}`;
+    }).join('\n\n');
+
     const apiKey = process.env.GROQ_API_KEY;
 
     if (apiKey) {
@@ -1742,26 +1772,34 @@ app.post('/api/ai/chat', async (req, res) => {
           messages: [
             {
               role: 'system',
-              content: `Ti si Ellinas AI Asistent, profesionalni i ljubazni turistički agent i koncjerž za sajt "Ellinas" (premium platforma za smeštaj u Grčkoj).
-Tvoj cilj je da pomažeš klijentima da nađu savršen smeštaj, odgovaraš na pitanja i pregovaraš o ponudama.
-Razgovaraj prirodno, toplo i profesionalno na srpskom jeziku, kao pravi čovek.
+              content: `Ti si Ellinas AI Asistent, premium AI turistički agent za platformu "Ellinas" (smeštaj u Grčkoj).
+Tvoj cilj je da pomogneš klijentima da pronađu idealan smeštaj na Tasosu, Lefkadi, Sitoniji i Krfu.
+Komuniciraj na srpskom jeziku, toplo, profesionalno, gostoljubivo i prirodno, ali IZUZETNO JASNO I DIREKTNO.
 
-Dostupni smeštaji na našem sajtu (preporuči isključivo ove smeštaje i spomeni ih po imenu kada predlažeš):
-${JSON.stringify(properties.map(p => ({ id: p.id, title: p.title, type: p.type, location: p.location, price: p.price, amenities: p.amenities })), null, 2)}
+Dostupni smeštaji na našoj platformi (PREPORUČI ISKLJUČIVO ove smeštaje i navedi njihova tačna imena):
+${propertiesTextList}
 
-Pravila ponašanja:
-1. Preporuči naše smeštaje. Kada predložiš smeštaj, obavezno navedi njegovo tačno ime kako bi ga sistem povezao.
-2. Budi spreman na pregovore. Ako gost kaže da je skupo, ponudi jeftiniju alternativu sa spiska ili naglasi šta sve ulazi u cenu (npr. bazen, blizina plaže, privatnost) kako bi opravdao vrednost.
-3. Odgovaraj kratko i koncizno (do 3-4 rečenice po poruci) kako bi čet bio lak za čitanje na mobilnim telefonima.
-4. Na kraju odgovora, pitaj gosta nešto što će nastaviti razgovor (npr. "Kada planirate dolazak?", "Koliko osoba putuje sa Vama?").
-5. Odgovori isključivo u validnom JSON formatu sa sledećim ključevima:
+Pravila komunikacije (Tvoj Trening):
+1. **Jasnoća i direktnost**: Odgovaraj konkretno, kratko i bez okolišanja. Nemoj pisati uopštene i dugačke uvode. Pređi odmah na stvar. Na svako pitanje odgovori direktno. Ako te pitaju za cenu, odmah navedi tačnu cenu. Ako te pitaju za WiFi ili neku drugu pogodnost, odmah potvrdi koji smeštaj to nudi.
+2. **Struktura i preglednost**: Odgovori moraju biti kratki (ukupno 3-4 rečenice). Koristi paragraf (novi red) za svaku posebnu celinu kako bi tekst bio lak za brzo skeniranje i čitanje. Koristi emojije (npr. 🏖️, 🌊, 💰, 🛏️) na prirodan i koristan način.
+3. **Preporuka i Pitch**: Preporuči 1-2 najprikladnija smeštaja na osnovu kriterijuma gosta (broj osoba, lokacija, bazen, klima, ljubimci, cena). Uvek navedi tačnu cenu i lokaciju (npr. "Preporučujem Apartmane Golden Beach Thassos na Tasosu za 55€ po noćenju").
+4. **Pregovaranje o ceni i budžetu**: Ako gost kaže da mu je skupo ili traži popust:
+   - Izrazi empatiju i razumevanje u jednoj kratkoj frazi (npr. "Razumem da je budžet važan.").
+   - Navedi vrednosti tog smeštaja koje opravdavaju cenu (npr. "Vila nudi privatni bazen i besplatan parking, što smanjuje druge troškove.").
+   - Odmah ponudi jeftiniju alternativu sa liste i uporedi cene (npr. "Kao povoljniju opciju, predlažem Apartmane Golden Beach Thassos za samo 55€ po noćenju.").
+5. **Uputstvo za rezervaciju (STRIKTNO I OBAVEZNO)**: Kada gost pita kako da rezerviše ili kako ide proces rezervacije, moraš doslovno reći: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." Nemoj predlagati kontaktiranje tima za podršku niti druge načine rezervacije.
+6. **Zadržavanje pažnje**: Na kraju poruke uvek postavi jedno kratko, direktno pitanje kako bi pomogao gostu da se odluči (npr. "Za koliko osoba planirate boravak?", "Koji period letovanja vam najviše odgovara?").
+7. **Format**: Odgovori ISKLJUČIVO u sledećem JSON formatu, bez ikakvog dodatnog teksta van JSON-a:
 {
   "text": "Tekst tvog odgovora...",
-  "recommendedPropertyIds": [1, 2] // ID-jevi preporučenih smeštaja sa liste iznad (ako ih ima)
+  "recommendedPropertyIds": [1, 2] // ID-jevi preporučenih smeštaja sa liste iznad koji odgovaraju tvom odgovoru (ako ih ima)
 }`
             },
             ...history,
-            { role: 'user', content: message }
+            { 
+              role: 'user', 
+              content: `${message}\n\n[UPUTSTVO ZA ODGOVOR: Odgovori na srpskom jeziku, toplo i profesionalno, u najviše 3-4 kratke rečenice. Koristi emojije i novi red za lakše čitanje. Odgovori ISKLJUČIVO u JSON formatu: { "text": "...", "recommendedPropertyIds": [...] }. Ako te gost pita kako da rezerviše ili kako ide proces rezervacije, OBAVEZNO i doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." Nemoj predlagati kontaktiranje tima za podršku, slanje e-maila ili druge načine rezervacije.]`
+            }
           ],
           response_format: { type: 'json_object' }
         })
@@ -1774,6 +1812,17 @@ Pravila ponašanja:
       const data = await response.json();
       try {
         const aiReply = JSON.parse(data.choices[0].message.content.trim());
+        
+        // Post-processing override to guarantee strict booking instruction rules are met
+        const userText = message.toLowerCase();
+        const isAskingBooking = userText.includes("rezerv") || userText.includes("kako da") || userText.includes("bukir");
+        if (isAskingBooking) {
+          const hasCorrectBookingText = aiReply.text && (aiReply.text.includes("klikom") || aiReply.text.includes("karticu") || aiReply.text.includes("Pogledaj"));
+          if (!hasCorrectBookingText) {
+            aiReply.text = `Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj. 📅\n\nDa li želite da vam pomognem oko izbora ili imate još pitanja?`;
+          }
+        }
+        
         return res.json(aiReply);
       } catch (parseErr) {
         console.error('Groq JSON Parse Error, falling back to simple text:', parseErr);
@@ -1798,13 +1847,22 @@ Pravila ponašanja:
 
       // Match amenities
       const wantsPool = userText.includes("bazen") || userText.includes("pool");
-      const wantsBeach = userText.includes("plaž") || userText.includes("beach") || userText.includes("mor");
-      const wantsPets = userText.includes("ljubim") || userText.includes("pas") || userText.includes("dog");
+      const wantsBeach = userText.includes("plaž") || userText.includes("beach") || userText.includes("mor") || userText.includes("vode");
+      const wantsPets = userText.includes("ljubim") || userText.includes("pas") || userText.includes("dog") || userText.includes("kuce");
+      const wantsWifi = userText.includes("wifi") || userText.includes("internet");
+      const wantsParking = userText.includes("parking") || userText.includes("kola") || userText.includes("auto");
+
+      // Extract guest capacity requested (e.g. "za 5 osoba")
+      const guestMatch = userText.match(/(\d+)\s*(?:osob|gost|ljud|krevet|odrasl|dec|član|clan)/i) || userText.match(/\b([1-9]|1[0-2])\b/);
+      const requestedGuests = guestMatch ? parseInt(guestMatch[1], 10) : 0;
 
       // Filter properties
       let matches = properties;
       if (matchedLoc) {
         matches = matches.filter(p => p.location.toLowerCase().includes(matchedLoc.toLowerCase()));
+      }
+      if (requestedGuests > 0) {
+        matches = matches.filter(p => p.guests >= requestedGuests);
       }
       if (wantsPool) {
         matches = matches.filter(p => p.amenities.pool);
@@ -1815,42 +1873,73 @@ Pravila ponašanja:
       if (wantsPets) {
         matches = matches.filter(p => p.amenities.pets);
       }
+      if (wantsWifi) {
+        matches = matches.filter(p => p.amenities.wifi);
+      }
+      if (wantsParking) {
+        matches = matches.filter(p => p.amenities.parking);
+      }
 
-      // Handle budget negotiations
-      const isComplainingPrice = userText.includes("skupo") || userText.includes("jeftinij") || userText.includes("budžet") || userText.includes("budzet") || userText.includes("cene") || userText.includes("popust");
+      // Check if complaining about price
+      const isComplainingPrice = userText.includes("skupo") || userText.includes("jeftinij") || userText.includes("budžet") || userText.includes("budzet") || userText.includes("cene") || userText.includes("popust") || userText.includes("skupa") || userText.includes("niza");
 
-      if (isComplainingPrice) {
+      // Check if asking how to reserve
+      const isAskingBooking = userText.includes("rezerv") || userText.includes("kako da") || userText.includes("bukir");
+
+      if (isAskingBooking) {
+        replyText = `Rezervaciju možete izvršiti jednostavno i direktno. 📅\n\nKliknite na karticu smeštaja koja se pojavila ispod ove poruke ili na dugme "Pogledaj" kako biste otvorili detalje, izabrali sobu i poslali upit.\n\nKoji smeštaj sa liste biste želeli da pogledate detaljnije?`;
+        if (matches.length > 0) {
+          recommendedIds = [matches[0].id];
+        } else {
+          recommendedIds = [1]; // Fallback to first property
+        }
+      } else if (isComplainingPrice) {
         matches.sort((a, b) => a.price - b.price);
         if (matches.length > 0) {
           const cheapest = matches[0];
-          replyText = `Potpuno vas razumem, budžet je ključan za planiranje odmora. Za vas imam odličnu pristupačniju ponudu: ${cheapest.title} u regiji ${cheapest.location} za samo ${cheapest.price}€ po noćenju. Ima sve što vam treba za udoban boravak. Kako vam se to čini?`;
+          replyText = `Razumem da je budžet važan za planiranje odmora. 💰\n\nNajpovoljniji smeštaj koji ispunjava vaše uslove je **${cheapest.title}** u regiji **${cheapest.location}** po ceni od **${cheapest.price}€** po noćenju.\n\nDa li vam ova ponuda odgovara ili želite da pogledamo neku drugu regiju?`;
           recommendedIds = [cheapest.id];
         } else {
-          const overallCheapest = [...properties].sort((a, b) => a.price - b.price).slice(0, 2);
-          replyText = `Razumem vas. Trenutno nemamo jeftinijih opcija za te specifične kriterijume, ali naša najpovoljnija ponuda uopšte su ${overallCheapest.map(p => `${p.title} (${p.price}€)`).join(" i ")}. Da li bi vam neka od ovih lokacija odgovarala?`;
-          recommendedIds = overallCheapest.map(p => p.id);
+          const overallCheapest = [...properties].sort((a, b) => a.price - b.price);
+          const cheapest = overallCheapest[0];
+          replyText = `Razumem vas. Trenutno nemamo jeftinijih opcija za te specifične kriterijume, ali naša najpovoljnija ponuda uopšte je **${cheapest.title}** za **${cheapest.price}€** po noćenju.\n\nDa li bi vam ova lokacija odgovarala?`;
+          recommendedIds = [cheapest.id];
         }
       } else if (matchedLoc) {
         if (matches.length > 0) {
           const selected = matches[0];
-          replyText = `Sjajan izbor! ${matchedLoc} je fantastična destinacija. Preporučujem vam našu prelepu smeštajnu jedinicu: ${selected.title} za ${selected.price}€ po noćenju. Nalazi se na odličnoj lokaciji. Da li biste želeli da pogledate detalje i fotografije?`;
+          replyText = `Sjajan izbor! **${matchedLoc}** je prelepa destinacija za odmor. 🏖️\n\nPreporučujem vam **${selected.title}** po ceni od **${selected.price}€** po noćenju, koji nudi izvanredan komfor.\n\nDa li želite da proverim slobodne termine za ovaj smeštaj?`;
           recommendedIds = [selected.id];
           if (matches.length > 1) {
             recommendedIds.push(matches[1].id);
           }
         } else {
-          replyText = `Nažalost, trenutno nemamo slobodnih smeštaja u regiji ${matchedLoc} sa tim specifičnim pogodnostima. Imamo slobodne smeštaje na drugim lokacijama. Gde biste još voleli da letujete ove godine?`;
+          // If no matches for location + guest count / amenities
+          const alternative = properties.find(p => p.location.toLowerCase().includes(matchedLoc.toLowerCase())) || properties[0];
+          replyText = `Nažalost, nemamo smeštaj u regiji **${matchedLoc}** koji ispunjava sve te specifične uslove. 😔\n\nKao najbolju alternativu na toj lokaciji nudimo **${alternative.title}** za **${alternative.price}€** po noćenju.\n\nDa li biste želeli da pogledate ovaj smeštaj?`;
+          recommendedIds = [alternative.id];
         }
       } else if (wantsPool) {
         const poolMatches = properties.filter(p => p.amenities.pool);
         if (poolMatches.length > 0) {
-          replyText = `Uživanje pored vode je nezamenljivo! Naša preporuka je luksuzna ${poolMatches[0].title} sa sopstvenim bazenom za ${poolMatches[0].price}€ po noćenju. Savršena je za opuštanje. Da li želite da proverim raspoloživost?`;
+          replyText = `Uživanje pored vode je nezamenljivo! 🏊\n\nPreporučujem vam **${poolMatches[0].title}** sa sopstvenim bazenom za **${poolMatches[0].price}€** po noćenju.\n\nDa li vam se dopada ova vila ili više volite apartman tik uz plažu?`;
           recommendedIds = [poolMatches[0].id];
         } else {
-          replyText = `Trenutno nemamo slobodnih vila sa bazenom, ali imamo odlične apartmane tik uz peščanu plažu. Da li biste želeli da pogledate te opcije?`;
+          replyText = `Trenutno nemamo slobodnih smeštaja sa bazenom. 🏖️\n\nPredlažem da pogledate prelepi **Apartmani Golden Beach Thassos** koji su tik uz peščanu plažu.\n\nDa li želite da proverim slobodne termine?`;
+          recommendedIds = [2];
+        }
+      } else if (requestedGuests > 0) {
+        const guestMatches = properties.filter(p => p.guests >= requestedGuests);
+        if (guestMatches.length > 0) {
+          replyText = `Pronašao sam odličan smeštaj za **${requestedGuests} osoba**. 🛏️\n\nPreporučujem **${guestMatches[0].title}** po ceni od **${guestMatches[0].price}€** po noćenju, koji ima sasvim dovoljno mesta za sve.\n\nDa li želite da pogledate raspored kreveta i soba?`;
+          recommendedIds = [guestMatches[0].id];
+        } else {
+          replyText = `Nažalost, nemamo smeštaj kapaciteta za **${requestedGuests} osoba** u jednoj jedinici. 😔\n\nPredlažem da iznajmite više manjih apartmana ili soba u **Apartmani Golden Beach Thassos**.\n\nDa li biste želeli da pogledate tu opciju?`;
+          recommendedIds = [2];
         }
       } else {
-        replyText = `Dobar dan! Ja sam vaš Ellinas AI turistički agent. ⛵ Pomažem vam da izaberete savršen smeštaj u Grčkoj. Imamo prelepe vile i apartmane na Tasosu, Lefkadi, u Sitoniji i na Krfu. Recite mi, u kom periodu planirate putovanje i šta vam je najvažnije kod smeštaja?`;
+        replyText = `Dobar dan! Ja sam vaš Ellinas AI turistički agent. ⛵\n\nTu sam da vam pomognem da brzo i lako pronađete idealan smeštaj na Tasosu, Lefkadi, Sitoniji ili Krfu.\n\nZa koliko osoba tražite smeštaj i koji period letovanja planirate?`;
+        recommendedIds = [1, 2];
       }
 
       res.json({
