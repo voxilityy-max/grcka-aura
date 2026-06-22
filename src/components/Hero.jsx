@@ -3,9 +3,12 @@ import { useState, useEffect, useRef } from 'react';
 export default function Hero({ searchFilters, setSearchFilters, destinations, onSearch }) {
   const [isDestOpen, setIsDestOpen] = useState(false);
   const [isGuestOpen, setIsGuestOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
   
   const destRef = useRef(null);
   const guestRef = useRef(null);
+  const calendarRef = useRef(null);
 
   // Close custom dropdowns if clicked outside
   useEffect(() => {
@@ -16,12 +19,106 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, on
       if (guestRef.current && !guestRef.current.contains(event.target)) {
         setIsGuestOpen(false);
       }
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        setIsCalendarOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const SERBIAN_MONTHS = [
+    "Januar", "Februar", "Mart", "April", "Maj", "Jun", 
+    "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"
+  ];
+
+  const generateMonthDays = (year, month) => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const numDays = lastDay.getDate();
+    const startDayOfWeek = (firstDay.getDay() + 6) % 7; // Monday is 0
+
+    const days = [];
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= numDays; i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
+  };
+
+  const getFormattedDateString = (date) => {
+    if (!date) return '';
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const handlePrevMonth = (e) => {
+    e.stopPropagation();
+    setCurrentMonthDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = (e) => {
+    e.stopPropagation();
+    setCurrentMonthDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
+  const handleDayClick = (dateStr) => {
+    const checkIn = searchFilters.checkIn;
+    const checkOut = searchFilters.checkOut;
+
+    if (!checkIn || (checkIn && checkOut)) {
+      setSearchFilters(prev => ({
+        ...prev,
+        checkIn: dateStr,
+        checkOut: ''
+      }));
+    } else {
+      if (dateStr < checkIn) {
+        setSearchFilters(prev => ({
+          ...prev,
+          checkIn: dateStr
+        }));
+      } else if (dateStr > checkIn) {
+        setSearchFilters(prev => ({
+          ...prev,
+          checkOut: dateStr
+        }));
+        setIsCalendarOpen(false); // Close calendar on selection complete
+      } else {
+        setSearchFilters(prev => ({
+          ...prev,
+          checkIn: '',
+          checkOut: ''
+        }));
+      }
+    }
+  };
+
+  const getDatesDisplay = () => {
+    const checkIn = searchFilters.checkIn;
+    const checkOut = searchFilters.checkOut;
+    if (!checkIn) return 'Izaberite datume';
+    
+    const formatDate = (dateStr) => {
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return '';
+      const day = parseInt(parts[2], 10);
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const monthName = SERBIAN_MONTHS[monthIdx] ? SERBIAN_MONTHS[monthIdx].substring(0, 3) : '';
+      return `${day}. ${monthName}`;
+    };
+
+    const startStr = formatDate(checkIn);
+    if (!checkOut) return `${startStr} - Odaberite odlazak`;
+    const endStr = formatDate(checkOut);
+    return `${startStr} - ${endStr}`;
+  };
 
   const handleSelectDest = (val) => {
     setSearchFilters(prev => ({
@@ -114,7 +211,7 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, on
       
       <div className="search-bar-gradient-wrapper animate-scale">
         <div className="search-bar-inner">
-          <div className="search-field-col dest-field-col" ref={destRef} onClick={() => setIsDestOpen(!isDestOpen)}>
+          <div className="search-field-col dest-field-col" ref={destRef} onClick={() => { setIsDestOpen(!isDestOpen); setIsGuestOpen(false); setIsCalendarOpen(false); }}>
             <label>Destinacija</label>
             <div className="custom-select-wrapper">
               <div className="custom-select-trigger">
@@ -148,42 +245,92 @@ export default function Hero({ searchFilters, setSearchFilters, destinations, on
           
           <div className="search-field-divider"></div>
           
-          <div className="search-field-col date-field-col">
+          <div className="search-field-col date-field-col" ref={calendarRef} onClick={() => { setIsCalendarOpen(!isCalendarOpen); setIsDestOpen(false); setIsGuestOpen(false); }} style={{ cursor: 'pointer', position: 'relative' }}>
             <label>Dolazak / Odlazak</label>
-            <div className="dates-wrapper-nikana">
-              <input 
-                type="date"
-                id="checkIn" 
-                name="checkIn" 
-                value={searchFilters.checkIn || ''}
-                onChange={(e) => {
-                  const { name, value } = e.target;
-                  setSearchFilters(prev => ({ ...prev, [name]: value }));
-                }}
-                onClick={(e) => { try { e.target.showPicker(); } catch { /* ignore */ } }}
-                min={new Date().toISOString().split('T')[0]}
-                className="date-input-nikana"
-              />
-              <span className="date-separator">&rarr;</span>
-              <input 
-                type="date"
-                id="checkOut" 
-                name="checkOut" 
-                value={searchFilters.checkOut || ''}
-                onChange={(e) => {
-                  const { name, value } = e.target;
-                  setSearchFilters(prev => ({ ...prev, [name]: value }));
-                }}
-                onClick={(e) => { try { e.target.showPicker(); } catch { /* ignore */ } }}
-                min={searchFilters.checkIn || new Date().toISOString().split('T')[0]}
-                className="date-input-nikana"
-              />
+            <div className="custom-select-wrapper">
+              <div className="custom-select-trigger">
+                <span className="custom-select-value" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  📅 {getDatesDisplay()}
+                </span>
+                <span className={`custom-select-arrow ${isCalendarOpen ? 'open' : ''}`}></span>
+              </div>
+              {isCalendarOpen && (
+                <div className="custom-dropdown-menu calendar-dropdown glass animate-scale" onClick={(e) => e.stopPropagation()} style={{ width: '310px', padding: '1rem', zIndex: 100, position: 'absolute', top: '100%', left: '0', marginTop: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-hover)' }}>
+                  <div className="calendar-container" style={{ width: '100%' }}>
+                    <div className="calendar-nav-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                      <button type="button" className="btn-calendar-nav" onClick={handlePrevMonth} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)', borderRadius: '4px', padding: '0.2rem 0.5rem', color: 'var(--text-main)', cursor: 'pointer' }}>&larr;</button>
+                      <span className="calendar-nav-label" style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>Izaberite datume</span>
+                      <button type="button" className="btn-calendar-nav" onClick={handleNextMonth} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)', borderRadius: '4px', padding: '0.2rem 0.5rem', color: 'var(--text-main)', cursor: 'pointer' }}>&rarr;</button>
+                    </div>
+                    <div className="calendar-months-wrapper">
+                      {(() => {
+                        const year = currentMonthDate.getFullYear();
+                        const month = currentMonthDate.getMonth();
+                        const monthDays = generateMonthDays(year, month);
+                        const monthName = SERBIAN_MONTHS[month];
+                        const todayStr = getFormattedDateString(new Date());
+
+                        return (
+                          <div className="calendar-month-box">
+                            <div className="calendar-month-title">
+                              {monthName} {year}
+                            </div>
+                            <div className="calendar-weekdays-grid">
+                              <span>Po</span>
+                              <span>Ut</span>
+                              <span>Sr</span>
+                              <span>Če</span>
+                              <span>Pe</span>
+                              <span>Su</span>
+                              <span>Ne</span>
+                            </div>
+                            <div className="calendar-days-grid">
+                              {monthDays.map((day, idx) => {
+                                if (!day) {
+                                  return <div key={`empty-${idx}`} className="calendar-day empty"></div>;
+                                }
+
+                                const dateStr = getFormattedDateString(day);
+                                const isPast = dateStr < todayStr;
+
+                                let dayClass = "calendar-day";
+                                if (isPast) dayClass += " past";
+
+                                const isCheckIn = searchFilters.checkIn === dateStr;
+                                const isCheckOut = searchFilters.checkOut === dateStr;
+                                const isInRange = searchFilters.checkIn && searchFilters.checkOut && dateStr > searchFilters.checkIn && dateStr < searchFilters.checkOut;
+
+                                if (isCheckIn) dayClass += " selected-checkin";
+                                if (isCheckOut) dayClass += " selected-checkout";
+                                if (isInRange) dayClass += " selected-range";
+
+                                return (
+                                  <div 
+                                    key={dateStr} 
+                                    className={dayClass}
+                                    onClick={() => {
+                                      if (isPast) return;
+                                      handleDayClick(dateStr);
+                                    }}
+                                  >
+                                    {day.getDate()}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
           <div className="search-field-divider"></div>
           
-          <div className="search-field-col guest-field-col" ref={guestRef} onClick={() => setIsGuestOpen(!isGuestOpen)}>
+          <div className="search-field-col guest-field-col" ref={guestRef} onClick={() => { setIsGuestOpen(!isGuestOpen); setIsDestOpen(false); setIsCalendarOpen(false); }}>
             <label>Gosti</label>
             <div className="custom-select-wrapper">
               <div className="custom-select-trigger">
