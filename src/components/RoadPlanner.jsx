@@ -1,4 +1,181 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+
+// Searchable Select Component for premium autocomplete feel
+function SearchableSelect({ label, id, value, options, onChange, placeholder }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const wrapperRef = useRef(null);
+
+  // Find currently selected option
+  const selectedOption = options.find(opt => opt.value === value);
+
+  // Filter options based on search query
+  const filteredOptions = useMemo(() => {
+    if (!search) return options;
+    const query = search.toLowerCase();
+    return options.filter(opt => opt.label.toLowerCase().includes(query));
+  }, [options, search]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (val) => {
+    onChange(val);
+    setSearch('');
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="searchable-select-wrapper" ref={wrapperRef}>
+      <label htmlFor={id}>{label}</label>
+      <div className="searchable-select-container">
+        <input
+          type="text"
+          id={id}
+          className="planner-select searchable-input"
+          value={isOpen ? search : (selectedOption ? selectedOption.label : '')}
+          placeholder={selectedOption ? selectedOption.label : placeholder}
+          onFocus={() => {
+            setIsOpen(true);
+            setSearch('');
+          }}
+          onChange={(e) => setSearch(e.target.value)}
+          autoComplete="off"
+        />
+        <span className="select-arrow">▼</span>
+      </div>
+
+      {isOpen && (
+        <div className="searchable-select-dropdown">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map(opt => (
+              <div
+                key={opt.value}
+                className={`searchable-option ${opt.value === value ? 'selected' : ''}`}
+                onClick={() => handleSelect(opt.value)}
+              >
+                {opt.label}
+              </div>
+            ))
+          ) : (
+            <div className="no-options-found">Nema rezultata</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Complete database of starting cities in Serbia, Romania, and North Macedonia
+const startingCities = [
+  // Srbija
+  { id: 'Beograd', name: 'Beograd', country: 'Srbija', ref: 'Beograd', offset: 0 },
+  { id: 'Novi Sad', name: 'Novi Sad', country: 'Srbija', ref: 'Novi Sad', offset: 0 },
+  { id: 'Niš', name: 'Niš', country: 'Srbija', ref: 'Niš', offset: 0 },
+  { id: 'Kragujevac', name: 'Kragujevac', country: 'Srbija', ref: 'Kragujevac', offset: 0 },
+  { id: 'Subotica', name: 'Subotica', country: 'Srbija', ref: 'Subotica', offset: 0 },
+  { id: 'Zrenjanin', name: 'Zrenjanin', country: 'Srbija', ref: 'Novi Sad', offset: 50 },
+  { id: 'Pančevo', name: 'Pančevo', country: 'Srbija', ref: 'Beograd', offset: 20 },
+  { id: 'Čačak', name: 'Čačak', country: 'Srbija', ref: 'Kragujevac', offset: 15 },
+  { id: 'Kraljevo', name: 'Kraljevo', country: 'Srbija', ref: 'Kragujevac', offset: 25 },
+  { id: 'Kruševac', name: 'Kruševac', country: 'Srbija', ref: 'Niš', offset: 50 },
+  { id: 'Leskovac', name: 'Leskovac', country: 'Srbija', ref: 'Niš', offset: 45 },
+  { id: 'Vranje', name: 'Vranje', country: 'Srbija', ref: 'Niš', offset: 110 },
+  { id: 'Novi Pazar', name: 'Novi Pazar', country: 'Srbija', ref: 'Kragujevac', offset: 130 },
+  { id: 'Užice', name: 'Užice', country: 'Srbija', ref: 'Kragujevac', offset: 95 },
+  { id: 'Sombor', name: 'Sombor', country: 'Srbija', ref: 'Subotica', offset: 60 },
+  { id: 'Požarevac', name: 'Požarevac', country: 'Srbija', ref: 'Beograd', offset: 80 },
+  { id: 'Pirot', name: 'Pirot', country: 'Srbija', ref: 'Niš', offset: 70 },
+  { id: 'Zaječar', name: 'Zaječar', country: 'Srbija', ref: 'Niš', offset: 110 },
+  { id: 'Kikinda', name: 'Kikinda', country: 'Srbija', ref: 'Novi Sad', offset: 110 },
+  { id: 'Jagodina', name: 'Jagodina', country: 'Srbija', ref: 'Kragujevac', offset: 40 },
+  { id: 'Šabac', name: 'Šabac', country: 'Srbija', ref: 'Beograd', offset: 80 },
+  { id: 'Loznica', name: 'Loznica', country: 'Srbija', ref: 'Beograd', offset: 130 },
+  { id: 'Valjevo', name: 'Valjevo', country: 'Srbija', ref: 'Beograd', offset: 90 },
+  { id: 'Smederevo', name: 'Smederevo', country: 'Srbija', ref: 'Beograd', offset: 20 },
+  { id: 'Vršac', name: 'Vršac', country: 'Srbija', ref: 'Beograd', offset: 85 },
+  { id: 'Bor', name: 'Bor', country: 'Srbija', ref: 'Niš', offset: 120 },
+  { id: 'Ruma', name: 'Ruma', country: 'Srbija', ref: 'Beograd', offset: 60 },
+  { id: 'Bačka Palanka', name: 'Bačka Palanka', country: 'Srbija', ref: 'Novi Sad', offset: 40 },
+  { id: 'Prokuplje', name: 'Prokuplje', country: 'Srbija', ref: 'Niš', offset: 30 },
+  { id: 'Inđija', name: 'Inđija', country: 'Srbija', ref: 'Beograd', offset: 45 },
+  { id: 'Aranđelovac', name: 'Aranđelovac', country: 'Srbija', ref: 'Kragujevac', offset: 40 },
+  { id: 'Gornji Milanovac', name: 'Gornji Milanovac', country: 'Srbija', ref: 'Kragujevac', offset: 40 },
+  { id: 'Vrbas', name: 'Vrbas', country: 'Srbija', ref: 'Novi Sad', offset: 45 },
+  { id: 'Bečej', name: 'Bečej', country: 'Srbija', ref: 'Novi Sad', offset: 50 },
+  { id: 'Obrenovac', name: 'Obrenovac', country: 'Srbija', ref: 'Beograd', offset: 30 },
+  { id: 'Mladenovac', name: 'Mladenovac', country: 'Srbija', ref: 'Beograd', offset: 55 },
+  { id: 'Lazarevac', name: 'Lazarevac', country: 'Srbija', ref: 'Beograd', offset: 65 },
+  { id: 'Smederevska Palanka', name: 'Smederevska Palanka', country: 'Srbija', ref: 'Beograd', offset: 80 },
+  { id: 'Temerin', name: 'Temerin', country: 'Srbija', ref: 'Novi Sad', offset: 20 },
+  { id: 'Ćuprija', name: 'Ćuprija', country: 'Srbija', ref: 'Kragujevac', offset: 50 },
+  { id: 'Paraćin', name: 'Paraćin', country: 'Srbija', ref: 'Kragujevac', offset: 60 },
+  { id: 'Knjaževac', name: 'Knjaževac', country: 'Srbija', ref: 'Niš', offset: 60 },
+
+  // Rumunija
+  { id: 'Bukurešt', name: 'Bukurešt', country: 'Rumunija', ref: 'Bukurešt', offset: 0 },
+  { id: 'Temišvar', name: 'Temišvar', country: 'Rumunija', ref: 'Temišvar', offset: 0 },
+  { id: 'Kluž', name: 'Kluž', country: 'Rumunija', ref: 'Kluž', offset: 0 },
+  { id: 'Krajova', name: 'Krajova', country: 'Rumunija', ref: 'Krajova', offset: 0 },
+  { id: 'Konstanca', name: 'Konstanca', country: 'Rumunija', ref: 'Bukurešt', offset: 220 },
+  { id: 'Brašov', name: 'Brašov', country: 'Rumunija', ref: 'Bukurešt', offset: 180 },
+  { id: 'Ploješti', name: 'Ploješti', country: 'Rumunija', ref: 'Bukurešt', offset: 60 },
+  { id: 'Pitešti', name: 'Pitešti', country: 'Rumunija', ref: 'Bukurešt', offset: 120 },
+  { id: 'Arad', name: 'Arad', country: 'Rumunija', ref: 'Temišvar', offset: 50 },
+  { id: 'Oradea', name: 'Oradea', country: 'Rumunija', ref: 'Kluž', offset: 150 },
+  { id: 'Iași', name: 'Jaši (Iași)', country: 'Rumunija', ref: 'Bukurešt', offset: 390 },
+  { id: 'Galați', name: 'Galac (Galați)', country: 'Rumunija', ref: 'Bukurešt', offset: 250 },
+  { id: 'Brăila', name: 'Braila (Brăila)', country: 'Rumunija', ref: 'Bukurešt', offset: 230 },
+  { id: 'Bacău', name: 'Bakau (Bacău)', country: 'Rumunija', ref: 'Bukurešt', offset: 290 },
+  { id: 'Sibiu', name: 'Sibinj (Sibiu)', country: 'Rumunija', ref: 'Krajova', offset: 150 },
+  { id: 'Târgu Mureș', name: 'Targu Mureš', country: 'Rumunija', ref: 'Kluž', offset: 100 },
+  { id: 'Baia Mare', name: 'Baja Mare', country: 'Rumunija', ref: 'Kluž', offset: 230 },
+  { id: 'Satu Mare', name: 'Satu Mare', country: 'Rumunija', ref: 'Kluž', offset: 280 },
+  { id: 'Râmnicu Vâlcea', name: 'Ramniku Valča (Râmnicu Vâlcea)', country: 'Rumunija', ref: 'Krajova', offset: 110 },
+  { id: 'Drobeta-Turnu Severin', name: 'Drobeta-Turnu Severin', country: 'Rumunija', ref: 'Krajova', offset: -110 },
+  { id: 'Reșița', name: 'Rešica (Reșița)', country: 'Rumunija', ref: 'Temišvar', offset: 100 },
+  { id: 'Târgoviște', name: 'Trgovište (Târgoviște)', country: 'Rumunija', ref: 'Bukurešt', offset: 80 },
+  { id: 'Suceava', name: 'Sučava (Suceava)', country: 'Rumunija', ref: 'Bukurešt', offset: 430 },
+  { id: 'Piatra Neamț', name: 'Pjatra Njamc (Piatra Neamț)', country: 'Rumunija', ref: 'Bukurešt', offset: 350 },
+  { id: 'Focșani', name: 'Fokšani (Focșani)', country: 'Rumunija', ref: 'Bukurešt', offset: 180 },
+
+  // Severna Makedonija
+  { id: 'Skoplje', name: 'Skoplje', country: 'Severna Makedonija', ref: 'Skoplje', offset: 0 },
+  { id: 'Bitola', name: 'Bitolj (Bitola)', country: 'Severna Makedonija', ref: 'Skoplje', offset: 170 },
+  { id: 'Ohrid', name: 'Ohrid', country: 'Severna Makedonija', ref: 'Skoplje', offset: 170 },
+  { id: 'Prilep', name: 'Prilep', country: 'Severna Makedonija', ref: 'Skoplje', offset: 130 },
+  { id: 'Kumanovo', name: 'Kumanovo', country: 'Severna Makedonija', ref: 'Skoplje', offset: -40 },
+  { id: 'Veles', name: 'Veles', country: 'Severna Makedonija', ref: 'Skoplje', offset: 50 },
+  { id: 'Tetovo', name: 'Tetovo', country: 'Severna Makedonija', ref: 'Skoplje', offset: 40 },
+  { id: 'Štip', name: 'Štip', country: 'Severna Makedonija', ref: 'Skoplje', offset: 90 }
+];
+
+const destinations = [
+  { id: 'Sitonija',    name: '🇬🇷 Sitonija (Halkidiki)', ref: 'Sitonija', offset: 0 },
+  { id: 'Kasandra',    name: '🇬🇷 Kasandra (Halkidiki)', ref: 'Kasandra', offset: 0 },
+  { id: 'Tasos',       name: '🇬🇷 Tasos (Keramoti)', ref: 'Tasos', offset: 0 },
+  { id: 'Lefkada',     name: '🇬🇷 Lefkada', ref: 'Lefkada', offset: 0 },
+  { id: 'Krf',         name: '🇬🇷 Krf (Igumenica)', ref: 'Krf', offset: 0 },
+  { id: 'Epir',        name: '🇬🇷 Epir (Parga/Sivota)', ref: 'Epir', offset: 0 },
+  { id: 'Kavala',      name: '🇬🇷 Kavala', ref: 'Kavala', offset: 0 },
+  { id: 'Atos',        name: '🇬🇷 Atos (Uranopolis)', ref: 'Atos', offset: 0 },
+  { id: 'Solun',       name: '🇬🇷 Solun (Thessaloniki)', ref: 'Sitonija', offset: -100 },
+  { id: 'Paralia',     name: '🇬🇷 Olimpijska regija (Paralia/Leptokarija/Nei Pori)', ref: 'Sitonija', offset: -40 },
+  { id: 'Asprovalta',  name: '🇬🇷 Asprovalta / Vrasna / Stavros', ref: 'Kavala', offset: -80 },
+  { id: 'Nea Moudania',name: '🇬🇷 Nea Mudanja', ref: 'Kasandra', offset: -30 },
+  { id: 'Athens',      name: '🇬🇷 Atina (Athens)', ref: 'Sitonija', offset: 400 },
+  { id: 'Peloponez',   name: '🇬🇷 Peloponez (Patra/Kalamata)', ref: 'Sitonija', offset: 550 },
+  { id: 'Preveza',     name: '🇬🇷 Jonska obala (Preveza/Vrahos/Parga)', ref: 'Lefkada', offset: -30 },
+  { id: 'Evia',        name: '🇬🇷 Ostrvo Evia (Pefki)', ref: 'Sitonija', offset: 180 }
+];
 
 export default function RoadPlanner({ currentUser, onOpenAuth }) {
   const [startCountry, setStartCountry] = useState('Srbija');
@@ -38,29 +215,14 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
     });
   };
 
-  const startingPointsByCountry = {
-    Srbija: ['Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Subotica'],
-    Rumunija: ['Temišvar', 'Bukurešt', 'Kluž', 'Krajova'],
-    'Severna Makedonija': ['Skoplje']
-  };
-
   const handleCountryChange = (e) => {
     const country = e.target.value;
     setStartCountry(country);
-    const defaultCity = startingPointsByCountry[country][0];
-    setStartPoint(defaultCity);
+    const firstCityOfCountry = startingCities.find(c => c.country === country);
+    if (firstCityOfCountry) {
+      setStartPoint(firstCityOfCountry.id);
+    }
   };
-
-  const destinations = [
-    { id: 'Sitonija',    name: '🇬🇷 Sitonija (Halkidiki)' },
-    { id: 'Kasandra',    name: '🇬🇷 Kasandra (Halkidiki)' },
-    { id: 'Tasos',       name: '🇬🇷 Tasos (Keramoti)' },
-    { id: 'Lefkada',     name: '🇬🇷 Lefkada' },
-    { id: 'Krf',         name: '🇬🇷 Krf (Igumenica)' },
-    { id: 'Epir',        name: '🇬🇷 Epir (Parga/Sivota)' },
-    { id: 'Kavala',      name: '🇬🇷 Kavala' },
-    { id: 'Atos',        name: '🇬🇷 Atos (Uranopolis)' }
-  ];
 
   // Route database mapping [start][destination][routeType]
   const routeDatabase = {
@@ -166,14 +328,23 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
     }
   };
 
+  // Get the selected start city object and destination object
+  const startCityObj = useMemo(() => {
+    return startingCities.find(c => c.id === startPoint) || startingCities[0];
+  }, [startPoint]);
+
+  const destObj = useMemo(() => {
+    return destinations.find(d => d.id === destination) || destinations[0];
+  }, [destination]);
+
   // Determine available route options for the selected start and destination
   const availableRoutes = useMemo(() => {
-    const startData = routeDatabase[startPoint];
+    const startData = routeDatabase[startCityObj.ref];
     if (!startData) return ['MKD'];
-    const destData = startData[destination];
+    const destData = startData[destObj.ref];
     if (!destData) return ['MKD'];
     return Object.keys(destData);
-  }, [startPoint, destination]);
+  }, [startCityObj, destObj]);
 
   // Adjust routeType if the selected one is not available
   useMemo(() => {
@@ -184,12 +355,35 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
 
   const activeRouteInfo = useMemo(() => {
     const defaultVal = { dist: 750, time: '8h 00m' };
-    const startData = routeDatabase[startPoint];
+    const startData = routeDatabase[startCityObj.ref];
     if (!startData) return defaultVal;
-    const destData = startData[destination];
+    const destData = startData[destObj.ref];
     if (!destData) return defaultVal;
-    return destData[routeType] || Object.values(destData)[0] || defaultVal;
-  }, [startPoint, destination, routeType]);
+    const route = destData[routeType] || Object.values(destData)[0] || defaultVal;
+    
+    // Apply offsets
+    const baseDist = route.dist;
+    const cityOffset = startCityObj.offset || 0;
+    const destOffset = destObj.offset || 0;
+    const finalDist = baseDist + cityOffset + destOffset;
+    
+    // Estimate final time based on final distance
+    const baseHours = parseFloat(route.time.split('h')[0]);
+    const baseMinutes = parseFloat(route.time.split('h')[1].replace('m', '')) || 0;
+    const totalBaseMinutes = (baseHours * 60) + baseMinutes;
+    
+    const offsetMin = Math.round((cityOffset + destOffset) * 0.75);
+    const totalMinutes = Math.max(60, totalBaseMinutes + offsetMin);
+    
+    const finalHours = Math.floor(totalMinutes / 60);
+    const finalMins = totalMinutes % 60;
+    const finalTimeStr = `${finalHours}h ${finalMins.toString().padStart(2, '0')}m`;
+
+    return {
+      dist: finalDist,
+      time: finalTimeStr
+    };
+  }, [startCityObj, destObj, routeType]);
 
   // Calculate toll costs and list toll booths
   const calculationData = useMemo(() => {
@@ -203,17 +397,19 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
       totalTolls += 3.00;
 
       // Danube Bridge Toll
-      if (startPoint === 'Bukurešt' || startPoint === 'Kluž') {
+      const refCity = startCityObj.ref;
+      if (refCity === 'Bukurešt' || refCity === 'Kluž') {
         tolls.push({ name: '🇷🇴➔🇧🇬 Mostarina Dunav (Giurgiu ➔ Ruse)', cost: 3.00, currency: 'EUR' });
         totalTolls += 3.00;
-      } else if (startPoint === 'Temišvar' || startPoint === 'Krajova') {
+      } else if (refCity === 'Temišvar' || refCity === 'Krajova') {
         tolls.push({ name: '🇷🇴➔🇧🇬 Mostarina Dunav (Calafat ➔ Vidin)', cost: 6.00, currency: 'EUR' });
         totalTolls += 6.00;
       }
-    } else if (startPoint !== 'Skoplje') {
+    } else if (startPoint !== 'Skoplje' && startCityObj.country !== 'Severna Makedonija') {
       let srbToll = 0;
       let label = '';
-      switch (startPoint) {
+      const refCity = startCityObj.ref;
+      switch (refCity) {
         case 'Subotica':
           srbToll = 21.00;
           label = '🇷🇸 Naplatna rampa Subotica ➔ Preševo';
@@ -236,9 +432,22 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
           label = '🇷🇸 Naplatna rampa Beograd (Vrčin) ➔ Preševo';
           break;
       }
-      if (routeType === 'BGR') {
+
+      // Specific city overrides for tolls to make it hyper-realistic
+      if (startPoint === 'Vranje') {
+        srbToll = 1.50;
+        label = '🇷🇸 Naplatna rampa Vranje ➔ Preševo';
+      } else if (startPoint === 'Leskovac') {
+        srbToll = 3.50;
+        label = '🇷🇸 Naplatna rampa Leskovac ➔ Preševo';
+      } else if (startPoint === 'Pirot' && routeType === 'BGR') {
+        srbToll = 1.00;
+        label = '🇷🇸 Naplatna rampa Pirot ➔ Dimitrovgrad';
+      }
+
+      if (routeType === 'BGR' && startPoint !== 'Pirot') {
         // Going to Bulgaria instead of Macedonia
-        switch (startPoint) {
+        switch (refCity) {
           case 'Subotica': srbToll = 17.50; label = '🇷🇸 Subotica ➔ Dimitrovgrad'; break;
           case 'Novi Sad': srbToll = 13.50; label = '🇷🇸 Novi Sad ➔ Dimitrovgrad'; break;
           case 'Beograd': srbToll = 11.50; label = '🇷🇸 Beograd ➔ Dimitrovgrad'; break;
@@ -256,6 +465,12 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
         // Skoplje to Greece (passes Sopot/Otovica, Gradsko, Gevgelija)
         tolls.push({ name: '🇲🇰 Naplatne rampe u S. Makedoniji (3 rampe)', cost: 5.00, currency: 'EUR' });
         totalTolls += 5.00;
+      } else if (startCityObj.country === 'Severna Makedonija') {
+        // Other MKD cities
+        if (startPoint !== 'Bitola' && startPoint !== 'Ohrid') {
+          tolls.push({ name: '🇲🇰 Naplatne rampe u S. Makedoniji (Tranzit)', cost: 3.50, currency: 'EUR' });
+          totalTolls += 3.50;
+        }
       } else {
         // Full Macedonia transit (passes all 5 ramps: Romanovce, Sopot, Otovica, Gradsko, Gevgelija)
         tolls.push({ name: '🇲🇰 Naplatne rampe u S. Makedoniji (Romanovce, Sopot, Otovica, Gradsko, Gevgelija)', cost: 8.00, currency: 'EUR' });
@@ -273,12 +488,12 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
       tolls.push({ name: '🇬🇷 Naplatna rampa Evzoni (Grčka)', cost: 2.40, currency: 'EUR' });
       totalTolls += 2.40;
 
-      if (destination === 'Tasos' || destination === 'Kavala') {
+      if (destObj.ref === 'Tasos' || destObj.ref === 'Kavala') {
         tolls.push({ name: '🇬🇷 Naplatna rampa Analipsi (Grčka)', cost: 2.40, currency: 'EUR' });
         tolls.push({ name: '🇬🇷 Naplatna rampa Asprovalta (Grčka)', cost: 1.10, currency: 'EUR' });
         tolls.push({ name: '🇬🇷 Naplatna rampa Moustheni (Grčka)', cost: 2.10, currency: 'EUR' });
         totalTolls += 5.60;
-      } else if (destination === 'Lefkada' || destination === 'Krf' || destination === 'Epir') {
+      } else if (destObj.ref === 'Lefkada' || destObj.ref === 'Krf' || destObj.ref === 'Epir') {
         tolls.push({ name: '🇬🇷 Naplatna rampa Malgara (Grčka)', cost: 1.20, currency: 'EUR' });
         tolls.push({ name: '🇬🇷 Naplatna rampa Polymylos (Grčka)', cost: 2.00, currency: 'EUR' });
         tolls.push({ name: '🇬🇷 Naplatna rampa Siatista (Grčka)', cost: 1.50, currency: 'EUR' });
@@ -291,12 +506,21 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
           totalTolls += 3.00;
         }
       }
+
+      // Additional tolls for Athens / Peloponnese route
+      if (destination === 'Athens') {
+        tolls.push({ name: '🇬🇷 Naplatne rampe Solun ➔ Atina (višestruke rampe)', cost: 33.50, currency: 'EUR' });
+        totalTolls += 33.50;
+      } else if (destination === 'Peloponez') {
+        tolls.push({ name: '🇬🇷 Naplatne rampe Solun ➔ Atina ➔ Peloponez', cost: 38.50, currency: 'EUR' });
+        totalTolls += 38.50;
+      }
     } else {
       // Entering via Kulata (Promahonas)
       tolls.push({ name: '🇬🇷 Naplatna rampa Promahonas (Grčka)', cost: 2.00, currency: 'EUR' });
       totalTolls += 2.00;
 
-      if (destination === 'Tasos' || destination === 'Kavala') {
+      if (destObj.ref === 'Tasos' || destObj.ref === 'Kavala') {
         tolls.push({ name: '🇬🇷 Naplatna rampa Asprovalta (Grčka)', cost: 1.10, currency: 'EUR' });
         tolls.push({ name: '🇬🇷 Naplatna rampa Moustheni (Grčka)', cost: 2.10, currency: 'EUR' });
         totalTolls += 3.20;
@@ -328,7 +552,7 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
       totalTripCost: Number((totalTolls + totalFuelCost).toFixed(2)),
       averageFuelPrice: Number(avgFuelPrice.toFixed(2)),
     };
-  }, [startPoint, destination, routeType, activeRouteInfo, consumption, fuelPrices, isRomanianStart]);
+  }, [startPoint, destination, routeType, activeRouteInfo, consumption, fuelPrices, isRomanianStart, startCityObj, destObj]);
 
   // Fuel advice based on prices
   const fuelAdvice = useMemo(() => {
@@ -402,40 +626,39 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
               </select>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="start-point">Polazište (Grad)</label>
-              <select 
-                id="start-point" 
-                value={startPoint} 
-                onChange={(e) => setStartPoint(e.target.value)}
-                className="planner-select"
-              >
-                {startingPointsByCountry[startCountry].map(point => {
+            <SearchableSelect
+              id="start-point"
+              label="Polazište (Grad)"
+              value={startPoint}
+              options={startingCities
+                .filter(city => city.country === startCountry)
+                .map(city => {
                   let flag = '';
-                  if (startCountry === 'Srbija') flag = '🇷🇸 ';
-                  else if (startCountry === 'Rumunija') flag = '🇷🇴 ';
-                  else if (startCountry === 'Severna Makedonija') flag = '🇲🇰 ';
-                  return (
-                    <option key={point} value={point}>{flag}{point}</option>
-                  );
-                })}
-              </select>
-            </div>
+                  if (city.country === 'Srbija') flag = '🇷🇸 ';
+                  else if (city.country === 'Rumunija') flag = '🇷🇴 ';
+                  else if (city.country === 'Severna Makedonija') flag = '🇲🇰 ';
+                  return {
+                    value: city.id,
+                    label: `${flag}${city.name}`
+                  };
+                })
+              }
+              onChange={setStartPoint}
+              placeholder="Pretraži polazište..."
+            />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="destination">Odredište (u Grčkoj)</label>
-            <select 
-              id="destination" 
-              value={destination} 
-              onChange={(e) => setDestination(e.target.value)}
-              className="planner-select"
-            >
-              {destinations.map(dest => (
-                <option key={dest.id} value={dest.id}>{dest.name}</option>
-              ))}
-            </select>
-          </div>
+          <SearchableSelect
+            id="destination"
+            label="Odredište (u Grčkoj)"
+            value={destination}
+            options={destinations.map(dest => ({
+              value: dest.id,
+              label: dest.name
+            }))}
+            onChange={setDestination}
+            placeholder="Pretraži odredište..."
+          />
 
           {/* Route Options (Transit choice) */}
           {availableRoutes.length > 1 && (
