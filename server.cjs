@@ -1519,6 +1519,34 @@ app.patch('/api/users/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// 20b. Change Password Info
+app.post('/api/users/:id/change-password', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { currentPassword, newPassword } = req.body;
+
+  if (parseInt(id, 10) !== req.user.id) {
+    return res.status(403).json({ error: 'Nemate ovlašćenje da menjate tuđu lozinku.' });
+  }
+
+  try {
+    const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [id]);
+    if (!user) return res.status(404).json({ error: 'Korisnik nije pronađen.' });
+
+    // Compare old password
+    const passwordMatch = bcrypt.compareSync(currentPassword, user.password);
+    if (!passwordMatch) {
+      return res.status(400).json({ error: 'Trenutna lozinka nije ispravna.' });
+    }
+
+    // Hash and store new password
+    const hashedNewPassword = bcrypt.hashSync(newPassword, 10);
+    await dbHelper.run('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, id]);
+    res.json({ success: true, message: 'Lozinka je uspešno promenjena!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 21. Real SQLite SQL Query Terminal Endpoint
 app.post('/api/admin/query', authenticateToken, async (req, res) => {
   const { query } = req.body;

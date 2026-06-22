@@ -12201,4 +12201,165 @@ select option {
   to { opacity: 1; box-shadow: 0 0 12px rgba(0, 242, 254, 0.4); }
 }
 
+/* User Portal (ProfileTab) Overrides */
+.profile-navigation-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.profile-menu-item {
+  background: transparent !important;
+  border: none !important;
+  text-align: left !important;
+  color: var(--text-muted) !important;
+  padding: 0.8rem 1.1rem !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  border-left: 3px solid transparent !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  width: 100% !important;
+}
+
+.profile-menu-item:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--text-light) !important;
+  transform: translateX(4px);
+}
+
+.profile-menu-item.active {
+  background: linear-gradient(90deg, rgba(0, 132, 255, 0.12) 0%, rgba(0, 132, 255, 0.01) 100%) !important;
+  color: var(--accent) !important;
+  border-left: 3px solid var(--accent) !important;
+  box-shadow: inset 0 0 10px rgba(0, 132, 255, 0.05) !important;
+  text-shadow: 0 0 10px rgba(0, 132, 255, 0.2);
+}
+
+.btn-profile-panel-link {
+  background: transparent !important;
+  border: 1px solid var(--accent) !important;
+  color: var(--accent) !important;
+  padding: 0.75rem 1.2rem !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  font-weight: bold !important;
+  font-size: 0.85rem !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+  width: 100% !important;
+}
+
+.btn-profile-panel-link:hover {
+  background: var(--accent) !important;
+  color: #fff !important;
+  box-shadow: 0 0 15px rgba(0, 132, 255, 0.3) !important;
+  transform: translateY(-1px);
+}
+
+.btn-profile-panel-link.host {
+  border-color: var(--success) !important;
+  color: var(--success) !important;
+}
+
+.btn-profile-panel-link.host:hover {
+  background: var(--success) !important;
+  color: #fff !important;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+.btn-profile-panel-link.host-upgrade {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+}
+
+.btn-profile-panel-link.host-upgrade:hover {
+  background: #f59e0b !important;
+  color: #fff !important;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3) !important;
+}
+
+.profile-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .profile-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+}
+
+.profile-kpi-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 14px !important;
+  padding: 1.2rem 1.4rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.3s ease !important;
+}
+
+.profile-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.profile-kpi-card:nth-child(1) { border-left: 3px solid var(--accent) !important; }
+.profile-kpi-card:nth-child(2) { border-left: 3px solid #10b981 !important; }
+.profile-kpi-card:nth-child(3) { border-left: 3px solid #ef4444 !important; }
+
+.profile-kpi-card .kpi-icon {
+  font-size: 1.8rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.profile-kpi-card:nth-child(1) .kpi-icon { box-shadow: 0 0 12px rgba(0, 132, 255, 0.12); }
+.profile-kpi-card:nth-child(2) .kpi-icon { box-shadow: 0 0 12px rgba(16, 185, 129, 0.12); }
+.profile-kpi-card:nth-child(3) .kpi-icon { box-shadow: 0 0 12px rgba(239, 68, 68, 0.12); }
+
+.profile-kpi-card .kpi-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-kpi-card .kpi-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.profile-kpi-card .kpi-label {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+.profile-tabs-content-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+
 

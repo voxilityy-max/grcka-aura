@@ -2351,6 +2351,9 @@ export default function App() {
               onSendChatMessage={handleSendChatMessage}
               onNavigate={handleTabChange}
               onUpgradeToHost={handleUpgradeToHost}
+              wishlist={wishlist}
+              onToggleWishlist={handleToggleWishlist}
+              backendActive={backendActive}
             />
           </div>
         ) : (
