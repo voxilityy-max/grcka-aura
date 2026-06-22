@@ -52,14 +52,14 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
   };
 
   const destinations = [
-    { id: 'Sitonija',    name: 'Sitonija (Halkidiki)' },
-    { id: 'Kasandra',    name: 'Kasandra (Halkidiki)' },
-    { id: 'Tasos',       name: 'Tasos (Keramoti)' },
-    { id: 'Lefkada',     name: 'Lefkada' },
-    { id: 'Krf',         name: 'Krf (Igumenica)' },
-    { id: 'Epir',        name: 'Epir (Parga/Sivota)' },
-    { id: 'Kavala',      name: 'Kavala' },
-    { id: 'Atos',        name: 'Atos (Uranopolis)' }
+    { id: 'Sitonija',    name: '🇬🇷 Sitonija (Halkidiki)' },
+    { id: 'Kasandra',    name: '🇬🇷 Kasandra (Halkidiki)' },
+    { id: 'Tasos',       name: '🇬🇷 Tasos (Keramoti)' },
+    { id: 'Lefkada',     name: '🇬🇷 Lefkada' },
+    { id: 'Krf',         name: '🇬🇷 Krf (Igumenica)' },
+    { id: 'Epir',        name: '🇬🇷 Epir (Parga/Sivota)' },
+    { id: 'Kavala',      name: '🇬🇷 Kavala' },
+    { id: 'Atos',        name: '🇬🇷 Atos (Uranopolis)' }
   ];
 
   // Route database mapping [start][destination][routeType]
@@ -199,15 +199,15 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
     // 1. Romania or Serbia Tolls
     if (isRomanianStart) {
       // Romanian Vignette (Rovinieta)
-      tolls.push({ name: 'Rovinieta (Rumunska vinjeta - 7 dana)', cost: 3.00, currency: 'EUR' });
+      tolls.push({ name: '🇷🇴 Rovinieta (Rumunska vinjeta - 7 dana)', cost: 3.00, currency: 'EUR' });
       totalTolls += 3.00;
 
       // Danube Bridge Toll
       if (startPoint === 'Bukurešt' || startPoint === 'Kluž') {
-        tolls.push({ name: 'Mostarina Dunav (Giurgiu ➔ Ruse)', cost: 3.00, currency: 'EUR' });
+        tolls.push({ name: '🇷🇴➔🇧🇬 Mostarina Dunav (Giurgiu ➔ Ruse)', cost: 3.00, currency: 'EUR' });
         totalTolls += 3.00;
       } else if (startPoint === 'Temišvar' || startPoint === 'Krajova') {
-        tolls.push({ name: 'Mostarina Dunav (Calafat ➔ Vidin)', cost: 6.00, currency: 'EUR' });
+        tolls.push({ name: '🇷🇴➔🇧🇬 Mostarina Dunav (Calafat ➔ Vidin)', cost: 6.00, currency: 'EUR' });
         totalTolls += 6.00;
       }
     } else if (startPoint !== 'Skoplje') {
@@ -216,34 +216,34 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
       switch (startPoint) {
         case 'Subotica':
           srbToll = 21.00;
-          label = 'Naplatna rampa Subotica ➔ Preševo';
+          label = '🇷🇸 Naplatna rampa Subotica ➔ Preševo';
           break;
         case 'Novi Sad':
           srbToll = 17.00;
-          label = 'Naplatna rampa Novi Sad ➔ Preševo';
+          label = '🇷🇸 Naplatna rampa Novi Sad ➔ Preševo';
           break;
         case 'Kragujevac':
           srbToll = 10.50;
-          label = 'Naplatna rampa Kragujevac ➔ Preševo';
+          label = '🇷🇸 Naplatna rampa Kragujevac ➔ Preševo';
           break;
         case 'Niš':
           srbToll = 6.00;
-          label = 'Naplatna rampa Niš ➔ Preševo';
+          label = '🇷🇸 Naplatna rampa Niš ➔ Preševo';
           break;
         case 'Beograd':
         default:
           srbToll = 15.00;
-          label = 'Naplatna rampa Beograd (Vrčin) ➔ Preševo';
+          label = '🇷🇸 Naplatna rampa Beograd (Vrčin) ➔ Preševo';
           break;
       }
       if (routeType === 'BGR') {
         // Going to Bulgaria instead of Macedonia
         switch (startPoint) {
-          case 'Subotica': srbToll = 17.50; label = 'Subotica ➔ Dimitrovgrad'; break;
-          case 'Novi Sad': srbToll = 13.50; label = 'Novi Sad ➔ Dimitrovgrad'; break;
-          case 'Beograd': srbToll = 11.50; label = 'Beograd ➔ Dimitrovgrad'; break;
-          case 'Kragujevac': srbToll = 7.00; label = 'Kragujevac ➔ Dimitrovgrad'; break;
-          case 'Niš': srbToll = 2.50; label = 'Niš ➔ Dimitrovgrad'; break;
+          case 'Subotica': srbToll = 17.50; label = '🇷🇸 Subotica ➔ Dimitrovgrad'; break;
+          case 'Novi Sad': srbToll = 13.50; label = '🇷🇸 Novi Sad ➔ Dimitrovgrad'; break;
+          case 'Beograd': srbToll = 11.50; label = '🇷🇸 Beograd ➔ Dimitrovgrad'; break;
+          case 'Kragujevac': srbToll = 7.00; label = '🇷🇸 Kragujevac ➔ Dimitrovgrad'; break;
+          case 'Niš': srbToll = 2.50; label = '🇷🇸 Niš ➔ Dimitrovgrad'; break;
         }
       }
       tolls.push({ name: label, cost: srbToll, currency: 'EUR' });
@@ -254,51 +254,51 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
     if (routeType === 'MKD') {
       if (startPoint === 'Skoplje') {
         // Skoplje to Greece (passes Sopot/Otovica, Gradsko, Gevgelija)
-        tolls.push({ name: 'Naplatne rampe u S. Makedoniji (3 rampe)', cost: 5.00, currency: 'EUR' });
+        tolls.push({ name: '🇲🇰 Naplatne rampe u S. Makedoniji (3 rampe)', cost: 5.00, currency: 'EUR' });
         totalTolls += 5.00;
       } else {
         // Full Macedonia transit (passes all 5 ramps: Romanovce, Sopot, Otovica, Gradsko, Gevgelija)
-        tolls.push({ name: 'Naplatne rampe u S. Makedoniji (Romanovce, Sopot, Otovica, Gradsko, Gevgelija)', cost: 8.00, currency: 'EUR' });
+        tolls.push({ name: '🇲🇰 Naplatne rampe u S. Makedoniji (Romanovce, Sopot, Otovica, Gradsko, Gevgelija)', cost: 8.00, currency: 'EUR' });
         totalTolls += 8.00;
       }
     } else if (routeType === 'BGR') {
       // Bulgaria Vignette (Vinjeta) - 7 days minimum
-      tolls.push({ name: 'Bugarska vinjeta (Vignette - 7 dana)', cost: 7.00, currency: 'EUR' });
+      tolls.push({ name: '🇧🇬 Bugarska vinjeta (Vignette - 7 dana)', cost: 7.00, currency: 'EUR' });
       totalTolls += 7.00;
     }
 
     // 3. GREECE TOLLS
     if (routeType === 'MKD') {
       // Entering via Evzoni
-      tolls.push({ name: 'Naplatna rampa Evzoni (Grčka)', cost: 2.40, currency: 'EUR' });
+      tolls.push({ name: '🇬🇷 Naplatna rampa Evzoni (Grčka)', cost: 2.40, currency: 'EUR' });
       totalTolls += 2.40;
 
       if (destination === 'Tasos' || destination === 'Kavala') {
-        tolls.push({ name: 'Naplatna rampa Analipsi (Grčka)', cost: 2.40, currency: 'EUR' });
-        tolls.push({ name: 'Naplatna rampa Asprovalta (Grčka)', cost: 1.10, currency: 'EUR' });
-        tolls.push({ name: 'Naplatna rampa Moustheni (Grčka)', cost: 2.10, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Analipsi (Grčka)', cost: 2.40, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Asprovalta (Grčka)', cost: 1.10, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Moustheni (Grčka)', cost: 2.10, currency: 'EUR' });
         totalTolls += 5.60;
       } else if (destination === 'Lefkada' || destination === 'Krf' || destination === 'Epir') {
-        tolls.push({ name: 'Naplatna rampa Malgara (Grčka)', cost: 1.20, currency: 'EUR' });
-        tolls.push({ name: 'Naplatna rampa Polymylos (Grčka)', cost: 2.00, currency: 'EUR' });
-        tolls.push({ name: 'Naplatna rampa Siatista (Grčka)', cost: 1.50, currency: 'EUR' });
-        tolls.push({ name: 'Naplatna rampa Tyria (Grčka)', cost: 2.10, currency: 'EUR' });
-        tolls.push({ name: 'Naplatna rampa Pamvotis (Grčka)', cost: 1.20, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Malgara (Grčka)', cost: 1.20, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Polymylos (Grčka)', cost: 2.00, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Siatista (Grčka)', cost: 1.50, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Tyria (Grčka)', cost: 2.10, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Pamvotis (Grčka)', cost: 1.20, currency: 'EUR' });
         totalTolls += 8.00;
 
         if (destination === 'Lefkada') {
-          tolls.push({ name: 'Podvodni tunel Aktio (Lefkada)', cost: 3.00, currency: 'EUR' });
+          tolls.push({ name: '🇬🇷 Podvodni tunel Aktio (Lefkada)', cost: 3.00, currency: 'EUR' });
           totalTolls += 3.00;
         }
       }
     } else {
       // Entering via Kulata (Promahonas)
-      tolls.push({ name: 'Naplatna rampa Promahonas (Grčka)', cost: 2.00, currency: 'EUR' });
+      tolls.push({ name: '🇬🇷 Naplatna rampa Promahonas (Grčka)', cost: 2.00, currency: 'EUR' });
       totalTolls += 2.00;
 
       if (destination === 'Tasos' || destination === 'Kavala') {
-        tolls.push({ name: 'Naplatna rampa Asprovalta (Grčka)', cost: 1.10, currency: 'EUR' });
-        tolls.push({ name: 'Naplatna rampa Moustheni (Grčka)', cost: 2.10, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Asprovalta (Grčka)', cost: 1.10, currency: 'EUR' });
+        tolls.push({ name: '🇬🇷 Naplatna rampa Moustheni (Grčka)', cost: 2.10, currency: 'EUR' });
         totalTolls += 3.20;
       }
     }
@@ -410,9 +410,15 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
                 onChange={(e) => setStartPoint(e.target.value)}
                 className="planner-select"
               >
-                {startingPointsByCountry[startCountry].map(point => (
-                  <option key={point} value={point}>{point}</option>
-                ))}
+                {startingPointsByCountry[startCountry].map(point => {
+                  let flag = '';
+                  if (startCountry === 'Srbija') flag = '🇷🇸 ';
+                  else if (startCountry === 'Rumunija') flag = '🇷🇴 ';
+                  else if (startCountry === 'Severna Makedonija') flag = '🇲🇰 ';
+                  return (
+                    <option key={point} value={point}>{flag}{point}</option>
+                  );
+                })}
               </select>
             </div>
           </div>
