@@ -280,6 +280,7 @@ export default function App() {
     return 'listings';
   });
 
+  const [backendActive, setBackendActive] = useState(false);
   const [guideSubTab, setGuideSubTab] = useState('calculator');
 
   const handleTabChange = (tabName) => {
@@ -553,8 +554,6 @@ export default function App() {
 
   // Selected Property for Details Modal
   const [selectedProperty, setSelectedProperty] = useState(null);
-
-  const [backendActive, setBackendActive] = useState(false);
 
   // Floating support chat widget states
   const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
