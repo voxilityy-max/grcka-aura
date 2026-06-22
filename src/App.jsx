@@ -422,16 +422,22 @@ export default function App() {
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('users');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map(u => {
-        if (u.email === 'voxilityy@gmail.com') {
-          return { ...u, password: 'pakovanje1337', isAdmin: true, isHost: true };
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map(u => {
+            if (u.email === 'voxilityy@gmail.com') {
+              return { ...u, password: 'pakovanje1337', isAdmin: true, isHost: true };
+            }
+            if (u.email === 'stefan@email.com' || u.email === 'stefan.petrovic@gmail.com') {
+              return { ...u, isAdmin: true, isHost: true };
+            }
+            return u;
+          });
         }
-        if (u.email === 'stefan@email.com' || u.email === 'stefan.petrovic@gmail.com') {
-          return { ...u, isAdmin: true, isHost: true };
-        }
-        return u;
-      });
+      } catch (e) {
+        console.warn("Greška pri parsovanju lokalnih korisnika:", e);
+      }
     }
     return DEFAULT_USERS;
   });
