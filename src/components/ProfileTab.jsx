@@ -25,7 +25,7 @@ export default function ProfileTab({
   onToggleWishlist,
   backendActive
 }) {
-  const [subTab, setSubTab] = useState('info'); // 'info', 'bookings', 'wishlist'
+  const [subTab, setSubTab] = useState('bookings'); // Default to bookings (Moja Putovanja)
   const [formData, setFormData] = useState({
     fullName: currentUser.fullName,
     phone: currentUser.phone,
