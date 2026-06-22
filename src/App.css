@@ -8986,6 +8986,16 @@ g:hover > .pin-hover-label {
   backdrop-filter: blur(10px);
 }
 
+select option {
+  background-color: var(--bg-card, #ffffff);
+  color: var(--text-main, #333333);
+}
+
+[data-theme="dark"] select option {
+  background-color: #0d1e2d !important;
+  color: #ffffff !important;
+}
+
 [data-theme="dark"] .form-field input:focus,
 
 [data-theme="dark"] .form-field textarea:focus,
