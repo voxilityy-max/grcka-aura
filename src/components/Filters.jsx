@@ -9,7 +9,16 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
     }));
   };
 
-  const handleManualPriceChange = (e) => {
+  const handleMinPriceChange = (e) => {
+    const val = e.target.value;
+    const parsed = parseInt(val, 10);
+    setFilters(prev => ({
+      ...prev,
+      minPrice: val === '' || isNaN(parsed) ? null : Math.max(0, parsed)
+    }));
+  };
+
+  const handleMaxPriceChange = (e) => {
     const val = e.target.value;
     const parsed = parseInt(val, 10);
     setFilters(prev => ({
@@ -18,7 +27,16 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
     }));
   };
 
-  const handleManualDistanceChange = (e) => {
+  const handleMinDistanceChange = (e) => {
+    const val = e.target.value;
+    const parsed = parseInt(val, 10);
+    setFilters(prev => ({
+      ...prev,
+      minDistance: val === '' || isNaN(parsed) ? null : Math.max(0, parsed)
+    }));
+  };
+
+  const handleMaxDistanceChange = (e) => {
     const val = e.target.value;
     const parsed = parseInt(val, 10);
     setFilters(prev => ({
@@ -38,6 +56,32 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
     }));
   };
 
+  const getPriceDisplay = () => {
+    const hasMin = filters.minPrice !== null && filters.minPrice !== undefined && filters.minPrice !== '';
+    const hasMax = filters.maxPrice !== null && filters.maxPrice !== undefined && filters.maxPrice !== 1000;
+    if (hasMin && hasMax) {
+      return `${filters.minPrice}€ - ${filters.maxPrice}€`;
+    } else if (hasMin) {
+      return `Preko ${filters.minPrice}€`;
+    } else if (hasMax) {
+      return `Do ${filters.maxPrice}€`;
+    }
+    return 'Bilo koja cena';
+  };
+
+  const getDistanceDisplay = () => {
+    const hasMin = filters.minDistance !== null && filters.minDistance !== undefined && filters.minDistance !== '';
+    const hasMax = filters.maxDistance !== null && filters.maxDistance !== undefined && filters.maxDistance !== 1200;
+    if (hasMin && hasMax) {
+      return `${filters.minDistance}m - ${filters.maxDistance}m`;
+    } else if (hasMin) {
+      return `Preko ${filters.minDistance}m`;
+    } else if (hasMax) {
+      return `Do ${filters.maxDistance}m`;
+    }
+    return 'Bilo koja';
+  };
+
   return (
     <aside className="filters-sidebar">
       <div className="filters-header">
@@ -51,18 +95,34 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
       <div className="filter-section">
         <h4 className="filter-section-title">Maks. cena po noćenju</h4>
         <div className="range-inputs">
-          <div className="manual-input-row">
-            <span>Ručni unos:</span>
-            <div className="manual-input-box-wrapper">
-              <input 
-                type="number" 
-                className="manual-filter-input"
-                placeholder="Bilo koja cena"
-                value={filters.maxPrice === null || filters.maxPrice === undefined ? '' : filters.maxPrice}
-                onChange={handleManualPriceChange}
-                min="20"
-              />
-              <span className="manual-input-suffix">€</span>
+          <div className="manual-range-row">
+            <div className="manual-range-field">
+              <span>Od:</span>
+              <div className="manual-input-box-wrapper">
+                <input 
+                  type="number" 
+                  className="manual-filter-input"
+                  placeholder="Min"
+                  value={filters.minPrice === null || filters.minPrice === undefined ? '' : filters.minPrice}
+                  onChange={handleMinPriceChange}
+                  min="0"
+                />
+                <span className="manual-input-suffix">€</span>
+              </div>
+            </div>
+            <div className="manual-range-field">
+              <span>Do:</span>
+              <div className="manual-input-box-wrapper">
+                <input 
+                  type="number" 
+                  className="manual-filter-input"
+                  placeholder="Max"
+                  value={filters.maxPrice === null || filters.maxPrice === undefined ? '' : filters.maxPrice}
+                  onChange={handleMaxPriceChange}
+                  min="20"
+                />
+                <span className="manual-input-suffix">€</span>
+              </div>
             </div>
           </div>
           <input 
@@ -76,7 +136,7 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
           <div className="range-values">
             <span>20€</span>
             <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
-              {filters.maxPrice === null || filters.maxPrice === undefined ? 'Bilo koja cena' : `Do ${filters.maxPrice}€`}
+              {getPriceDisplay()}
             </span>
             <span>1000+€</span>
           </div>
@@ -87,18 +147,34 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
       <div className="filter-section">
         <h4 className="filter-section-title">Udaljenost od plaže</h4>
         <div className="range-inputs">
-          <div className="manual-input-row">
-            <span>Ručni unos:</span>
-            <div className="manual-input-box-wrapper">
-              <input 
-                type="number" 
-                className="manual-filter-input"
-                placeholder="Bilo koja"
-                value={filters.maxDistance === null || filters.maxDistance === undefined || filters.maxDistance === 1200 ? '' : filters.maxDistance}
-                onChange={handleManualDistanceChange}
-                min="10"
-              />
-              <span className="manual-input-suffix">m</span>
+          <div className="manual-range-row">
+            <div className="manual-range-field">
+              <span>Od:</span>
+              <div className="manual-input-box-wrapper">
+                <input 
+                  type="number" 
+                  className="manual-filter-input"
+                  placeholder="Min"
+                  value={filters.minDistance === null || filters.minDistance === undefined ? '' : filters.minDistance}
+                  onChange={handleMinDistanceChange}
+                  min="0"
+                />
+                <span className="manual-input-suffix">m</span>
+              </div>
+            </div>
+            <div className="manual-range-field">
+              <span>Do:</span>
+              <div className="manual-input-box-wrapper">
+                <input 
+                  type="number" 
+                  className="manual-filter-input"
+                  placeholder="Max"
+                  value={filters.maxDistance === null || filters.maxDistance === undefined || filters.maxDistance === 1200 ? '' : filters.maxDistance}
+                  onChange={handleMaxDistanceChange}
+                  min="10"
+                />
+                <span className="manual-input-suffix">m</span>
+              </div>
             </div>
           </div>
           <input 
@@ -113,7 +189,7 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
           <div className="range-values">
             <span>10m</span>
             <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
-              {filters.maxDistance >= 1200 ? 'Bilo koja' : `Do ${filters.maxDistance}m`}
+              {getDistanceDisplay()}
             </span>
             <span>1200m+</span>
           </div>

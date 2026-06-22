@@ -530,7 +530,9 @@ export default function App() {
 
   // Advanced Sidebar Filters
   const [filters, setFilters] = useState({
-    maxPrice: null, // null means "not set" (defaults to maxPriceLimit)
+    minPrice: null,
+    maxPrice: null,
+    minDistance: null,
     maxDistance: 1200,
     amenities: {
       wifi: false,
@@ -2110,7 +2112,9 @@ export default function App() {
   // Clear Sidebar Filters
   const handleClearFilters = () => {
     setFilters({
+      minPrice: null,
       maxPrice: null,
+      minDistance: null,
       maxDistance: 1200,
       amenities: {
         wifi: false,
@@ -2177,14 +2181,20 @@ export default function App() {
     // Filter by Availability (Check-In & Check-Out) is disabled to match Grčka Info behavior 
     // where guests can always send inquiries and properties are not hidden by existing bookings.
 
-    // Filter by Sidebar: Max Price
+    // Filter by Sidebar: Min & Max Price
+    if (filters.minPrice !== null && filters.minPrice !== undefined && filters.minPrice !== '') {
+      items = items.filter(p => p.price >= filters.minPrice);
+    }
     if (filters.maxPrice !== null && filters.maxPrice !== undefined) {
       if (filters.maxPrice !== 1000) {
         items = items.filter(p => p.price <= filters.maxPrice);
       }
     }
 
-    // Filter by Sidebar: Max Distance
+    // Filter by Sidebar: Min & Max Distance
+    if (filters.minDistance !== null && filters.minDistance !== undefined && filters.minDistance !== '') {
+      items = items.filter(p => p.distanceToBeach >= filters.minDistance);
+    }
     if (filters.maxDistance !== null && filters.maxDistance !== undefined) {
       if (filters.maxDistance !== 1200) {
         items = items.filter(p => p.distanceToBeach <= filters.maxDistance);
