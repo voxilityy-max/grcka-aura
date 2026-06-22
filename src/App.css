@@ -658,6 +658,70 @@
   font-weight: 500;
 }
 
+/* Manual filter inputs */
+.manual-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.manual-input-row span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.manual-input-box-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.manual-filter-input {
+  width: 100%;
+  padding: 0.4rem 1.6rem 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.manual-filter-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15);
+}
+
+.manual-filter-input::-webkit-outer-spin-button,
+.manual-filter-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.manual-filter-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.manual-input-suffix {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  font-weight: 600;
+}
+
+.beach-checkbox-wrapper {
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed var(--border);
+}
+
+
 .checkbox-group {
   display: flex;
   flex-direction: column;

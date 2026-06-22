@@ -2178,14 +2178,17 @@ export default function App() {
     // where guests can always send inquiries and properties are not hidden by existing bookings.
 
     // Filter by Sidebar: Max Price
-    const activeMaxPrice = filters.maxPrice !== null && filters.maxPrice !== undefined ? filters.maxPrice : maxPriceLimit;
-    if (activeMaxPrice < 1000) {
-      items = items.filter(p => p.price <= activeMaxPrice);
+    if (filters.maxPrice !== null && filters.maxPrice !== undefined) {
+      if (filters.maxPrice !== 1000) {
+        items = items.filter(p => p.price <= filters.maxPrice);
+      }
     }
 
     // Filter by Sidebar: Max Distance
-    if (filters.maxDistance < 1200) {
-      items = items.filter(p => p.distanceToBeach <= filters.maxDistance);
+    if (filters.maxDistance !== null && filters.maxDistance !== undefined) {
+      if (filters.maxDistance !== 1200) {
+        items = items.filter(p => p.distanceToBeach <= filters.maxDistance);
+      }
     }
 
     // Filter by Sidebar: Amenities
