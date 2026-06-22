@@ -49,7 +49,7 @@ export default function HostPanel({
   inquiries: rawInquiries = [],
   activityLogs = [],
   onDeleteProperty,
-  users = [],
+  users: rawUsers = [],
   onToggleAdminStatus,
   onUpdateInquiryStatus,
   onSendChatMessage,
@@ -66,6 +66,8 @@ export default function HostPanel({
   onUpdateAdminPermissions,
   onProcessActionRequest
 }) {
+  const users = Array.isArray(rawUsers) ? rawUsers : [];
+
   const properties = useMemo(() => {
     const orig = rawProperties;
     if (!currentUser) return orig;

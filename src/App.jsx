@@ -777,9 +777,16 @@ export default function App() {
       const dataProps = await resProps.json();
       setProperties(dataProps);
 
-      const resUsers = await fetch(`${API_URL}/api/users`);
-      const dataUsers = await resUsers.json();
-      setUsers(dataUsers);
+      const token = localStorage.getItem('authToken');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      const resUsers = await fetch(`${API_URL}/api/users`, { headers });
+      if (resUsers.ok) {
+        const dataUsers = await resUsers.json();
+        if (Array.isArray(dataUsers)) {
+          setUsers(dataUsers);
+        }
+      }
 
       const resInqs = await fetch(`${API_URL}/api/inquiries`);
       const dataInqs = await resInqs.json();
@@ -839,39 +846,45 @@ export default function App() {
         const dataProps = await resProps.json();
         setProperties(dataProps);
 
-        const resUsers = await fetch(`${API_URL}/api/users`);
-        const dataUsers = await resUsers.json();
-        setUsers(dataUsers);
+        const token = localStorage.getItem('authToken');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        // Sync local user profile and wishlist with fresh database data on mount
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-          const parsed = JSON.parse(savedUser);
-          const freshUser = dataUsers.find(u => u.id === parsed.id);
-          if (freshUser) {
-            freshUser.isAdmin = !!freshUser.isAdmin;
-            freshUser.isHost = !!freshUser.isHost;
-            setCurrentUser(freshUser);
-            localStorage.setItem('currentUser', JSON.stringify(freshUser));
+        const resUsers = await fetch(`${API_URL}/api/users`, { headers });
+        if (resUsers.ok) {
+          const dataUsers = await resUsers.json();
+          if (Array.isArray(dataUsers)) {
+            setUsers(dataUsers);
 
-            // Sync wishlist state (merge local and database wishlists)
-            const dbWishlist = freshUser.wishlist ? (Array.isArray(freshUser.wishlist) ? freshUser.wishlist : JSON.parse(freshUser.wishlist)) : [];
-            const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-            const mergedWishlist = Array.from(new Set([...localWishlist, ...dbWishlist]));
-            setWishlist(mergedWishlist);
-            localStorage.setItem('wishlist', JSON.stringify(mergedWishlist));
-            
-            // Sync merged wishlist back to backend
-            const token = localStorage.getItem('authToken');
-            if (token) {
-              fetch(`${API_URL}/api/users/wishlist`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ wishlist: mergedWishlist })
-              }).catch(err => console.error('Failed to sync merged wishlist on mount:', err));
+            // Sync local user profile and wishlist with fresh database data on mount
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+              const parsed = JSON.parse(savedUser);
+              const freshUser = dataUsers.find(u => u.id === parsed.id);
+              if (freshUser) {
+                freshUser.isAdmin = !!freshUser.isAdmin;
+                freshUser.isHost = !!freshUser.isHost;
+                setCurrentUser(freshUser);
+                localStorage.setItem('currentUser', JSON.stringify(freshUser));
+
+                // Sync wishlist state (merge local and database wishlists)
+                const dbWishlist = freshUser.wishlist ? (Array.isArray(freshUser.wishlist) ? freshUser.wishlist : JSON.parse(freshUser.wishlist)) : [];
+                const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+                const mergedWishlist = Array.from(new Set([...localWishlist, ...dbWishlist]));
+                setWishlist(mergedWishlist);
+                localStorage.setItem('wishlist', JSON.stringify(mergedWishlist));
+
+                // Sync merged wishlist back to backend
+                if (token) {
+                  fetch(`${API_URL}/api/users/wishlist`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ wishlist: mergedWishlist })
+                  }).catch(err => console.error('Failed to sync merged wishlist on mount:', err));
+                }
+              }
             }
           }
         }
@@ -938,10 +951,16 @@ export default function App() {
 
         // 2. If Admin, poll updated user list, notifications & action requests to see updates in real-time
         if (currentUser.isAdmin) {
-          const resUsers = await fetch(`${API_URL}/api/users`);
+          const resUsers = await fetch(`${API_URL}/api/users`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
           if (resUsers.ok) {
             const dataUsers = await resUsers.json();
-            setUsers(dataUsers);
+            if (Array.isArray(dataUsers)) {
+              setUsers(dataUsers);
+            }
           }
 
           const resNotifs = await fetch(`${API_URL}/api/admin/notifications`, {
