@@ -2377,12 +2377,21 @@ export default function HostPanel({
                             <label htmlFor="type">Tip smeštaja *</label>
                             <div className="input-with-icon-wrapper">
                               <span className="input-icon">🏢</span>
-                              <select id="type" name="type" value={formData.type} onChange={handleChange}>
-                                {propertyTypes.map(t => (
-                                  <option key={t} value={t}>{t}</option>
-                                ))}
-                              </select>
+                              <input 
+                                list="host-types-list" 
+                                id="type" 
+                                name="type" 
+                                value={formData.type} 
+                                onChange={handleChange}
+                                placeholder="Izaberite ili upišite tip..."
+                                required
+                              />
                             </div>
+                            <datalist id="host-types-list">
+                              {propertyTypes.map(t => (
+                                <option key={t} value={t} />
+                              ))}
+                            </datalist>
                           </div>
                         </div>
 
@@ -4065,9 +4074,16 @@ export default function HostPanel({
                 </div>
                 <div className="form-field">
                   <label>Tip smeštaja</label>
-                  <select value={editingProperty.type} onChange={e => setEditingProperty(p => ({ ...p, type: e.target.value }))}>
-                    {propertyTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <input 
+                    list="edit-types-list" 
+                    value={editingProperty.type} 
+                    onChange={e => setEditingProperty(p => ({ ...p, type: e.target.value }))}
+                    placeholder="Izaberite ili upišite tip..."
+                    required
+                  />
+                  <datalist id="edit-types-list">
+                    {propertyTypes.map(t => <option key={t} value={t} />)}
+                  </datalist>
                 </div>
               </div>
 
