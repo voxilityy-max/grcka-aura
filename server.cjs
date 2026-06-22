@@ -14,6 +14,9 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || 'aura_jwt_secret_key_2026';
 
+// In-memory active users tracker (userId -> lastSeenTimestamp)
+const activeUsers = new Map();
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -612,6 +615,9 @@ function authenticateToken(req, res, next) {
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Nevažeći token.' });
     req.user = user;
+    if (user && user.id) {
+      activeUsers.set(Number(user.id), Date.now());
+    }
     next();
   });
 }
@@ -713,6 +719,8 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '24h' }
     );
     
+    activeUsers.set(Number(user.id), Date.now());
+    
     res.json({ user, token });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -748,6 +756,8 @@ app.post('/api/auth/register', async (req, res) => {
       JWT_SECRET,
       { expiresIn: '24h' }
     );
+    
+    activeUsers.set(Number(user.id), Date.now());
     
     res.json({ user, token });
   } catch (err) {
@@ -1062,12 +1072,24 @@ app.get('/api/users', async (req, res) => {
       } catch (e) {
         u.wishlist = [];
       }
+      // Check online status (online if active in last 90 seconds)
+      const lastSeen = activeUsers.get(Number(u.id));
+      u.isOnline = lastSeen ? (Date.now() - lastSeen < 90000) : false;
+      u.lastActive = lastSeen || null;
       return u;
     });
     res.json(mapped);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// 19b. Heartbeat route to register user presence
+app.post('/api/users/heartbeat', authenticateToken, (req, res) => {
+  if (req.user && req.user.id) {
+    activeUsers.set(Number(req.user.id), Date.now());
+  }
+  res.json({ status: 'ok' });
 });
 
 // Helper function to simulate/send emails

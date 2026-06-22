@@ -845,6 +845,54 @@ export default function App() {
     fetchData();
   }, []);
 
+  // Heartbeat & Online Status Polling
+  useEffect(() => {
+    if (!currentUser || !backendActive) return;
+
+    const sendHeartbeatAndPoll = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
+      try {
+        // 1. Send Heartbeat
+        await fetch(`${API_URL}/api/users/heartbeat`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        // 2. If Admin, poll updated user list & notifications to see online users in real-time
+        if (currentUser.isAdmin) {
+          const resUsers = await fetch(`${API_URL}/api/users`);
+          if (resUsers.ok) {
+            const dataUsers = await resUsers.json();
+            setUsers(dataUsers);
+          }
+
+          const resNotifs = await fetch(`${API_URL}/api/admin/notifications`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (resNotifs.ok) {
+            const dataNotifs = await resNotifs.json();
+            setAdminNotifications(dataNotifs);
+          }
+        }
+      } catch (err) {
+        console.warn('Heartbeat/polling failed:', err.message);
+      }
+    };
+
+    // Run immediately
+    sendHeartbeatAndPoll();
+
+    // Run every 20 seconds
+    const interval = setInterval(sendHeartbeatAndPoll, 20000);
+    return () => clearInterval(interval);
+  }, [currentUser, backendActive]);
+
   // Sync theme
   useEffect(() => {
     if (isDarkMode) {

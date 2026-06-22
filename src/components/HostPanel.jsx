@@ -1069,14 +1069,37 @@ export default function HostPanel({
   }, [properties, inquiries]);
 
   const uniqueOwners = useMemo(() => {
-    const emails = properties.map(p => p.ownerEmail).filter(Boolean);
+    const emails = properties
+      .map(p => p.ownerEmail?.toLowerCase().trim())
+      .filter(Boolean);
     return ['all', ...Array.from(new Set(emails))];
   }, [properties]);
 
   const filteredPropertiesByOwner = useMemo(() => {
     if (selectedOwnerFilter === 'all') return properties;
-    return properties.filter(p => p.ownerEmail === selectedOwnerFilter);
+    const filterLower = selectedOwnerFilter.toLowerCase().trim();
+    return properties.filter(p => p.ownerEmail?.toLowerCase().trim() === filterLower);
   }, [properties, selectedOwnerFilter]);
+
+  // Reset selected owner filter if it's no longer in the unique owners list (e.g. database refresh)
+  useEffect(() => {
+    if (selectedOwnerFilter !== 'all') {
+      const cleanFilter = selectedOwnerFilter.toLowerCase().trim();
+      if (!uniqueOwners.includes(cleanFilter)) {
+        setSelectedOwnerFilter('all');
+      }
+    }
+  }, [uniqueOwners, selectedOwnerFilter]);
+
+  const getOwnerDisplayName = (email) => {
+    if (!email) return '';
+    const cleanEmail = email.toLowerCase().trim();
+    const user = users.find(u => u.email?.toLowerCase().trim() === cleanEmail);
+    if (user && user.fullName) {
+      return `${user.fullName} (${cleanEmail})`;
+    }
+    return email;
+  };
 
   // Regional revenue stats
   const revenueByDest = destinations.reduce((acc, dest) => {
@@ -1887,8 +1910,8 @@ export default function HostPanel({
                   {/* SVG Gradients definition */}
                   <defs>
                     <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--success)" stopOpacity="0.6"/>
-                      <stop offset="100%" stopColor="var(--success)" stopOpacity="0.0"/>
+                      <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.45"/>
+                      <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0"/>
                     </linearGradient>
                   </defs>
                 </svg>
@@ -3013,10 +3036,10 @@ export default function HostPanel({
                 >
                   <option value="all">Svi vlasnici ({properties.length})</option>
                   {uniqueOwners.filter(email => email !== 'all').map(email => {
-                    const count = properties.filter(p => p.ownerEmail === email).length;
+                    const count = properties.filter(p => p.ownerEmail?.toLowerCase().trim() === email).length;
                     return (
                       <option key={email} value={email}>
-                        {email} ({count})
+                        {getOwnerDisplayName(email)} ({count})
                       </option>
                     );
                   })}
@@ -3485,29 +3508,56 @@ export default function HostPanel({
                         let verifyBadge = null;
                         if (u.isHost) {
                           if (vStatus === 1) {
-                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(46, 196, 182, 0.12)', color: '#2ec4b6', borderRadius: '4px', fontWeight: 'bold', marginLeft: '0.4rem' }}>✓ Verifikovan</span>;
+                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(46, 196, 182, 0.12)', color: '#2ec4b6', borderRadius: '4px', fontWeight: 'bold' }}>✓ Verifikovan</span>;
                           } else if (vStatus === 0 && u.verificationDetails) {
-                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#d97706', borderRadius: '4px', fontWeight: 'bold', marginLeft: '0.4rem' }}>⏳ Čeka pregled</span>;
+                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#d97706', borderRadius: '4px', fontWeight: 'bold' }}>⏳ Čeka pregled</span>;
                           } else if (vStatus === -1) {
-                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(230, 57, 70, 0.12)', color: '#ef4444', borderRadius: '4px', fontWeight: 'bold', marginLeft: '0.4rem' }}>✗ Odbijen</span>;
+                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(230, 57, 70, 0.12)', color: '#ef4444', borderRadius: '4px', fontWeight: 'bold' }}>✗ Odbijen</span>;
                           } else {
-                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', borderRadius: '4px', marginLeft: '0.4rem' }}>Nije poslao</span>;
+                            verifyBadge = <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', borderRadius: '4px' }}>Nije poslao</span>;
                           }
                         }
 
                         return (
                           <tr key={u.id}>
-                            <td style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.75rem 1rem' }}>
-                              <img 
-                                src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=0a4f70&color=fff`} 
-                                alt="Avatar" 
-                                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
-                              />
-                              <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{u.fullName}</span>
+                            <td style={{ padding: '0.75rem 1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                  <img 
+                                    src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=0a4f70&color=fff`} 
+                                    alt="Avatar" 
+                                    style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
+                                  />
+                                  <span style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    right: 0,
+                                    width: '10px',
+                                    height: '10px',
+                                    borderRadius: '50%',
+                                    backgroundColor: u.isOnline ? 'var(--success)' : '#9ca3af',
+                                    border: '2px solid var(--bg-card)',
+                                    boxShadow: u.isOnline ? '0 0 8px var(--success)' : 'none',
+                                    animation: u.isOnline ? 'statusPulse 2s infinite ease-in-out' : 'none'
+                                  }} title={u.isOnline ? 'Online' : 'Offline'} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.9rem' }}>{u.fullName}</span>
+                                  {u.isOnline ? (
+                                    <span style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: '600' }}>
+                                      online
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                      {u.lastActive ? `aktivan ${new Date(u.lastActive).toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' })}` : 'offline'}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </td>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.3rem' }}>
-                                <span className={`roster-role-badge ${roleClass}`}>
+                            <td style={{ padding: '0.75rem 1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', gap: '0.4rem' }}>
+                                <span className={`roster-role-badge ${roleClass}`} style={{ whiteSpace: 'nowrap' }}>
                                   {roleLabel}
                                 </span>
                                 {verifyBadge}
