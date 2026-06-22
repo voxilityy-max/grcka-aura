@@ -7,11 +7,13 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
   const [fuelType, setFuelType] = useState('dizel'); // 'benzin', 'dizel', 'lpg'
   const [consumption, setConsumption] = useState(6.5); // l/100km
 
+  const isRomanianStart = ['Temišvar', 'Bukurešt', 'Kluž', 'Krajova'].includes(startPoint);
+
   // Default average fuel prices (in EUR) per country and fuel type
   const defaultFuelPrices = {
-    benzin: { SRB: 1.68, MKD: 1.30, BGR: 1.35, GRC: 1.92 },
-    dizel:  { SRB: 1.76, MKD: 1.22, BGR: 1.30, GRC: 1.66 },
-    lpg:    { SRB: 0.85, MKD: 0.68, BGR: 0.70, GRC: 0.95 },
+    benzin: { SRB: 1.68, MKD: 1.30, BGR: 1.35, GRC: 1.92, ROU: 1.42 },
+    dizel:  { SRB: 1.76, MKD: 1.22, BGR: 1.30, GRC: 1.66, ROU: 1.48 },
+    lpg:    { SRB: 0.85, MKD: 0.68, BGR: 0.70, GRC: 0.95, ROU: 0.75 },
   };
 
   // State for user-adjustable fuel prices
@@ -20,6 +22,7 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
     MKD: defaultFuelPrices[fuelType].MKD,
     BGR: defaultFuelPrices[fuelType].BGR,
     GRC: defaultFuelPrices[fuelType].GRC,
+    ROU: defaultFuelPrices[fuelType].ROU,
   });
 
   // Automatically sync sliders when fuel type changes
@@ -30,10 +33,11 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
       MKD: defaultFuelPrices[type].MKD,
       BGR: defaultFuelPrices[type].BGR,
       GRC: defaultFuelPrices[type].GRC,
+      ROU: defaultFuelPrices[type].ROU,
     });
   };
 
-  const startingPoints = ['Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Subotica', 'Skoplje'];
+  const startingPoints = ['Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Subotica', 'Skoplje', 'Temišvar', 'Bukurešt', 'Kluž', 'Krajova'];
 
   const destinations = [
     { id: 'Sitonija',    name: 'Sitonija (Halkidiki)' },
@@ -107,6 +111,46 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
       Epir:      { MKD: { dist: 500, time: '5h 30m' } },
       Kavala:    { MKD: { dist: 350, time: '3h 50m' }, BGR: { dist: 390, time: '4h 30m' } },
       Atos:      { MKD: { dist: 360, time: '4h 00m' } },
+    },
+    Bukurešt: {
+      Sitonija:  { BGR: { dist: 760, time: '9h 30m' } },
+      Kasandra:  { BGR: { dist: 750, time: '9h 20m' } },
+      Tasos:     { BGR: { dist: 620, time: '8h 00m' } },
+      Lefkada:   { BGR: { dist: 980, time: '12h 00m' } },
+      Krf:       { BGR: { dist: 950, time: '11h 30m' } },
+      Epir:      { BGR: { dist: 930, time: '11h 15m' } },
+      Kavala:    { BGR: { dist: 590, time: '7h 35m' } },
+      Atos:      { BGR: { dist: 800, time: '10h 00m' } },
+    },
+    Temišvar: {
+      Sitonija:  { BGR: { dist: 780, time: '9h 45m' } },
+      Kasandra:  { BGR: { dist: 770, time: '9h 35m' } },
+      Tasos:     { BGR: { dist: 800, time: '10h 15m' } },
+      Lefkada:   { BGR: { dist: 990, time: '12h 15m' } },
+      Krf:       { BGR: { dist: 970, time: '11h 45m' } },
+      Epir:      { BGR: { dist: 950, time: '11h 30m' } },
+      Kavala:    { BGR: { dist: 740, time: '9h 30m' } },
+      Atos:      { BGR: { dist: 820, time: '10h 30m' } },
+    },
+    Kluž: {
+      Sitonija:  { BGR: { dist: 1040, time: '13h 00m' } },
+      Kasandra:  { BGR: { dist: 1030, time: '12h 50m' } },
+      Tasos:     { BGR: { dist: 980, time: '12h 15m' } },
+      Lefkada:   { BGR: { dist: 1260, time: '15h 30m' } },
+      Krf:       { BGR: { dist: 1230, time: '15h 00m' } },
+      Epir:      { BGR: { dist: 1210, time: '14h 45m' } },
+      Kavala:    { BGR: { dist: 920, time: '11h 30m' } },
+      Atos:      { BGR: { dist: 1080, time: '13h 45m' } },
+    },
+    Krajova: {
+      Sitonija:  { BGR: { dist: 580, time: '7h 45m' } },
+      Kasandra:  { BGR: { dist: 570, time: '7h 35m' } },
+      Tasos:     { BGR: { dist: 620, time: '8h 30m' } },
+      Lefkada:   { BGR: { dist: 800, time: '10h 15m' } },
+      Krf:       { BGR: { dist: 770, time: '9h 45m' } },
+      Epir:      { BGR: { dist: 750, time: '9h 30m' } },
+      Kavala:    { BGR: { dist: 560, time: '7h 50m' } },
+      Atos:      { BGR: { dist: 620, time: '8h 30m' } },
     }
   };
 
@@ -140,8 +184,21 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
     let tolls = [];
     let totalTolls = 0;
 
-    // 1. SERBIA TOLL
-    if (startPoint !== 'Skoplje') {
+    // 1. Romania or Serbia Tolls
+    if (isRomanianStart) {
+      // Romanian Vignette (Rovinieta)
+      tolls.push({ name: 'Rovinieta (Rumunska vinjeta - 7 dana)', cost: 3.00, currency: 'EUR' });
+      totalTolls += 3.00;
+
+      // Danube Bridge Toll
+      if (startPoint === 'Bukurešt' || startPoint === 'Kluž') {
+        tolls.push({ name: 'Mostarina Dunav (Giurgiu ➔ Ruse)', cost: 3.00, currency: 'EUR' });
+        totalTolls += 3.00;
+      } else if (startPoint === 'Temišvar' || startPoint === 'Krajova') {
+        tolls.push({ name: 'Mostarina Dunav (Calafat ➔ Vidin)', cost: 6.00, currency: 'EUR' });
+        totalTolls += 6.00;
+      }
+    } else if (startPoint !== 'Skoplje') {
       let srbToll = 0;
       let label = '';
       switch (startPoint) {
@@ -238,9 +295,11 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
     const dist = activeRouteInfo.dist;
     
     // Average fuel price per km based on country splits:
-    // Serbia: 35%, Macedonia/Bulgaria: 40%, Greece: 25% of the trip distance
+    // Romania/Serbia: 35%, Macedonia/Bulgaria: 40%, Greece: 25% of the trip distance
     let avgFuelPrice = 0;
-    if (routeType === 'MKD') {
+    if (isRomanianStart) {
+      avgFuelPrice = (fuelPrices.ROU * 0.35) + (fuelPrices.BGR * 0.40) + (fuelPrices.GRC * 0.25);
+    } else if (routeType === 'MKD') {
       avgFuelPrice = (fuelPrices.SRB * 0.35) + (fuelPrices.MKD * 0.40) + (fuelPrices.GRC * 0.25);
     } else {
       avgFuelPrice = (fuelPrices.SRB * 0.35) + (fuelPrices.BGR * 0.40) + (fuelPrices.GRC * 0.25);
@@ -257,10 +316,22 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
       totalTripCost: Number((totalTolls + totalFuelCost).toFixed(2)),
       averageFuelPrice: Number(avgFuelPrice.toFixed(2)),
     };
-  }, [startPoint, destination, routeType, activeRouteInfo, consumption, fuelPrices]);
+  }, [startPoint, destination, routeType, activeRouteInfo, consumption, fuelPrices, isRomanianStart]);
 
   // Fuel advice based on prices
   const fuelAdvice = useMemo(() => {
+    if (isRomanianStart) {
+      const savingsPerLitre = Math.max(0, fuelPrices.GRC - fuelPrices.BGR);
+      if (savingsPerLitre > 0.2) {
+        const potentialSavings = Number((savingsPerLitre * 45).toFixed(2));
+        return {
+          title: '💡 Savet za kupovinu goriva',
+          text: `Gorivo u Bugarskoj je znatno jeftinije nego u Grčkoj. Savetujemo da napunite rezervoar pre ulaska u Grčku na poslednjim pumpama u Bugarskoj (npr. Kulata/Sandanski). Uštedećete oko ${potentialSavings} € po rezervoaru!`,
+          type: 'success'
+        };
+      }
+      return null;
+    }
     if (routeType === 'MKD') {
       const savingsPerLitre = Math.max(0, fuelPrices.SRB - fuelPrices.MKD);
       const savingsGr = Math.max(0, fuelPrices.GRC - fuelPrices.MKD);
@@ -285,7 +356,7 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
       }
     }
     return null;
-  }, [routeType, fuelPrices]);
+  }, [routeType, fuelPrices, isRomanianStart, startPoint]);
 
   return (
     <div className="planner-container animate-fade">
@@ -407,21 +478,39 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
           {/* Local Fuel Prices adjustments */}
           <h4 className="sub-section-title">⛽ Cene goriva po litru (Podesivo)</h4>
           <div className="fuel-sliders-grid">
-            <div className="form-group slider-group mini">
-              <div className="slider-header">
-                <span>🇷🇸 Srbija</span>
-                <span className="slider-value">{fuelPrices.SRB.toFixed(2)} €</span>
+            {isRomanianStart ? (
+              <div className="form-group slider-group mini">
+                <div className="slider-header">
+                  <span>🇷🇴 Rumunija</span>
+                  <span className="slider-value">{fuelPrices.ROU.toFixed(2)} €</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0.50" 
+                  max="2.50" 
+                  step="0.01" 
+                  value={fuelPrices.ROU} 
+                  onChange={(e) => setFuelPrices(prev => ({ ...prev, ROU: parseFloat(e.target.value) }))}
+                  className="planner-slider mini-slider"
+                />
               </div>
-              <input 
-                type="range" 
-                min="0.50" 
-                max="2.50" 
-                step="0.01" 
-                value={fuelPrices.SRB} 
-                onChange={(e) => setFuelPrices(prev => ({ ...prev, SRB: parseFloat(e.target.value) }))}
-                className="planner-slider mini-slider"
-              />
-            </div>
+            ) : (
+              <div className="form-group slider-group mini">
+                <div className="slider-header">
+                  <span>🇷🇸 Srbija</span>
+                  <span className="slider-value">{fuelPrices.SRB.toFixed(2)} €</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0.50" 
+                  max="2.50" 
+                  step="0.01" 
+                  value={fuelPrices.SRB} 
+                  onChange={(e) => setFuelPrices(prev => ({ ...prev, SRB: parseFloat(e.target.value) }))}
+                  className="planner-slider mini-slider"
+                />
+              </div>
+            )}
 
             {routeType === 'MKD' ? (
               <div className="form-group slider-group mini">
@@ -546,6 +635,18 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
             <h3 className="section-title">📋 Obavezna dokumentacija i pravila</h3>
             <div className="rules-grid">
               
+              {isRomanianStart && (
+                <div className="country-rule-box">
+                  <h4>🇷🇴 Rumunija</h4>
+                  <ul>
+                    <li><strong>Rovinieta:</strong> Obavezna elektronska vinjeta za puteve u Rumuniji.</li>
+                    <li><strong>Vatrogasni aparat:</strong> Obavezan u vozilu.</li>
+                    <li><strong>Reflektujući prsluk:</strong> Obavezan.</li>
+                    <li><strong>Brzina:</strong> Auto-put max 130 km/h.</li>
+                  </ul>
+                </div>
+              )}
+
               {routeType === 'MKD' && (
                 <div className="country-rule-box">
                   <h4>🇲🇰 Severna Makedonija</h4>
@@ -575,7 +676,7 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
                 <ul>
                   <li><strong>Vatrogasni aparat:</strong> Obavezan.</li>
                   <li><strong>Reflektujući prsluk:</strong> Obavezan u kabini vozila.</li>
-                  <li><strong>Međunarodna vozačka:</strong> Nije obavezna za državljane Srbije sa novim dozvolama.</li>
+                  <li><strong>Međunarodna vozačka:</strong> Nije obavezna za državljane Srbije/Rumunije sa novim dozvolama.</li>
                   <li><strong>Brzina:</strong> Auto-put max 130 km/h.</li>
                 </ul>
               </div>
