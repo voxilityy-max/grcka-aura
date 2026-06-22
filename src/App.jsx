@@ -283,6 +283,7 @@ export default function App() {
   const [guideSubTab, setGuideSubTab] = useState('calculator');
 
   const handleTabChange = (tabName) => {
+    scrollPositionRef.current = 0;
     setSelectedProperty(null);
     setActiveTab(tabName);
     if (tabName === 'listings') {
@@ -434,6 +435,18 @@ export default function App() {
     return DEFAULT_USERS;
   });
 
+  // Action Requests (for admin approvals)
+  const [actionRequests, setActionRequests] = useState(() => {
+    const saved = localStorage.getItem('aura_action_requests');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    if (!backendActive) {
+      localStorage.setItem('aura_action_requests', JSON.stringify(actionRequests));
+    }
+  }, [actionRequests, backendActive]);
+
   // Current Logged-in User State
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('currentUser');
@@ -548,6 +561,25 @@ export default function App() {
   const [chatWidgetOptionSelected, setChatWidgetOptionSelected] = useState(null);
   const [showChatWidgetSuccess, setShowChatWidgetSuccess] = useState(false);
   const chatWidgetRef = useRef(null);
+  const scrollPositionRef = useRef(0);
+
+  // Reset scroll to top on tab change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
+
+  // Track and restore scroll position when viewing / closing property details
+  useEffect(() => {
+    if (selectedProperty) {
+      scrollPositionRef.current = window.scrollY;
+    } else if (scrollPositionRef.current > 0) {
+      const savedPos = scrollPositionRef.current;
+      setTimeout(() => {
+        window.scrollTo(0, savedPos);
+      }, 50);
+      scrollPositionRef.current = 0;
+    }
+  }, [selectedProperty]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -767,6 +799,20 @@ export default function App() {
           }
         } catch (notifErr) {
           console.warn("Failed to refresh admin notifications:", notifErr);
+        }
+
+        try {
+          const resReqs = await fetch(`${API_URL}/api/admin/action-requests`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          });
+          if (resReqs.ok) {
+            const dataReqs = await resReqs.json();
+            setActionRequests(dataReqs);
+          }
+        } catch (reqErr) {
+          console.warn("Failed to refresh action requests:", reqErr);
         }
       }
       
@@ -1492,6 +1538,152 @@ export default function App() {
     }
   };
 
+  // Handle Update Admin Permissions
+  const handleUpdateAdminPermissions = async (userId, permissions) => {
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/users/${userId}/permissions`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ adminPermissions: permissions })
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Nije uspelo ažuriranje permisija.');
+        }
+        setUsers(prev => prev.map(u => {
+          if (u.id === userId) {
+            const updated = { ...u, adminPermissions: permissions };
+            logActivity(currentUser, `Ažurirane permisije za admina ${u.fullName}: [${permissions.join(', ')}]`, 'update');
+            if (currentUser && currentUser.id === userId) {
+              const updatedMe = { ...currentUser, adminPermissions: permissions };
+              setCurrentUser(updatedMe);
+              localStorage.setItem('currentUser', JSON.stringify(updatedMe));
+            }
+            return updated;
+          }
+          return u;
+        }));
+      } catch (err) {
+        alert(err.message);
+      }
+    } else {
+      setUsers(prev => prev.map(u => {
+        if (u.id === userId) {
+          const updated = { ...u, adminPermissions: permissions };
+          logActivity(currentUser, `Ažurirane permisije za admina ${u.fullName} (lokalno): [${permissions.join(', ')}]`, 'update');
+          if (currentUser && currentUser.id === userId) {
+            const updatedMe = { ...currentUser, adminPermissions: permissions };
+            setCurrentUser(updatedMe);
+            localStorage.setItem('currentUser', JSON.stringify(updatedMe));
+          }
+          return updated;
+        }
+        return u;
+      }));
+    }
+  };
+
+  // Handle Create Action Request
+  const handleCreateActionRequest = async (requestData) => {
+    const { actionType, targetId, targetTitle, proposedContent, reason } = requestData;
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/admin/action-requests`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ actionType, targetId, targetTitle, proposedContent, reason })
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Nije uspelo slanje zahteva.');
+        }
+        
+        // Refresh requests
+        const resReqs = await fetch(`${API_URL}/api/admin/action-requests`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        if (resReqs.ok) {
+          const dataReqs = await resReqs.json();
+          setActionRequests(dataReqs);
+        }
+        alert('Zahtev za odobrenje je uspešno poslat ostalim adminima.');
+      } catch (err) {
+        alert(err.message);
+      }
+    } else {
+      const newReq = {
+        id: `req-${Date.now()}`,
+        requesterId: currentUser?.id || 999,
+        requesterName: currentUser?.username || 'stefan',
+        actionType,
+        targetId,
+        targetTitle,
+        proposedContent,
+        status: 'pending',
+        reason,
+        timestamp: new Date().toLocaleString('sr-RS')
+      };
+      setActionRequests(prev => [newReq, ...prev]);
+      alert('Zahtev za odobrenje je uspešno poslat ostalim adminima (lokalno).');
+    }
+  };
+
+  // Handle Process Action Request
+  const handleProcessActionRequest = async (requestId, status) => {
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/admin/action-requests/${requestId}/handle`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ status })
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Nije uspela obrada zahteva.');
+        }
+        
+        await handleRefreshDatabase();
+        const resReqs = await fetch(`${API_URL}/api/admin/action-requests`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        if (resReqs.ok) {
+          const dataReqs = await resReqs.json();
+          setActionRequests(dataReqs);
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    } else {
+      const req = actionRequests.find(r => r.id === requestId);
+      if (!req) return;
+      
+      if (status === 'approved') {
+        if (req.actionType === 'forum_delete') {
+          setForumPosts(prev => prev.filter(p => p.id !== req.targetId));
+        } else if (req.actionType === 'forum_edit') {
+          setForumPosts(prev => prev.map(p => p.id === req.targetId ? { ...p, title: req.proposedContent.title, content: req.proposedContent.content } : p));
+        }
+      }
+      
+      setActionRequests(prev => prev.map(r => r.id === requestId ? { ...r, status } : r));
+      logActivity(currentUser, `${status === 'approved' ? 'Odobren' : 'Odbijen'} zahtev za ${req.actionType === 'forum_delete' ? 'brisanje' : 'izmenu'} objave '${req.targetTitle}' od admina ${req.requesterName} (lokalno).`, 'update');
+    }
+  };
+
   // Handle Update Inquiry Status (Approve/Reject)
   const handleUpdateInquiryStatus = async (inquiryId, status) => {
     if (backendActive) {
@@ -2003,6 +2195,8 @@ export default function App() {
               onAddForumPost={handleAddForumPost} 
               currentUser={currentUser}
               onDeleteForumPost={handleDeleteForumPost}
+              onSendActionRequest={handleCreateActionRequest}
+              actionRequests={actionRequests}
             />
           </div>
         );
@@ -2026,6 +2220,9 @@ export default function App() {
               onDeleteProperty={handleDeleteProperty}
               users={users}
               onToggleAdminStatus={handleToggleAdminStatus}
+              actionRequests={actionRequests}
+              onUpdateAdminPermissions={handleUpdateAdminPermissions}
+              onProcessActionRequest={handleProcessActionRequest}
               onUpdateInquiryStatus={handleUpdateInquiryStatus}
               onSendChatMessage={handleSendChatMessage}
               onRefreshDatabase={handleRefreshDatabase}

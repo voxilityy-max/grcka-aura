@@ -179,6 +179,11 @@ export default function HostPanel({
   const [isImportingBooking, setIsImportingBooking] = useState(false);
   const [importMessage, setImportMessage] = useState(null);
 
+  // Scroll to top of window when changing dashboard sub-tabs
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [panelTab]);
+
   const handleImportBooking = async () => {
     if (!bookingUrl) return;
     setIsImportingBooking(true);

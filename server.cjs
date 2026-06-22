@@ -224,6 +224,11 @@ async function initializeSchema() {
       await dbHelper.run("ALTER TABLE users ADD COLUMN wishlist TEXT");
       console.log("Dodata kolona 'wishlist' u tabelu users.");
     }
+    const hasAdminPermissions = columns.some(c => c.name === 'adminPermissions');
+    if (!hasAdminPermissions) {
+      await dbHelper.run("ALTER TABLE users ADD COLUMN adminPermissions TEXT DEFAULT '[]'");
+      console.log("Dodata kolona 'adminPermissions' u tabelu users.");
+    }
   } catch (err) {
     console.warn("Nije uspelo automatsko dodavanje verifikacionih/wishlist kolona u users:", err.message);
   }
@@ -474,6 +479,20 @@ async function initializeSchema() {
     FOREIGN KEY (propertyId) REFERENCES properties(id) ON DELETE CASCADE
   )`);
 
+  // Create admin_action_requests table
+  await dbHelper.run(`CREATE TABLE IF NOT EXISTS admin_action_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    requesterId INTEGER,
+    requesterName TEXT,
+    actionType TEXT,
+    targetId TEXT,
+    targetTitle TEXT,
+    proposedContent TEXT,
+    status TEXT DEFAULT 'pending',
+    reason TEXT,
+    timestamp TEXT
+  )`);
+
   // Seed database if empty
   await seedDatabase();
 }
@@ -491,13 +510,14 @@ async function seedDatabase() {
       const hashedPassword = bcrypt.hashSync('password', 10);
       const hashedOwnerPassword = bcrypt.hashSync('pakovanje1337', 10);
 
+      const defaultAdminPerms = JSON.stringify(["properties", "inquiries", "users", "logs", "forum_edit", "forum_delete"]);
       const seedUsers = [
-        [999, 'stefan', 'Stefan Petrović', 'stefan@email.com', hashedPassword, '+381 60 123 4567', 'https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff', 1, 0, 1],
-        [1000, 'vlasnik_ellinas', 'Vlasnik Ellinas', 'voxilityy@gmail.com', hashedOwnerPassword, '+381 60 111 2233', 'https://ui-avatars.com/api/?name=Vlasnik+Ellinas&background=00b4d8&color=fff', 1, 1, 1]
+        [999, 'stefan', 'Stefan Petrović', 'stefan@email.com', hashedPassword, '+381 60 123 4567', 'https://ui-avatars.com/api/?name=Stefan+Petrovic&background=0a4f70&color=fff', 1, 0, 1, defaultAdminPerms],
+        [1000, 'vlasnik_ellinas', 'Vlasnik Ellinas', 'voxilityy@gmail.com', hashedOwnerPassword, '+381 60 111 2233', 'https://ui-avatars.com/api/?name=Vlasnik+Ellinas&background=00b4d8&color=fff', 1, 1, 1, defaultAdminPerms]
       ];
 
       for (const u of seedUsers) {
-        await dbHelper.run('INSERT OR REPLACE INTO users (id, username, fullName, email, password, phone, avatar, isAdmin, isHost, isVerified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', u);
+        await dbHelper.run('INSERT OR REPLACE INTO users (id, username, fullName, email, password, phone, avatar, isAdmin, isHost, isVerified, adminPermissions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', u);
       }
 
       // 2. Seed Properties
@@ -631,6 +651,60 @@ function requireAdmin(req, res, next) {
   });
 }
 
+function isOwnerUser(user) {
+  return user && user.email && user.email.toLowerCase().trim() === 'voxilityy@gmail.com';
+}
+
+function requireOwner(req, res, next) {
+  authenticateToken(req, res, () => {
+    if (!req.user || !isOwnerUser(req.user)) {
+      return res.status(403).json({ error: 'Pristup odbijen. Potrebna su vlasnička prava.' });
+    }
+    next();
+  });
+}
+
+function requirePermission(permission) {
+  return async (req, res, next) => {
+    authenticateToken(req, res, async () => {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Pristup odbijen. Token nedostaje.' });
+      }
+
+      // Vlasnik automatski ima sve dozvole
+      if (isOwnerUser(req.user)) {
+        return next();
+      }
+
+      if (!req.user.isAdmin) {
+        return res.status(403).json({ error: 'Pristup odbijen. Potrebna su administratorska prava.' });
+      }
+
+      try {
+        const dbUser = await dbHelper.get('SELECT adminPermissions, isAdmin FROM users WHERE id = ?', [req.user.id]);
+        if (!dbUser || !dbUser.isAdmin) {
+          return res.status(403).json({ error: 'Pristup odbijen. Korisnik nije administrator.' });
+        }
+
+        let perms = [];
+        try {
+          perms = JSON.parse(dbUser.adminPermissions || '[]');
+        } catch (e) {
+          perms = [];
+        }
+
+        if (perms.includes(permission)) {
+          return next();
+        } else {
+          return res.status(403).json({ error: `Pristup odbijen. Nemate administratorsko pravo: ${permission}` });
+        }
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    });
+  };
+}
+
 async function requireHostOrAdmin(req, res, next) {
   authenticateToken(req, res, async () => {
     if (!req.user) {
@@ -639,10 +713,24 @@ async function requireHostOrAdmin(req, res, next) {
     
     // Proveri u bazi da li je korisnik verifikovan domaćin ili admin
     try {
-      const dbUser = await dbHelper.get('SELECT isHost, isAdmin, isVerified FROM users WHERE id = ?', [req.user.id]);
+      const dbUser = await dbHelper.get('SELECT isHost, isAdmin, isVerified, adminPermissions FROM users WHERE id = ?', [req.user.id]);
       if (dbUser) {
         if (dbUser.isAdmin) {
-          return next();
+          // Ako je admin, proveri da li je vlasnik ili ima 'properties' permisiju
+          if (isOwnerUser(req.user)) {
+            return next();
+          }
+          let perms = [];
+          try {
+            perms = JSON.parse(dbUser.adminPermissions || '[]');
+          } catch (e) {
+            perms = [];
+          }
+          if (perms.includes('properties')) {
+            return next();
+          } else {
+            return res.status(403).json({ error: 'Pristup odbijen. Nemate administratorsko pravo za upravljanje smeštajima.' });
+          }
         }
         if (dbUser.isHost) {
           if (dbUser.isVerified === 1) {
@@ -657,7 +745,9 @@ async function requireHostOrAdmin(req, res, next) {
     }
 
     if (req.user.isAdmin) {
-      return next();
+      // Fallback ako provera u bazi propadne ali je u JWT admin
+      if (isOwnerUser(req.user)) return next();
+      return res.status(403).json({ error: 'Pristup odbijen. Potrebna je dozvola za upravljanje smeštajima.' });
     }
     
     // Proveri da li poseduje bar jedan smeštaj po e-mailu (samo ako je verifikovan u bazi ili ako ima privilegije)
@@ -711,6 +801,11 @@ app.post('/api/auth/login', async (req, res) => {
     
     user.isAdmin = !!user.isAdmin;
     user.isHost = !!user.isHost;
+    try {
+      user.adminPermissions = user.adminPermissions ? JSON.parse(user.adminPermissions) : [];
+    } catch (e) {
+      user.adminPermissions = [];
+    }
     
     // Sign JWT
     const token = jwt.sign(
@@ -746,6 +841,11 @@ app.post('/api/auth/register', async (req, res) => {
     const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [result.lastID]);
     user.isAdmin = !!user.isAdmin;
     user.isHost = !!user.isHost;
+    try {
+      user.adminPermissions = user.adminPermissions ? JSON.parse(user.adminPermissions) : [];
+    } catch (e) {
+      user.adminPermissions = [];
+    }
     
     // Create admin notification
     await createAdminNotification(`Novi korisnik se registrovao: ${fullName} (${email.toLowerCase().trim()})`);
@@ -880,7 +980,7 @@ app.post('/api/properties/:id/reviews', async (req, res) => {
 });
 
 // 7. Delete Review
-app.delete('/api/properties/:propertyId/reviews/:reviewId', requireAdmin, async (req, res) => {
+app.delete('/api/properties/:propertyId/reviews/:reviewId', requirePermission('properties'), async (req, res) => {
   const { propertyId, reviewId } = req.params;
   try {
     await dbHelper.run('DELETE FROM reviews WHERE id = ?', [reviewId]);
@@ -1036,7 +1136,7 @@ app.post('/api/forum-posts', async (req, res) => {
 });
 
 // 17. Delete Forum Post
-app.delete('/api/forum-posts/:id', requireAdmin, async (req, res) => {
+app.delete('/api/forum-posts/:id', requirePermission('forum_delete'), async (req, res) => {
   const { id } = req.params;
   try {
     const result = await dbHelper.run('DELETE FROM forum_posts WHERE id = ?', [id]);
@@ -1046,8 +1146,8 @@ app.delete('/api/forum-posts/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// 18. Toggle User Admin Status
-app.patch('/api/users/:id/role', requireAdmin, async (req, res) => {
+// 18. Toggle User Admin Status (Requires Owner)
+app.patch('/api/users/:id/role', requireOwner, async (req, res) => {
   const { id } = req.params;
   const { isAdmin } = req.body;
   const adminFlag = isAdmin ? 1 : 0;
@@ -1060,8 +1160,27 @@ app.patch('/api/users/:id/role', requireAdmin, async (req, res) => {
   }
 });
 
-// 19. Get Users List
-app.get('/api/users', async (req, res) => {
+// 18b. Update User Admin Permissions (Requires Owner)
+app.patch('/api/users/:id/permissions', requireOwner, async (req, res) => {
+  const { id } = req.params;
+  const { adminPermissions } = req.body;
+  
+  if (!Array.isArray(adminPermissions)) {
+    return res.status(400).json({ error: 'Permisije moraju biti niz.' });
+  }
+  
+  const permsStr = JSON.stringify(adminPermissions);
+  
+  try {
+    const result = await dbHelper.run('UPDATE users SET adminPermissions = ? WHERE id = ?', [permsStr, id]);
+    res.json({ success: true, changes: result.changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 19. Get Users List (Requires users permission)
+app.get('/api/users', requirePermission('users'), async (req, res) => {
   try {
     const users = await dbHelper.all('SELECT * FROM users');
     const mapped = users.map(u => {
@@ -1071,6 +1190,11 @@ app.get('/api/users', async (req, res) => {
         u.wishlist = u.wishlist ? JSON.parse(u.wishlist) : [];
       } catch (e) {
         u.wishlist = [];
+      }
+      try {
+        u.adminPermissions = u.adminPermissions ? JSON.parse(u.adminPermissions) : [];
+      } catch (e) {
+        u.adminPermissions = [];
       }
       // Check online status (online if active in last 90 seconds)
       const lastSeen = activeUsers.get(Number(u.id));
@@ -1082,6 +1206,137 @@ app.get('/api/users', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// 19c. Create Action Request (Requester asks for a delete or edit)
+app.post('/api/admin/action-requests', authenticateToken, async (req, res) => {
+  const { actionType, targetId, targetTitle, proposedContent, reason } = req.body;
+  
+  if (!req.user || !req.user.isAdmin) {
+    return res.status(403).json({ error: 'Samo administratori mogu slati zahteve.' });
+  }
+
+  const requesterId = req.user.id;
+  const requesterName = req.user.username;
+  const timestamp = new Date().toLocaleString('sr-RS');
+  const contentStr = proposedContent ? JSON.stringify(proposedContent) : null;
+
+  try {
+    const result = await dbHelper.run(
+      `INSERT INTO admin_action_requests (requesterId, requesterName, actionType, targetId, targetTitle, proposedContent, status, reason, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
+      [requesterId, requesterName, actionType, targetId, targetTitle, contentStr, reason, timestamp]
+    );
+
+    // Takođe kreiramo obaveštenje za ostale admine
+    await createAdminNotification(`Admin ${requesterName} traži odobrenje za ${actionType === 'forum_delete' ? 'brisanje' : 'izmenu'} objave '${targetTitle}'.`);
+
+    res.json({ success: true, id: result.lastID });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 19d. Get Action Requests
+app.get('/api/admin/action-requests', requireAdmin, async (req, res) => {
+  try {
+    const rows = await dbHelper.all('SELECT * FROM admin_action_requests ORDER BY id DESC');
+    const mapped = rows.map(r => {
+      try {
+        r.proposedContent = r.proposedContent ? JSON.parse(r.proposedContent) : null;
+      } catch (e) {
+        r.proposedContent = null;
+      }
+      return r;
+    });
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 19e. Handle Action Request (Approve/Reject)
+app.post('/api/admin/action-requests/:id/handle', async (req, res) => {
+  const requestId = req.params.id;
+  const { status } = req.body; // 'approved' ili 'rejected'
+  
+  if (status !== 'approved' && status !== 'rejected') {
+    return res.status(400).json({ error: 'Nevažeći status.' });
+  }
+
+  authenticateToken(req, res, async () => {
+    if (!req.user || !req.user.isAdmin) {
+      return res.status(403).json({ error: 'Pristup odbijen. Potrebna su administratorska prava.' });
+    }
+
+    try {
+      const request = await dbHelper.get('SELECT * FROM admin_action_requests WHERE id = ?', [requestId]);
+      if (!request) {
+        return res.status(404).json({ error: 'Zahtev nije pronađen.' });
+      }
+
+      if (request.status !== 'pending') {
+        return res.status(400).json({ error: 'Zahtev je već obrađen.' });
+      }
+
+      const permissionNeeded = request.actionType;
+      
+      let isAuthorized = isOwnerUser(req.user);
+      if (!isAuthorized) {
+        const dbUser = await dbHelper.get('SELECT adminPermissions FROM users WHERE id = ?', [req.user.id]);
+        if (dbUser) {
+          let perms = [];
+          try {
+            perms = JSON.parse(dbUser.adminPermissions || '[]');
+          } catch (e) {
+            perms = [];
+          }
+          if (perms.includes(permissionNeeded)) {
+            isAuthorized = true;
+          }
+        }
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({ error: `Nemate dozvolu '${permissionNeeded}' da biste obradili ovaj zahtev.` });
+      }
+
+      const handlerName = req.user.username;
+      
+      if (status === 'approved') {
+        if (request.actionType === 'forum_delete') {
+          await dbHelper.run('DELETE FROM forum_posts WHERE id = ?', [request.targetId]);
+          console.log(`Zahtev odobren: obrisan forum post sa ID ${request.targetId}`);
+        } else if (request.actionType === 'forum_edit') {
+          const content = JSON.parse(request.proposedContent || '{}');
+          await dbHelper.run(
+            'UPDATE forum_posts SET title = ?, content = ? WHERE id = ?',
+            [content.title, content.content, request.targetId]
+          );
+          console.log(`Zahtev odobren: izmenjen forum post sa ID ${request.targetId}`);
+        }
+      }
+
+      await dbHelper.run(
+        'UPDATE admin_action_requests SET status = ? WHERE id = ?',
+        [status, requestId]
+      );
+
+      await dbHelper.run(
+        'INSERT INTO activity_logs (timestamp, user, action, type) VALUES (?, ?, ?, ?)',
+        [
+          new Date().toLocaleString('sr-RS'),
+          handlerName,
+          `${status === 'approved' ? 'Odobren' : 'Odbijen'} zahtev za ${request.actionType === 'forum_delete' ? 'brisanje' : 'izmenu'} objave '${request.targetTitle}' od admina ${request.requesterName}.`,
+          'update'
+        ]
+      );
+
+      res.json({ success: true, message: `Zahtev je uspešno ${status === 'approved' ? 'odobren i izvršen' : 'odbijen'}.` });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 });
 
 // 19b. Heartbeat route to register user presence
@@ -1144,7 +1399,7 @@ app.post('/api/host/verify-request', authenticateToken, async (req, res) => {
 });
 
 // 19b. Admin approve or reject Host Verification
-app.post('/api/admin/verify-host/:id', requireAdmin, async (req, res) => {
+app.post('/api/admin/verify-host/:id', requirePermission('users'), async (req, res) => {
   const { id } = req.params;
   const { status, reason } = req.body; // status: 1 = odobreno, -1 = odbijeno
   try {
@@ -1366,7 +1621,7 @@ app.post('/api/admin/query', authenticateToken, async (req, res) => {
 });
 
 // 22. Database Reset Endpoint (Repopulates with fresh seeds)
-app.post('/api/admin/reset-db', requireAdmin, async (req, res) => {
+app.post('/api/admin/reset-db', requireOwner, async (req, res) => {
   try {
     await dbHelper.serialize(async () => {
       await dbHelper.run('DROP TABLE IF EXISTS chat_messages');
