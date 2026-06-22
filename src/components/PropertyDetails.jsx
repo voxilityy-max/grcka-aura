@@ -1917,7 +1917,7 @@ export default function PropertyDetails({
 
                     <span className="host-trust-badge-status">
 
-                      {rating >= 4.8 ? '🏆 Top Domaćin' : '⭐ Pouzdan Vlasnik'}
+                      {rating >= 4.8 ? '🏆 Top Domaćin' : '⭐ Pouzdan Domaćin'}
 
                     </span>
 
@@ -1939,7 +1939,7 @@ export default function PropertyDetails({
 
                     <span className="host-metric-icon">🔒</span>
 
-                    <span className="host-metric-text">Direktan dogovor bez provizije</span>
+                    <span className="host-metric-text">Sigurna rezervacija bez provizije</span>
 
                   </div>
 
@@ -1959,7 +1959,7 @@ export default function PropertyDetails({
 
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
 
-                    Da biste poslali direktan upit vlasniku i pratili status svojih rezervacija, molimo Vas da se prijavite na svoj profil.
+                    Da biste poslali upit našem timu i pratili status svojih rezervacija, molimo Vas da se prijavite na svoj profil.
 
                   </p>
 
@@ -1995,7 +1995,7 @@ export default function PropertyDetails({
 
                   <p style={{ fontWeight: 'normal', fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--text-main)' }}>
 
-                    Upit je zabeležen na Vašem profilu. Vlasnik će Vas kontaktirati na email <strong>{inquiryEmail}</strong>.
+                    Upit je zabeležen na Vašem profilu. Naš tim će Vas kontaktirati na email <strong>{inquiryEmail}</strong>.
 
                   </p>
 

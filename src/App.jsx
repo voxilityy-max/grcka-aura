@@ -2338,7 +2338,7 @@ export default function App() {
               <span>Elli</span>nas
             </div>
             <p className="footer-desc">
-              Najlepši smeštaji u Grčkoj na dlanu. Rezervišite bez posrednika, direktno od vlasnika sa najboljim uslovima.
+              Najlepši smeštaji u Grčkoj na dlanu. Rezervišite sigurno uz našu podršku i najbolje uslove.
             </p>
           </div>
           <div className="footer-col">

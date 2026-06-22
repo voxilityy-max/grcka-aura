@@ -1101,7 +1101,7 @@ export default function ProfileTab({ currentUser, inquiries = [], onUpdateUser, 
 
           setTimeout(() => {
 
-            let hostReply = "Hvala na poruci! Pitanje je prosleđeno vlasniku objekta. Javićemo vam se uskoro.";
+            let hostReply = "Hvala na poruci! Vaš upit je prosleđen našem timu podrške. Javićemo vam se sa odgovorom u najkraćem roku.";
 
             if (selectedInqForChat.status === 'Odobreno') {
 
