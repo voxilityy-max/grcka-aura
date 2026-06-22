@@ -14,7 +14,6 @@ import AlertsSection from './components/AlertsSection';
 import AuthModal from './components/AuthModal';
 import ProfileTab from './components/ProfileTab';
 import TravelGuide from './components/TravelGuide';
-import RoadPlanner from './components/RoadPlanner';
 import InteractiveMap from './components/InteractiveMap';
 import './App.css';
 
@@ -280,6 +279,8 @@ export default function App() {
     }
     return 'listings';
   });
+
+  const [guideSubTab, setGuideSubTab] = useState('calculator');
 
   const handleTabChange = (tabName) => {
     setSelectedProperty(null);
@@ -1838,6 +1839,8 @@ export default function App() {
             <TravelGuide 
               currentUser={currentUser}
               onOpenAuth={handleOpenAuthModal}
+              initialSubTab={guideSubTab}
+              onSubTabChange={setGuideSubTab}
             />
           </div>
         );
@@ -1920,15 +1923,7 @@ export default function App() {
             </div>
           </div>
         );
-      case 'planner':
-        return (
-          <div className="main-layout full-width">
-            <RoadPlanner 
-              currentUser={currentUser}
-              onOpenAuth={handleOpenAuthModal}
-            />
-          </div>
-        );
+
       default:
         // Listings / Wishlist tab layouts
         if (activeTab === 'listings' && !isSearchActive) {
@@ -2143,6 +2138,7 @@ export default function App() {
           handleSelectDestination={handleSelectDestination}
           handleSelectCategory={handleSelectCategory}
           setActiveTab={handleTabChange}
+          setGuideSubTab={setGuideSubTab}
           setIsSearchActive={setIsSearchActive}
           onOpenAuth={handleOpenAuthModal}
         />

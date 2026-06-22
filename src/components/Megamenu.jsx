@@ -12,7 +12,8 @@ export default function Megamenu({
   handleSelectCategory,
   setActiveTab,
   setIsSearchActive,
-  onOpenAuth
+  onOpenAuth,
+  setGuideSubTab
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -174,7 +175,7 @@ export default function Megamenu({
               <span className="mega-live-dot" />
               <span className="mega-live-label" style={{ marginLeft: '0.4rem' }}>Stanje na granici</span>
             </button>
-            <button className="mega-link-row" onClick={() => { setActiveTab('planner'); setIsGridMenuOpen(false); }}>
+            <button className="mega-link-row" onClick={() => { setActiveTab('guide'); if (setGuideSubTab) setGuideSubTab('calculator'); setIsGridMenuOpen(false); }}>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
               <span>Planer puta do Grčke</span>
             </button>

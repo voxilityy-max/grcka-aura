@@ -1,59 +1,5 @@
 import { useState } from 'react';
-
-const TRIP_DATA = {
-  distances: {
-    beograd: { mkd: 560, bul: 600 },
-    novisad: { mkd: 640, bul: 680 },
-    nis: { mkd: 320, bul: 360 },
-    subotica: { mkd: 750, bul: 790 }
-  },
-  tollsSerbia: {
-    beograd: { mkd: 1720, bul: 1510 },
-    novisad: { mkd: 2010, bul: 1800 },
-    nis: { mkd: 700, bul: 490 },
-    subotica: { mkd: 2450, bul: 2240 }
-  },
-  greekDistances: {
-    mkd: {
-      kasandra: 110,
-      sitonija: 130,
-      tasos: 250,
-      lefkada: 370,
-      krit: 650,
-      halkidiki: 160
-    },
-    bul: {
-      kasandra: 150,
-      sitonija: 170,
-      tasos: 150,
-      lefkada: 450,
-      krit: 720,
-      halkidiki: 170
-    }
-  },
-  greekTolls: {
-    mkd: {
-      kasandra: 2.40,
-      sitonija: 2.40,
-      tasos: 8.00,
-      lefkada: 12.80,
-      krit: 35.00,
-      halkidiki: 2.40
-    },
-    bul: {
-      kasandra: 3.00,
-      sitonija: 3.00,
-      tasos: 4.40,
-      lefkada: 16.00,
-      krit: 39.00,
-      halkidiki: 3.00
-    }
-  },
-  ferry: {
-    tasos: { car: 25.00, person: 5.00 },
-    krit: { car: 85.00, person: 48.00 }
-  }
-};
+import RoadPlanner from './RoadPlanner';
 
 const GREECE_PRICES = [
   { item: 'Giros pita', price: '4.20€ - 4.80€', category: 'restoran', icon: '🌯', desc: 'Prosečna cena u brzim hranama i tavernama.' },
@@ -84,19 +30,10 @@ const DISCOUNTS_LIST = [
   { shop: 'Restoran "Thalassa" (Heraklion, Krit)', discount: '-10%', category: 'Hrana i piće', desc: 'Važi uz poručena dva ili više glavnih jela od sveže ribe.' }
 ];
 
-export default function TravelGuide({ currentUser, onOpenAuth }) {
-  const [subTab, setSubTab] = useState('calculator'); // 'calculator', 'prices', 'card', 'info'
-  
-  // Calculator States
-  const [calcInputs, setCalcInputs] = useState({
-    startPoint: 'beograd',
-    route: 'mkd',
-    destination: 'kasandra',
-    fuelType: 'petrol',
-    consumption: 7,
-    passengers: 2,
-    roundTrip: true
-  });
+export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, onSubTabChange }) {
+  const [localSubTab, setLocalSubTab] = useState('calculator');
+  const subTab = initialSubTab || localSubTab;
+  const setSubTab = onSubTabChange || setLocalSubTab;
 
   // Search & Filters for Prices
   const [searchPrice, setSearchPrice] = useState('');
@@ -107,70 +44,6 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
 
   // Discount Card Mock claim animation
   const [cardClaimed, setCardClaimed] = useState(false);
-
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setCalcInputs(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? parseFloat(value) : value
-    }));
-  };
-
-  // Perform calculations
-  const calculateResult = () => {
-    const { startPoint, route, destination, fuelType, consumption, passengers, roundTrip } = calcInputs;
-    
-    // Distances
-    const distToBorder = TRIP_DATA.distances[startPoint][route];
-    const distFromBorder = TRIP_DATA.greekDistances[route][destination];
-    const totalDistanceOneWay = distToBorder + distFromBorder;
-    const totalDistance = roundTrip ? totalDistanceOneWay * 2 : totalDistanceOneWay;
-
-    // Fuel prices
-    const fuelPrice = fuelType === 'petrol' ? 1.95 : 1.65;
-    const fuelCostOneWay = (totalDistanceOneWay * (consumption / 100)) * fuelPrice;
-    const fuelCost = roundTrip ? fuelCostOneWay * 2 : fuelCostOneWay;
-
-    // Tolls Serbia (convert RSD to EUR roughly: RSD / 117.5)
-    const tollSrbRsd = TRIP_DATA.tollsSerbia[startPoint][route];
-    const tollSrbOneWay = parseFloat((tollSrbRsd / 117.5).toFixed(2));
-    const tollSrb = roundTrip ? tollSrbOneWay * 2 : tollSrbOneWay;
-
-    // Macedonia Tolls / Bulgaria Vignette
-    const transitionToll = route === 'mkd'
-      ? (roundTrip ? 13.00 : 6.50)
-      : (roundTrip ? 15.00 : 8.00);
-
-    // Greece Tolls
-    const tollGrOneWay = TRIP_DATA.greekTolls[route][destination];
-    const tollGr = roundTrip ? tollGrOneWay * 2 : tollGrOneWay;
-
-    // Ferry (Tasos & Krit only)
-    let ferryCost = 0;
-    if (destination === 'tasos') {
-      const oneWayFerry = TRIP_DATA.ferry.tasos.car + (TRIP_DATA.ferry.tasos.person * passengers);
-      ferryCost = roundTrip ? oneWayFerry * 2 : oneWayFerry;
-    } else if (destination === 'krit') {
-      const oneWayFerry = TRIP_DATA.ferry.krit.car + (TRIP_DATA.ferry.krit.person * passengers);
-      ferryCost = roundTrip ? oneWayFerry * 2 : oneWayFerry;
-    }
-
-    const totalTolls = tollSrb + transitionToll + tollGr + ferryCost;
-    const totalTripCost = fuelCost + totalTolls;
-
-    return {
-      distance: totalDistance,
-      fuelCost: parseFloat(fuelCost.toFixed(2)),
-      tollSrb: parseFloat(tollSrb.toFixed(2)),
-      transitionToll: parseFloat(transitionToll.toFixed(2)),
-      tollGr: parseFloat(tollGr.toFixed(2)),
-      ferryCost: parseFloat(ferryCost.toFixed(2)),
-      totalTolls: parseFloat(totalTolls.toFixed(2)),
-      total: parseFloat(totalTripCost.toFixed(2))
-    };
-  };
-
-  const calcResults = calculateResult();
 
   // Price category filter
   const filteredPrices = GREECE_PRICES.filter(p => {
@@ -188,7 +61,7 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
           className={`btn-filter-item ${subTab === 'calculator' ? 'active' : ''}`}
           onClick={() => setSubTab('calculator')}
         >
-          🚗 Kalkulator Troškova Puta
+          🚗 Pametni Planer Puta
         </button>
         <button 
           className={`btn-filter-item ${subTab === 'prices' ? 'active' : ''}`}
@@ -212,231 +85,7 @@ export default function TravelGuide({ currentUser, onOpenAuth }) {
 
       {/* Content Render based on SubTab */}
       {subTab === 'calculator' && (
-        <div className="calc-layout animate-fade">
-          {/* Inputs Section */}
-          <div className="calc-form-card">
-            <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '1.2rem', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem' }}>
-              Parametri Putovanja
-            </h3>
-            
-            <div className="inquiry-form">
-              <div className="form-field">
-                <label htmlFor="calc-start">Polazište iz Srbije</label>
-                <select id="calc-start" name="startPoint" value={calcInputs.startPoint} onChange={handleInputChange}>
-                  <option value="beograd">Beograd</option>
-                  <option value="novisad">Novi Sad</option>
-                  <option value="nis">Niš</option>
-                  <option value="subotica">Subotica</option>
-                </select>
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="calc-route">Izbor Rute</label>
-                <select id="calc-route" name="route" value={calcInputs.route} onChange={handleInputChange}>
-                  <option value="mkd">Preko Severne Makedonije (Evzoni)</option>
-                  <option value="bul">Preko Bugarske (Promahonas)</option>
-                </select>
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="calc-destination">Destinacija u Grčkoj</label>
-                <select id="calc-destination" name="destination" value={calcInputs.destination} onChange={handleInputChange}>
-                  <option value="kasandra">Kasandra (Pefkohori)</option>
-                  <option value="sitonija">Sitonija (Nikiti)</option>
-                  <option value="halkidiki">Halkidiki (Atos/Uranopolis)</option>
-                  <option value="tasos">Tasos (Limenas)</option>
-                  <option value="lefkada">Lefkada (Nidri)</option>
-                  <option value="krit">Krit (Iraklion)</option>
-                </select>
-              </div>
-
-              <div className="host-form-grid" style={{ marginBottom: '1rem' }}>
-                <div className="form-field">
-                  <label htmlFor="calc-fuel">Tip goriva</label>
-                  <select id="calc-fuel" name="fuelType" value={calcInputs.fuelType} onChange={handleInputChange}>
-                    <option value="petrol">Bezolovni 95 (1.95 €/l)</option>
-                    <option value="diesel">Eurodizel (1.65 €/l)</option>
-                  </select>
-                </div>
-                
-                <div className="form-field">
-                  <label htmlFor="calc-cons">Potrošnja (L/100km)</label>
-                  <input 
-                    type="number" 
-                    id="calc-cons" 
-                    name="consumption" 
-                    min="3" 
-                    max="20" 
-                    step="0.5" 
-                    value={calcInputs.consumption} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-              </div>
-
-              <div className="host-form-grid" style={{ marginBottom: '1rem' }}>
-                <div className="form-field">
-                  <label htmlFor="calc-pass">Broj putnika (za trajekt)</label>
-                  <input 
-                    type="number" 
-                    id="calc-pass" 
-                    name="passengers" 
-                    min="1" 
-                    max="9" 
-                    value={calcInputs.passengers} 
-                    onChange={handleInputChange} 
-                    required 
-                  />
-                </div>
-                
-                <div className="form-field" style={{ display: 'flex', alignItems: 'center', marginTop: '1.8rem', gap: '0.5rem' }}>
-                  <input 
-                    type="checkbox" 
-                    id="calc-round" 
-                    name="roundTrip" 
-                    checked={calcInputs.roundTrip} 
-                    onChange={handleInputChange} 
-                    style={{ width: 'auto', transform: 'scale(1.2)', cursor: 'pointer' }}
-                  />
-                  <label htmlFor="calc-round" style={{ cursor: 'pointer', margin: 0, fontWeight: '600' }}>Povratno putovanje</label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Results Summary Section */}
-          <div className="calc-result-card">
-            <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '1.2rem', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem' }}>
-              Obračun Troškova {calcInputs.roundTrip ? '(Povratni Put)' : '(Jedan Pravac)'}
-            </h3>
-
-            <div className="calc-summary-grid">
-              <div className="calc-sum-box">
-                <span className="calc-sum-label">Ukupna Kilometraža</span>
-                <span className="calc-sum-val">{calcResults.distance} km</span>
-              </div>
-              <div className="calc-sum-box highlight">
-                <span className="calc-sum-label">Ukupno za Put</span>
-                <span className="calc-sum-val">{calcResults.total} €</span>
-              </div>
-            </div>
-
-            {/* Visual Progress Breakdown */}
-            <div className="calc-breakdown-details" style={{ marginTop: '1.5rem' }}>
-              <h4 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-main)' }}>Struktura troškova:</h4>
-              
-              <div className="calc-breakdown-item">
-                <div className="calc-item-header">
-                  <span>⛽ Gorivo ({calcInputs.fuelType === 'petrol' ? 'Bezolovni 95' : 'Dizel'})</span>
-                  <strong>{calcResults.fuelCost} €</strong>
-                </div>
-                <div className="calc-progress-bg">
-                  <div className="calc-progress-fill fuel" style={{ width: `${Math.min(100, (calcResults.fuelCost / calcResults.total) * 100)}%` }}></div>
-                </div>
-              </div>
-
-              <div className="calc-breakdown-item">
-                <div className="calc-item-header">
-                  <span>🇷🇸 Putarina Srbija</span>
-                  <strong>{calcResults.tollSrb} €</strong>
-                </div>
-                <div className="calc-progress-bg">
-                  <div className="calc-progress-fill srb" style={{ width: `${Math.min(100, (calcResults.tollSrb / calcResults.total) * 100)}%` }}></div>
-                </div>
-              </div>
-
-              <div className="calc-breakdown-item">
-                <div className="calc-item-header">
-                  <span>{calcInputs.route === 'mkd' ? '🇲🇰 Putarina Makedonija' : '🇧🇬 Vinjeta Bugarska'}</span>
-                  <strong>{calcResults.transitionToll} €</strong>
-                </div>
-                <div className="calc-progress-bg">
-                  <div className="calc-progress-fill trans" style={{ width: `${Math.min(100, (calcResults.transitionToll / calcResults.total) * 100)}%` }}></div>
-                </div>
-              </div>
-
-              <div className="calc-breakdown-item">
-                <div className="calc-item-header">
-                  <span>🇬🇷 Putarina Grčka</span>
-                  <strong>{calcResults.tollGr} €</strong>
-                </div>
-                <div className="calc-progress-bg">
-                  <div className="calc-progress-fill gr" style={{ width: `${Math.min(100, (calcResults.tollGr / calcResults.total) * 100)}%` }}></div>
-                </div>
-              </div>
-
-              {calcResults.ferryCost > 0 && (
-                <div className="calc-breakdown-item">
-                  <div className="calc-item-header">
-                    <span>🚢 Trajekt (Auto + {calcInputs.passengers} putnika)</span>
-                    <strong>{calcResults.ferryCost} €</strong>
-                  </div>
-                  <div className="calc-progress-bg">
-                    <div className="calc-progress-fill ferry" style={{ width: `${Math.min(100, (calcResults.ferryCost / calcResults.total) * 100)}%` }}></div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Visual Route Timeline */}
-            <div className="calc-route-timeline" style={{ marginTop: '2rem', padding: '1.2rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: '700', marginBottom: '0.8rem', color: 'var(--text-main)', textAlign: 'center' }}>Šema Trase Putovanja</h4>
-              
-              <div className="route-steps">
-                <div className="route-step">
-                  <div className="route-step-circle">📍</div>
-                  <span className="route-step-text" style={{ textTransform: 'capitalize' }}>{calcInputs.startPoint}</span>
-                </div>
-                
-                <div className="route-line-connector">
-                  <span>{calcResults.tollSrb}€</span>
-                </div>
-
-                <div className="route-step">
-                  <div className="route-step-circle">🚧</div>
-                  <span className="route-step-text">Granica SRB</span>
-                </div>
-
-                <div className="route-line-connector">
-                  <span>{calcResults.transitionToll}€</span>
-                </div>
-
-                <div className="route-step">
-                  <div className="route-step-circle">🚧</div>
-                  <span className="route-step-text">{calcInputs.route === 'mkd' ? 'Evzoni (MKD)' : 'Promahonas (BG)'}</span>
-                </div>
-
-                <div className="route-line-connector">
-                  <span>{calcResults.tollGr}€</span>
-                </div>
-
-                {calcResults.ferryCost > 0 && (
-                  <>
-                    <div className="route-step">
-                      <div className="route-step-circle">🚢</div>
-                      <span className="route-step-text">Luka / Trajekt</span>
-                    </div>
-                    <div className="route-line-connector">
-                      <span>{calcResults.ferryCost}€</span>
-                    </div>
-                  </>
-                )}
-
-                <div className="route-step active">
-                  <div className="route-step-circle">🏝️</div>
-                  <span className="route-step-text" style={{ fontWeight: '700', color: 'var(--accent)' }}>
-                    {calcInputs.destination === 'kasandra' ? 'Kasandra' : 
-                     calcInputs.destination === 'sitonija' ? 'Sitonija' : 
-                     calcInputs.destination === 'tasos' ? 'Tasos' : 
-                     calcInputs.destination === 'lefkada' ? 'Lefkada' : 
-                     calcInputs.destination === 'krit' ? 'Krit' : 'Halkidiki'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <RoadPlanner currentUser={currentUser} onOpenAuth={onOpenAuth} />
       )}
 
       {/* Prices List Tab */}
