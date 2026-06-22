@@ -14,6 +14,7 @@ import AlertsSection from './components/AlertsSection';
 import AuthModal from './components/AuthModal';
 import ProfileTab from './components/ProfileTab';
 import TravelGuide from './components/TravelGuide';
+import RoadPlanner from './components/RoadPlanner';
 import InteractiveMap from './components/InteractiveMap';
 import './App.css';
 
@@ -1917,6 +1918,15 @@ export default function App() {
                 Prijavi se
               </button>
             </div>
+          </div>
+        );
+      case 'planner':
+        return (
+          <div className="main-layout full-width">
+            <RoadPlanner 
+              currentUser={currentUser}
+              onOpenAuth={handleOpenAuthModal}
+            />
           </div>
         );
       default:

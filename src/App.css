@@ -10535,6 +10535,499 @@ g:hover > .pin-hover-label {
 
 
 
+/* ==========================================================================
 
+   ROAD PLANER (PLANER PUTA DO GRČKE) STYLES
 
+   ========================================================================== */
 
+.planner-container {
+  max-width: 1200px;
+  margin: 1.5rem auto 3rem auto;
+  padding: 0 1.5rem;
+}
+
+.planner-header {
+  margin-bottom: 2.2rem;
+  text-align: center;
+}
+
+.planner-header h1 {
+  font-size: 2.2rem;
+  font-weight: 850;
+  color: var(--primary);
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.5px;
+}
+
+.planner-subtitle {
+  color: var(--text-muted);
+  font-size: 0.98rem;
+  max-width: 650px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.planner-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.planner-card {
+  border-radius: 20px;
+  padding: 1.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+}
+
+.planner-card.glass {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+.section-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.2px;
+}
+
+.sub-section-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 1.5rem 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.form-group-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.planner-select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.planner-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
+}
+
+.route-type-toggle,
+.fuel-type-toggle {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.route-btn,
+.fuel-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.route-btn:hover,
+.fuel-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-main);
+  background: rgba(var(--accent-rgb), 0.04);
+}
+
+.route-btn.active,
+.fuel-btn.active {
+  background: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.25);
+}
+
+.slider-group {
+  margin-top: 1.5rem;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  margin-bottom: 0.6rem;
+}
+
+.slider-value {
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.98rem;
+}
+
+.planner-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 5px;
+  background: var(--border);
+  outline: none;
+  transition: background 0.3s;
+}
+
+.planner-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.planner-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  background: #00b4d8;
+}
+
+.fuel-sliders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.slider-group.mini {
+  margin-top: 0;
+}
+
+.slider-group.mini .slider-header {
+  font-size: 0.76rem;
+  margin-bottom: 0.4rem;
+}
+
+.mini-slider {
+  height: 4px;
+}
+
+.mini-slider::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+}
+
+/* RESULTS PANEL */
+.planner-results-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, rgba(11, 49, 70, 0.08), rgba(0, 132, 255, 0.04));
+  border-color: rgba(var(--accent-rgb), 0.22) !important;
+}
+
+.summary-card-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
+
+.summary-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-box {
+  padding: 1rem 0.6rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.stat-box.highlight {
+  background: rgba(0, 132, 255, 0.08);
+  border-color: rgba(var(--accent-rgb), 0.35);
+  box-shadow: 0 4px 15px rgba(0, 132, 255, 0.06);
+}
+
+.stat-box.highlight .stat-label {
+  color: var(--accent);
+}
+
+.stat-box.highlight .stat-val {
+  color: var(--accent);
+  font-size: 1.35rem;
+  letter-spacing: -0.5px;
+}
+
+.cost-breakdown-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.cost-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.cost-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.cost-bullet.srb {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.cost-bullet.grc {
+  background: var(--secondary);
+  box-shadow: 0 0 6px var(--secondary);
+}
+
+.cost-item .cost-val {
+  margin-left: auto;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.fuel-advice-box {
+  padding: 1.1rem;
+  border-radius: 14px;
+  margin-top: 1.25rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.fuel-advice-box.success {
+  background: rgba(46, 196, 182, 0.08);
+  border: 1px solid rgba(46, 196, 182, 0.25);
+  color: var(--text-main);
+}
+
+.advice-title {
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  color: var(--success);
+  font-size: 0.9rem;
+}
+
+/* TOLLS BOARD */
+.tolls-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Custom Thin Scrollbar for tolls */
+.tolls-list::-webkit-scrollbar {
+  width: 4px;
+}
+.tolls-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tolls-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.toll-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.85rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.toll-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.toll-index {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.7rem;
+  font-weight: 800;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.toll-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toll-price {
+  font-weight: 800;
+  color: var(--text-main);
+  flex-shrink: 0;
+}
+
+.tolls-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.25rem;
+  padding-top: 0.9rem;
+  border-top: 2px solid var(--border);
+  font-weight: 800;
+  font-size: 0.98rem;
+}
+
+.tolls-total-val {
+  color: var(--accent);
+  font-size: 1.05rem;
+}
+
+/* RULES CHECKLIST */
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.country-rule-box h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  color: var(--primary);
+}
+
+.country-rule-box ul {
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.country-rule-box li {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* DARK MODE OVERRIDES */
+[data-theme="dark"] .planner-header h1 {
+  color: var(--accent-light);
+}
+
+[data-theme="dark"] .summary-card-title {
+  color: var(--accent-light);
+}
+
+[data-theme="dark"] .country-rule-box h4 {
+  color: var(--accent-light);
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 900px) {
+  .planner-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .fuel-sliders-grid {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+  
+  .rules-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
+  .summary-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}

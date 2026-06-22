@@ -78,6 +78,14 @@ export default function Navbar({
               Stanje na Granici
             </a>
           </li>
+          <li>
+            <a 
+              className={`nav-link ${activeTab === 'planner' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('planner'); setIsGridMenuOpen(false); }}
+            >
+              Planer Puta
+            </a>
+          </li>
           {currentUser && (currentUser.isAdmin || isHost) && (
             <li>
               <a 
