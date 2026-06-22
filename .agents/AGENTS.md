@@ -17,3 +17,10 @@
 - Agent nikada ne sme da pretpostavlja na koje se komponente, prozore ili delove sistema odnosi korisnički zahtev ako postoji bilo kakva dvosmislenost.
 - Uvek prvo pitati i potvrditi sa korisnikom tačan prozor/komponentu pre nego što se započne izrada plana ili modifikacija koda.
 - Nema mesta greškama u interpretaciji zahteva. Svaka izmena mora biti precizno usmerena i potvrđena od strane korisnika.
+
+
+# Pravilo o očuvanju stila i duha sajta (Style & Spirit Preservation)
+
+- Sve nove funkcionalnosti, moduli i stranice (tabovi) moraju u potpunosti pratiti trenutni stil, dizajn sistem, boje (Aegean Blue), fontove (Outfit/Nunito), CSS varijable i celokupnu atmosferu postojećeg sajta.
+- Nikada ne menjati postojeći dizajn, raspored (layout), niti stil postojećih stranica osim ako korisnik to eksplicitno i direktno ne zatraži. Sve izmene se moraju uvoditi kao neinvazivne nadogradnje.
+
