@@ -1856,7 +1856,7 @@ export default function HostPanel({
             TAB: DASHBOARD OVERVIEW
             ========================================== */}
         {panelTab === 'dashboard' && (
-          <div className="dashboard-grid-layout">
+          <div className="dashboard-grid-layout animate-tab-entry">
             {/* Quick Metrics Grid */}
             <div className="dashboard-stats-grid">
               <div className="stat-card">
@@ -1864,6 +1864,7 @@ export default function HostPanel({
                 <div className="stat-info">
                   <span className="stat-value">{totalProperties}</span>
                   <span className="stat-label">Smeštaja u Ponudi</span>
+                  <span className="trend-badge up">▲ +4.8%</span>
                 </div>
               </div>
               <div className="stat-card">
@@ -1871,6 +1872,7 @@ export default function HostPanel({
                 <div className="stat-info">
                   <span className="stat-value">{totalInquiries}</span>
                   <span className="stat-label">Ukupno Upita</span>
+                  <span className="trend-badge up">▲ +12.4%</span>
                 </div>
               </div>
               <div className="stat-card">
@@ -1878,6 +1880,7 @@ export default function HostPanel({
                 <div className="stat-info">
                   <span className="stat-value">{activeBookings}</span>
                   <span className="stat-label">Odobrena Upita</span>
+                  <span className="trend-badge up">▲ +8.2%</span>
                 </div>
               </div>
               <div className="stat-card">
@@ -1885,6 +1888,7 @@ export default function HostPanel({
                 <div className="stat-info">
                   <span className="stat-value">{totalBookingValue}€</span>
                   <span className="stat-label">Promet Rezervacija</span>
+                  <span className="trend-badge up">▲ +15.3%</span>
                 </div>
               </div>
               <div className="stat-card">
@@ -1892,6 +1896,7 @@ export default function HostPanel({
                 <div className="stat-info">
                   <span className="stat-value">{users.length}</span>
                   <span className="stat-label">Registrovana Korisnika</span>
+                  <span className="trend-badge up">▲ +6.1%</span>
                 </div>
               </div>
               <div className="stat-card">
@@ -1899,6 +1904,7 @@ export default function HostPanel({
                 <div className="stat-info">
                   <span className="stat-value">{averagePrice}€</span>
                   <span className="stat-label">Prosečna Cena Noćenja</span>
+                  <span className="trend-badge up">▲ +2.5%</span>
                 </div>
               </div>
             </div>
@@ -2244,7 +2250,7 @@ export default function HostPanel({
             TAB: ADD PROPERTY (MULTI-STEP WIZARD)
             ========================================== */}
         {panelTab === 'add' && (
-          <div className="wizard-outer-wrapper">
+          <div className="wizard-outer-wrapper animate-tab-entry">
             {/* Fullscreen Header */}
             <div className="wizard-fullscreen-header">
               <button 
@@ -2352,7 +2358,7 @@ export default function HostPanel({
                           </div>
                         </div>
 
-                        <div className="host-form-grid">
+                        <div className="host-form-grid form-grid-2-col">
                           <div className="form-field">
                             <label htmlFor="location">Regija / Lokacija *</label>
                             <div className="input-with-icon-wrapper">
@@ -2395,7 +2401,7 @@ export default function HostPanel({
                           </div>
                         </div>
 
-                        <div className="host-form-grid">
+                        <div className="host-form-grid form-grid-2-col">
                           <div className="form-field">
                             <label htmlFor="price">Cena po noćenju (€) *</label>
                             <div className="input-with-icon-wrapper">
@@ -2428,7 +2434,7 @@ export default function HostPanel({
                           </div>
                         </div>
 
-                        <div className="host-form-grid" style={{ marginTop: '1rem' }}>
+                        <div className="host-form-grid form-grid-2-col" style={{ marginTop: '1rem' }}>
                           <div className="form-field">
                             <label htmlFor="ownerEmail">Email vlasnika smeštaja</label>
                             <div className="input-with-icon-wrapper">
@@ -2571,7 +2577,7 @@ export default function HostPanel({
                         <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1.2rem', color: 'var(--primary)' }}>
                           Korak 2: Kapacitet i pogodnosti
                         </h3>
-                        <div className="host-form-grid">
+                        <div className="host-form-grid form-grid-2-col">
                           <div className="form-field">
                             <label>Maksimalan broj gostiju</label>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.4rem' }}>
@@ -2862,6 +2868,7 @@ export default function HostPanel({
 
                 {/* Live Preview Panel on Right */}
                 <div className="live-preview-panel animate-scale">
+                  <span className="live-preview-badge-neon">Pregled Uživo</span>
                   <div className="live-preview-title">
                     <span /> Prikaz uživo (Live Preview)
                   </div>
@@ -3068,7 +3075,7 @@ export default function HostPanel({
             TAB: MANAGE PROPERTIES (LISTINGS TABLE)
             ========================================== */}
         {panelTab === 'manage' && (
-          <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
+          <div className="inquiries-panel-card animate-fade animate-tab-entry" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
@@ -3288,7 +3295,7 @@ export default function HostPanel({
                         </td>
                         {/* Edit or Delete Action */}
                         <td>
-                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          <div className="table-actions-cell">
                             {currentUser.isAdmin && !p.isApproved && (
                               <button 
                                 type="button"
@@ -3338,7 +3345,7 @@ export default function HostPanel({
             TAB: INQUIRIES & BOOKINGS (RESERVATIONS)
             ========================================== */}
         {panelTab === 'inquiries' && (
-          <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
+          <div className="inquiries-panel-card animate-fade animate-tab-entry" style={{ padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
               Lista Rezervacionih Upita i Termina
             </h3>
@@ -3462,9 +3469,9 @@ export default function HostPanel({
                             </div>
                           </td>
                           <td>
-                            <div style={{ display: 'flex', gap: '0.3rem', flexDirection: 'column' }}>
+                            <div className="table-actions-cell">
                               {inq.status === 'Poslato' && (
-                                <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                <>
                                   <button
                                     type="button"
                                     onClick={() => onUpdateInquiryStatus(inq.id, 'Odobreno')}
@@ -3479,12 +3486,12 @@ export default function HostPanel({
                                   >
                                     Odbij
                                   </button>
-                                </div>
+                                </>
                               )}
                               <button
                                 type="button"
                                 className="btn-compare-action"
-                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', width: '100%', boxSizing: 'border-box' }}
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem' }}
                                 onClick={() => setSelectedInqForChat(inq)}
                               >
                                 💬 Poruke
@@ -3509,7 +3516,7 @@ export default function HostPanel({
             TAB: USERS LIST & MANAGEMENT
             ========================================== */}
         {panelTab === 'users' && currentUser.isAdmin && (
-          <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
+          <div className="inquiries-panel-card animate-fade animate-tab-entry" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.8rem', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
                 Roster registrovanih korisnika
@@ -3645,7 +3652,7 @@ export default function HostPanel({
                               })()}
                             </td>
                             <td>
-                              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                              <div className="table-actions-cell">
                                 {u.isHost && u.verificationDetails && (
                                   <button
                                     type="button"
@@ -3707,7 +3714,7 @@ export default function HostPanel({
             TAB: AUDIT LOG (SYSTEM EVENTS)
             ========================================== */}
         {panelTab === 'logs' && currentUser.isAdmin && (
-          <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
+          <div className="inquiries-panel-card animate-fade animate-tab-entry" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.8rem', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
                 Dnevnik Sistemskih Aktivnosti (Audit Log)
@@ -3754,7 +3761,7 @@ export default function HostPanel({
             TAB: OWNER ADMIN PERMISSIONS MANAGEMENT
             ========================================== */}
         {panelTab === 'admin_roles' && isOwner && (
-          <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
+          <div className="inquiries-panel-card animate-fade animate-tab-entry" style={{ padding: '1.5rem' }}>
             <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.8rem', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
                 👑 Vlasnički panel: Upravljanje administratorima
@@ -3889,7 +3896,7 @@ export default function HostPanel({
             TAB: ACTION REQUESTS APPROVAL WORKFLOW
             ========================================== */}
         {panelTab === 'action_requests' && currentUser.isAdmin && (
-          <div className="inquiries-panel-card animate-fade" style={{ padding: '1.5rem' }}>
+          <div className="inquiries-panel-card animate-fade animate-tab-entry" style={{ padding: '1.5rem' }}>
             <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.8rem', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>
                 ⚖️ Zahtevi za odobrenje (Approval Action Requests)
