@@ -166,10 +166,10 @@ export default function LandingPage({
           <div className="max-width-1200 relative-z10">
             <div className="text-center-mb16">
               <h2 className="destinations-neon-title">
-                Preporučene destinacije
+                Destinacije u našoj ponudi
               </h2>
               <p className="destinations-neon-subtitle">
-                Izaberite destinaciju i pronađite savršen smeštaj
+                Izaberite neku od naših najpopularnijih letnjih regija i započnite pretragu
               </p>
             </div>
             {/* Destinations Grid */}
