@@ -5361,11 +5361,31 @@ g:hover > .pin-hover-label {
   padding: 1.5rem;
   position: sticky;
   top: 100px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   z-index: 10;
+}
+
+/* Subtle scrollbar for admin sidebar */
+.admin-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 .admin-sidebar-branding {
