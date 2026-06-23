@@ -1706,6 +1706,17 @@ app.post('/api/admin/notifications/mark-read', requireAdmin, async (req, res) =>
   }
 });
 
+// 22c. Mark a Single Admin Notification as Read
+app.post('/api/admin/notifications/:id/mark-read', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await dbHelper.run('UPDATE admin_notifications SET isRead = 1 WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 23. File Upload Endpoint with Cloudinary Support
 const storage = process.env.CLOUDINARY_CLOUD_NAME
   ? multer.memoryStorage()

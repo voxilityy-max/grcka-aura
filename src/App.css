@@ -5466,6 +5466,20 @@ g:hover > .pin-hover-label {
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+/* Individual Notification Items */
+.admin-notification-item {
+  transition: all 0.2s ease-in-out;
+}
+
+.admin-notification-item:hover {
+  background-color: rgba(0, 132, 255, 0.08) !important;
+  transform: translateX(4px);
+}
+
+[data-theme="dark"] .admin-notification-item:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
 .admin-avatar-wrapper {
   position: relative;
   display: inline-block;

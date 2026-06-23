@@ -57,6 +57,7 @@ export default function HostPanel({
   backendActive,
   adminNotifications = [],
   onMarkNotificationsRead,
+  onMarkSingleNotificationRead,
   onApproveProperty,
   onUpdateProperty,
   onAddMockNotification,
@@ -112,6 +113,29 @@ export default function HostPanel({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleNotificationClick = (notif) => {
+    if (!notif.isRead && onMarkSingleNotificationRead) {
+      onMarkSingleNotificationRead(notif.id);
+    }
+    
+    const msg = (notif.message || '').toLowerCase();
+    let targetTab = 'dashboard';
+    
+    if (msg.includes('odobrenje') || msg.includes('zahtev') || msg.includes('forum_delete')) {
+      targetTab = 'action_requests';
+    } else if (msg.includes('registrovao') || msg.includes('verifikacij') || msg.includes('dokumentac') || msg.includes('korisnik')) {
+      targetTab = 'users';
+    } else if (msg.includes('smeštaj') || msg.includes('smestaj') || msg.includes('soba') || msg.includes('sobu') || msg.includes('sobe')) {
+      targetTab = 'manage';
+    } else if (msg.includes('upit') || msg.includes('rezervacij') || msg.includes('poruka')) {
+      targetTab = 'inquiries';
+    }
+    
+    setPanelTab(targetTab);
+    setIsNotifOpen(false);
+  };
+
   // Navigation & View States
   const [panelTab, setPanelTab] = useState('dashboard'); // 'dashboard', 'add', 'manage', 'inquiries', 'users', 'logs', 'database'
   const [wizardStep, setWizardStep] = useState(1); // For property adding wizard: 1, 2, 3
@@ -1703,6 +1727,8 @@ export default function HostPanel({
                         adminNotifications.map((notif) => (
                           <div 
                             key={notif.id} 
+                            onClick={() => handleNotificationClick(notif)}
+                            className="admin-notification-item"
                             style={{ 
                               padding: '0.5rem 0.6rem', 
                               borderRadius: '8px', 
@@ -1711,7 +1737,8 @@ export default function HostPanel({
                               fontSize: '0.75rem',
                               color: notif.isRead ? 'var(--text-muted)' : 'var(--text-main)',
                               transition: 'all 0.2s ease',
-                              textAlign: 'left'
+                              textAlign: 'left',
+                              cursor: 'pointer'
                             }}
                           >
                             <div style={{ lineHeight: '1.3' }}>{notif.message}</div>

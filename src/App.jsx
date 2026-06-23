@@ -1161,6 +1161,26 @@ export default function App() {
     }
   };
 
+  const handleMarkSingleNotificationRead = async (id) => {
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/admin/notifications/${id}/mark-read`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        if (res.ok) {
+          fetchAdminNotifications();
+        }
+      } catch (err) {
+        console.error('Greška pri označavanju obaveštenja kao pročitanog:', err);
+      }
+    } else {
+      setAdminNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: 1 } : n));
+    }
+  };
+
   const createMockAdminNotification = useCallback((message) => {
     const newNotif = {
       id: getUniqueId(),
@@ -2333,6 +2353,7 @@ export default function App() {
               backendActive={backendActive}
               adminNotifications={adminNotifications}
               onMarkNotificationsRead={handleMarkNotificationsRead}
+              onMarkSingleNotificationRead={handleMarkSingleNotificationRead}
               onApproveProperty={handleApproveProperty}
               onUpdateProperty={handleUpdateProperty}
               onAddMockNotification={createMockAdminNotification}
