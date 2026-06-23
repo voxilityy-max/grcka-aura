@@ -2281,7 +2281,7 @@ export default function PropertyDetails({
                         onChange={(e) => setBookingGuests(e.target.value)}
                       >
                         {Array.from({ length: activeMaxGuests }, (_, i) => i + 1).map(n => (
-                          <option key={n} value={n}>{n} {n === 1 ? 'odrasla osoba' : n < 5 ? 'odrasle osobe' : 'odraslih'}</option>
+                          <option key={n} value={n}>{n} {n === 1 ? 'odrasla' : n < 5 ? 'odrasle' : 'odraslih'}</option>
                         ))}
                       </select>
                     </div>
@@ -2294,7 +2294,7 @@ export default function PropertyDetails({
                         onChange={(e) => setBookingChildren(parseInt(e.target.value, 10))}
                       >
                         {[0, 1, 2, 3, 4].map(n => (
-                          <option key={n} value={n}>{n} {n === 0 ? 'bez dece' : n === 1 ? 'dete' : n < 5 ? 'deteta' : 'dece'}</option>
+                          <option key={n} value={n}>{n} {n === 0 ? 'dece' : n === 1 ? 'dete' : 'dece'}</option>
                         ))}
                       </select>
                     </div>

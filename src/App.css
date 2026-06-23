@@ -1564,12 +1564,20 @@
 }
 
 .form-field input,
-
-.form-field textarea,
+.form-field textarea {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  transition: var(--transition);
+}
 
 .form-field select {
   width: 100%;
-  padding: 0.7rem 0.9rem;
+  padding: 0.7rem 0.5rem;
+  padding-right: 1.5rem !important;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background-color: var(--bg-input);
