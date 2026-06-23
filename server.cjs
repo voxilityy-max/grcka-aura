@@ -1821,12 +1821,14 @@ Pravila komunikacije (Tvoj Trening):
 {
   "text": "Tekst tvog odgovora...",
   "recommendedPropertyIds": [1, 2] // ID-jevi preporučenih smeštaja sa liste iznad koji odgovaraju tvom odgovoru (ako ih ima)
+
+8. **BEZ LINKOVA (STRIKTNO PRAVILO)**: U svom tekstu (polje "text" u JSON-u) nikada, ni pod kojim uslovima, nemoj ispisivati nikakve URL linkove, veb adrese (npr. www.nesto.com, http://...) niti markdown linkove (npr. [naziv](link)). Zabranjeno je slanje bilo kakvih linkova korisniku! Umesto toga, samo napiši ime smeštaja običnim rečima, a njegove ID-jeve prosledi u nizu "recommendedPropertyIds". Sistem će te ID-jeve automatski pretvoriti u prelepe kartice na klijentu.
 }`
             },
             ...history,
             { 
               role: 'user', 
-              content: `${message}\n\n[UPUTSTVO ZA ODGOVOR: Odgovori na srpskom jeziku, toplo i profesionalno, u najviše 3-4 kratke rečenice. Koristi emojije i novi red za lakše čitanje. Odgovori ISKLJUČIVO u JSON formatu: { "text": "...", "recommendedPropertyIds": [...] }. Ako te gost pita kako da rezerviše ili kako ide proces rezervacije, OBAVEZNO i doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." Nemoj predlagati kontaktiranje tima za podršku, slanje e-maila ili druge načine rezervacije.]`
+              content: `${message}\n\n[UPUTSTVO ZA ODGOVOR: Odgovori na srpskom jeziku, toplo i profesionalno, u najviše 3-4 kratke rečenice. Koristi emojije i novi red za lakše čitanje. Odgovori ISKLJUČIVO u JSON formatu: { "text": "...", "recommendedPropertyIds": [...] }. Ako te gost pita kako da rezerviše ili kako ide proces rezervacije, OBAVEZNO i doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." Nemoj predlagati kontaktiranje tima za podršku. STRIKTNO JE ZABRANJENO slanje bilo kakvih linkova, URL-ova ili markdown linkova (poput [ime](link) ili http://...) u polju "text". Smeštaje preporuči isključivo kroz niz "recommendedPropertyIds", a u tekstu samo navedi njihova imena običnim rečima.]`
             }
           ],
           response_format: { type: 'json_object' }
@@ -1840,6 +1842,15 @@ Pravila komunikacije (Tvoj Trening):
       const data = await response.json();
       try {
         const aiReply = JSON.parse(data.choices[0].message.content.trim());
+        
+        if (aiReply.text) {
+          // Remove markdown links: [Text](URL) -> Text
+          aiReply.text = aiReply.text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+          // Remove raw URLs (http://... or https://...)
+          aiReply.text = aiReply.text.replace(/https?:\/\/[^\s]+/g, '');
+          // Remove domain-like strings just in case
+          aiReply.text = aiReply.text.replace(/\bwww\.[a-z0-9-]+\.[a-z]{2,}\S*/gi, '');
+        }
         
         // Post-processing override to guarantee strict booking instruction rules are met
         const userText = message.toLowerCase();
