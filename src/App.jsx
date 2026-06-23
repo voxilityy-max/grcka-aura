@@ -475,6 +475,10 @@ export default function App() {
 
   // Auth Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [activeLegalTab, setActiveLegalTab] = useState(null);
+  const [showCookieBanner, setShowCookieBanner] = useState(() => {
+    return !localStorage.getItem('ellinas_cookies_accepted');
+  });
   const [authModalOptions, setAuthModalOptions] = useState({ initialIsRegister: false, initialIsHost: false });
 
   const handleOpenAuthModal = (opts = {}) => {
@@ -2794,9 +2798,10 @@ export default function App() {
               <span>Elli</span>nas
             </div>
             <p className="footer-desc">
-              Najlepši smeštaji u Grčkoj na dlanu. Rezervišite sigurno uz našu podršku i najbolje uslove.
+              Najlepši smeštaji u Grčkoj na dlanu. Rezervišite direktno i sigurno uz našu podršku i najbolje uslove za sezonu 2026.
             </p>
           </div>
+          
           <div className="footer-col">
             <h4>Brzi Linkovi</h4>
             <ul className="footer-links">
@@ -2809,17 +2814,31 @@ export default function App() {
               <li><a onClick={() => { handleTabChange('alerts'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Stanje na Granici</a></li>
             </ul>
           </div>
+
           <div className="footer-col">
-            <h4>Kontakt</h4>
+            <h4>Sedište i Kontakt</h4>
+            <ul className="footer-links" style={{ color: 'var(--accent-light)', opacity: 0.85, fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <li>📍 Knez Mihailova 10, 11000 Beograd, Srbija</li>
+              <li>🏢 Ellinas Travel d.o.o. Beograd</li>
+              <li>📞 Telefon: +381 60 123 4567</li>
+              <li>✉️ Email: info@ellinas.com</li>
+              <li>💼 PIB: 112987654 | MB: 21876543</li>
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <h4>Pravne Informacije</h4>
             <ul className="footer-links">
-              <li>E-mail: info@ellinas.com</li>
-              <li>Telefon: +381 60 123 4567</li>
-              <li>Radno vreme: 09:00 - 17:00</li>
+              <li><a onClick={() => { setActiveLegalTab('about'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>O nama & Licenca</a></li>
+              <li><a onClick={() => { setActiveLegalTab('rules'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Pravila korišćenja</a></li>
+              <li><a onClick={() => { setActiveLegalTab('privacy'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Politika privatnosti</a></li>
+              <li><a onClick={() => { setActiveLegalTab('cookies'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{cursor: 'pointer'}}>Politika kolačića</a></li>
             </ul>
           </div>
         </div>
+        
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} Ellinas Portal. Sva prava zadržana. Inspirisano GrčkaInfo turističkim portalom.</p>
+          <p>© {new Date().getFullYear()} Ellinas Travel d.o.o. Beograd. Sva prava zadržana. Licenca OTP br. 85/2026. Inspirisano GrčkaInfo turističkim portalom.</p>
         </div>
       </footer>
 
@@ -2835,6 +2854,114 @@ export default function App() {
           initialIsRegister={authModalOptions.initialIsRegister}
           initialIsHost={authModalOptions.initialIsHost}
         />
+      )}
+
+      {/* Legal Information Modal Overlay */}
+      {activeLegalTab && (
+        <div className="modal-overlay" onClick={() => setActiveLegalTab(null)}>
+          <div className="modal-container" onClick={e => e.stopPropagation()} style={{ maxWidth: '750px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+            <button className="btn-modal-close" onClick={() => setActiveLegalTab(null)}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            
+            <div style={{ padding: '2rem', borderBottom: '1px solid var(--border)' }}>
+              <h2 style={{ fontSize: '1.6rem', color: 'var(--primary)' }}>
+                {activeLegalTab === 'about' && '🏢 O Nama & Turistička Licenca'}
+                {activeLegalTab === 'rules' && '⚖️ Pravila i Uslovi Korišćenja'}
+                {activeLegalTab === 'privacy' && '🛡️ Politika Privatnosti (GDPR)'}
+                {activeLegalTab === 'cookies' && '🍪 Politika Kolačića (Cookie Policy)'}
+              </h2>
+            </div>
+            
+            <div style={{ padding: '2rem', overflowY: 'auto', fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--text-main)' }}>
+              {activeLegalTab === 'about' && (
+                <div>
+                  <p>Dobrodošli na portal <strong>Ellinas</strong> – Vašu premium platformu za pretragu i rezervaciju smeštaja u Grčkoj za sezonu 2026. godinu.</p>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>Ko smo mi?</h3>
+                  <p>Ellinas je brend turističke agencije <strong>Ellinas Travel d.o.o. Beograd</strong>, registrovane u Republici Srbiji sa sledećim identifikacionim podacima:</p>
+                  <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem', marginBottom: '1rem' }}>
+                    <li><strong>Puno poslovno ime:</strong> Društvo sa ograničenom odgovornošću za turizam i usluge Ellinas Travel Beograd</li>
+                    <li><strong>Sedište:</strong> Knez Mihailova 10, 11000 Beograd, Srbija</li>
+                    <li><strong>Matični broj (MB):</strong> 21876543</li>
+                    <li><strong>Poreski identifikacioni broj (PIB):</strong> 112987654</li>
+                    <li><strong>Broj turističke licence:</strong> OTP br. 85/2026 (Kategorija A)</li>
+                  </ul>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>Naša misija</h3>
+                  <p>Naš portal omogućava turistima direktan kontakt sa domaćinima u Grčkoj, bez skrivenih provizija i posrednika, uz podršku našeg naprednog AI asistenta i lokalnih agenata na terenu u Grčkoj. Garantujemo najpovoljnije cene direktnim dogovorom.</p>
+                </div>
+              )}
+              
+              {activeLegalTab === 'rules' && (
+                <div>
+                  <p>Ova Pravila korišćenja regulišu pristup i upotrebu veb-sajta Ellinas. Korišćenjem portala potvrđujete da ste saglasni sa ovim uslovima.</p>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>1. Platforma za pretragu i rezervacije</h3>
+                  <p>Ellinas deluje kao posrednik i informativni sistem koji spaja goste sa vlasnicima smeštaja u Grčkoj. Sve rezervacije i upiti poslati preko forme ili AI Asistenta se šalju direktno vlasnicima objekata. Ellinas ne snosi odgovornost za eventualne sporove između gosta i domaćina nastale tokom boravka.</p>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>2. Tačnost informacija</h3>
+                  <p>Trudimo se da sve informacije o cenama, opremljenosti i lokacijama budu tačne. Ipak, sve cene i uslovi boravka podležu finalnoj potvrdi domaćina prilikom slanja zvaničnog upita za rezervaciju.</p>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>3. Odgovornost korisnika</h3>
+                  <p>Korisnik je dužan da unosi tačne i validne podatke (ime, email, broj telefona) prilikom registracije i slanja upita. Zabranjena je zloupotreba AI asistenta i slanje spam upita.</p>
+                </div>
+              )}
+              
+              {activeLegalTab === 'privacy' && (
+                <div>
+                  <p>Ellinas Travel d.o.o. se obavezuje na zaštitu Vaših ličnih podataka u skladu sa Zakonom o zaštiti podataka o ličnosti Republike Srbije i evropskom GDPR uredbom.</p>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>Koje podatke prikupljamo?</h3>
+                  <p>Prilikom korišćenja našeg portala, prikupljamo sledeće lične podatke:</p>
+                  <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem', marginBottom: '1rem' }}>
+                    <li>Ime i prezime</li>
+                    <li>Email adresu (za registraciju i prepisku sa AI asistentom i domaćinima)</li>
+                    <li>Broj telefona (radi koordinacije oko rezervacije)</li>
+                    <li>Istoriju Vaših upita i sačuvanih smeštaja</li>
+                  </ul>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>Kako štitimo Vaše podatke?</h3>
+                  <p>Vaše lozinke se čuvaju kriptovane (korišćenjem bcrypt algoritma). Vaše podatke nikada ne delimo sa trećim licima niti marketinškim agencijama. Podaci se prosleđuju isključivo domaćinu smeštaja za koji ste poslali upit, i to isključivo u svrhu realizacije rezervacije.</p>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>Vaša prava</h3>
+                  <p>U svakom trenutku možete zatražiti brisanje svog profila i svih povezanih podataka slanjem zahteva na info@ellinas.com.</p>
+                </div>
+              )}
+              
+              {activeLegalTab === 'cookies' && (
+                <div>
+                  <p>Portal Ellinas koristi kolačiće (cookies) i lokalno skladište pretraživača (LocalStorage) kako bi Vam omogućio optimalno korisničko iskustvo.</p>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>Koje kolačiće koristimo?</h3>
+                  <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem', marginBottom: '1rem' }}>
+                    <li><strong>Neophodni (funkcionalni) kolačići:</strong> Služe za čuvanje Vaše prijave (auth tokena), izbora teme (svetla/tamna) i spiska sačuvanih smeštaja na klijentu.</li>
+                    <li><strong>Analitički kolačići:</strong> Anonimno beleže posete kako bismo optimizovali rad portala.</li>
+                  </ul>
+                  <h3 style={{ marginTop: '1.2rem', color: 'var(--primary)' }}>Upravljanje kolačićima</h3>
+                  <p>U podešavanjima svog pretraživača možete blokirati ili obrisati kolačiće, ali napominjemo da u tom slučaju pojedine funkcije sajta (poput prijave na profil ili čuvanja smeštaja) neće ispravno raditi.</p>
+                </div>
+              )}
+            </div>
+            
+            <div style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.015)' }}>
+              <button className="btn-search" onClick={() => setActiveLegalTab(null)}>Zatvori</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Cookie Consent Banner */}
+      {showCookieBanner && (
+        <div className="cookie-banner animate-scale">
+          <div className="cookie-banner-title">
+            <span>🍪</span> Kolačići i Privatnost
+          </div>
+          <p className="cookie-banner-desc">
+            Koristimo neophodne kolačiće za rad portala, čuvanje Vaših omiljenih smeštaja i analitiku poseta. Klikom na dugme "Prihvati sve" slažete se sa našom Politikom privatnosti i uslovima korišćenja.
+          </p>
+          <div className="cookie-banner-actions">
+            <button className="btn-cookie-decline" onClick={() => setShowCookieBanner(false)}>Odbij</button>
+            <button className="btn-cookie-accept" onClick={() => {
+              localStorage.setItem('ellinas_cookies_accepted', 'true');
+              setShowCookieBanner(false);
+            }}>Prihvati sve</button>
+          </div>
+        </div>
       )}
 
       {/* Floating Brand Explorer Launcher */}

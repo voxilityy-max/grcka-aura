@@ -409,6 +409,11 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
                   • Telefoniranje u toku vožnje: <strong>100€</strong> (uz mogućnost oduzimanja dozvole)
                 </p>
               </div>
+
+          {/* Legal Disclaimer Box */}
+          <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: 'rgba(230, 57, 70, 0.05)', borderLeft: '4px solid var(--danger)', borderRadius: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <strong>⚠️ Odricanje odgovornosti (Disclaimer):</strong> Brojevi telefona, saobraćajni propisi i zdravstveni kontakti su navedeni u informativne svrhe. Podaci o dežurnim lekarima, uslugama i kaznama nisu zvanični medicinski ili pravni saveti. Ellinas portal ne preuzima odgovornost za tačnost ovih informacija niti za eventualne neprijatnosti na putovanju. Pre polaska na put preporučujemo da obezbedite putno zdravstveno osiguranje i verifikujete brojeve telefona i propise.
+          </div>
             </div>
           </div>
         </div>

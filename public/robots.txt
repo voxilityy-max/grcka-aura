@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ellinas.travel/sitemap.xml

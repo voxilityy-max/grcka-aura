@@ -937,6 +937,11 @@ export default function RoadPlanner({ currentUser, onOpenAuth }) {
               </div>
 
             </div>
+
+            {/* Legal Disclaimer Box */}
+            <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: 'rgba(230, 57, 70, 0.05)', borderLeft: '4px solid var(--danger)', borderRadius: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              <strong>⚠️ Odricanje odgovornosti (Disclaimer):</strong> Proračuni troškova putarina, potrošnje goriva, dužine puta i propisa o dokumentaciji na granicama su isključivo informativnog karaktera. Stanje na putevima, cene goriva i zakonski propisi su promenljivi. Pre polaska na put, uvek zvanične informacije proverite kod zvaničnih tela (AMSS, Granična policija, Ministarstvo spoljnih poslova).
+            </div>
           </div>
 
         </div>

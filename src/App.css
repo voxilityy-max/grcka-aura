@@ -12369,5 +12369,89 @@ select option {
   flex-direction: column;
 }
 
+/* --- Cookie Consent Banner Styles --- */
+.cookie-banner {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  max-width: 400px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
+[data-theme="dark"] .cookie-banner {
+  background: rgba(7, 28, 41, 0.95);
+  box-shadow: 0 10px 45px rgba(0, 0, 0, 0.5);
+}
 
+.cookie-banner-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme="dark"] .cookie-banner-title {
+  color: var(--accent-light);
+}
+
+.cookie-banner-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.cookie-banner-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-cookie-accept {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  transition: var(--transition) !important;
+  cursor: pointer !important;
+}
+
+.btn-cookie-accept:hover {
+  background: var(--primary-light) !important;
+  box-shadow: 0 0 12px rgba(0, 132, 255, 0.35) !important;
+}
+
+.btn-cookie-decline {
+  border: 1px solid var(--border) !important;
+  color: var(--text-muted) !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  transition: var(--transition) !important;
+  cursor: pointer !important;
+  background: transparent !important;
+}
+
+.btn-cookie-decline:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .btn-cookie-decline:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
