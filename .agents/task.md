@@ -1,15 +1,21 @@
-- [x] Implementacija stranice "Svi smeštaji" sa selektivnim poređenjem
-    - [x] Izmena u `src/components/PropertyCard.jsx` za uslovno prikazivanje `card-compare-badge`
-    - [x] Izmena u `src/components/Navbar.jsx` za dodavanje linka "Svi smeštaji" u meni
-    - [x] Izmene u `src/App.jsx`:
-        - [x] Ažuriranje `handleTabChange` za podršku tabu `all-listings` i pretrage sa početne strane
-        - [x] Ažuriranje `renderTabContent` i pratećih delova koda za katalog na tabu `all-listings`
-        - [x] Sakrivanje `compare-drawer` osim na tabu `all-listings`
-        - [x] Prosleđivanje `showCompare` u `PropertyCard`
-    - [x] Verifikacija sa `npm.cmd run build` i testiranjem
-
-- [x] Implementacija taba "Kamere & Stanje na Granicama" u Putnom Vodiču (Opcija 1)
-    - [x] Kreiranje komponente `BorderStatus.jsx` sa CCTV simulatorom i putničkim izveštajima
-    - [x] Integracija i renderovanje u `TravelGuide.jsx`
-    - [x] Dodavanje stilova u `App.css`
-    - [x] Uspešan build projekta (`npm.cmd run build`)
+- `[x]` Modifikacija CSS stilova u `src/App.css`
+    - `[x]` Dodavanje globalnih animacija za tabove (fade-in & slide-up) i Apple-like scrollbarova
+    - `[x]` Poliranje `.admin-sidebar` (glassmorphism, active state neon, glowing shadow)
+    - `[x]` Poliranje stat kartica (KPI trend bedževi, soft-glow ikonice, gradient borderi)
+    - `[x]` Poliranje tabela (`.inquiries-table`, rounded rows, hover lift, prozirni status bedževi)
+    - `[x]` Poliranje formi (input polja, grid rasporedi `.form-grid-3-col`, `.form-grid-2-col`)
+    - `[x]` Poliranje live preview kartice sa neon tagom "PREGLED UŽIVO"
+- `[x]` Modifikacija React komponente `src/components/HostPanel.jsx`
+    - `[x]` Dodavanje trend bedževa na dashboard stat kartice (npr. `▲ +12%`)
+    - `[x]` Dodavanje animacije crtanja na SVG grafik (stroke-dasharray / stroke-dashoffset)
+    - `[x]` Grupisanje srodnih polja u grid rasporede u formama za dodavanje/izmenu smeštaja
+    - `[x]` Podešavanje real-time live preview kartice u formi
+    - `[x]` Grupisanje akcionih dugmića u tabelama u flex redove
+- `[x]` Verifikacija i Build
+    - `[x]` Testiranje builda: `npm run build`
+    - `[x]` Provera online rada i fluidnosti
+- `[x]` Git commit, tag i push
+    - `[x]` Git commit
+    - `[x]` Git tag (npr. `deploy-YYYYMMDD-HHMMSS`)
+    - `[x]` Git push
+    - `[x]` Tabela pre/posle na srpskom
