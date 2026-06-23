@@ -1,4 +1,7 @@
+import { useState } from 'react';
+
 export default function Filters({ filters, setFilters, maxPriceLimit = 250, clearFilters }) {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const activeMaxPrice = filters.maxPrice !== null && filters.maxPrice !== undefined ? filters.maxPrice : maxPriceLimit;
 
   const handleRangeChange = (e) => {
@@ -83,179 +86,187 @@ export default function Filters({ filters, setFilters, maxPriceLimit = 250, clea
   };
 
   return (
-    <aside className="filters-sidebar">
-      <div className="filters-header">
-        <h3>Filteri</h3>
-        <button className="btn-clear-filters" onClick={clearFilters}>
+    <aside className={`filters-sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
+      <div className="filters-header" onClick={() => { if (window.innerWidth <= 992) setIsMobileOpen(!isMobileOpen); }} style={{ cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3>Filteri</h3>
+          <span className={`filters-mobile-chevron ${isMobileOpen ? 'open' : ''}`}></span>
+        </div>
+        <button 
+          className="btn-clear-filters" 
+          onClick={(e) => { e.stopPropagation(); clearFilters(); }}
+        >
           Poništi sve
         </button>
       </div>
       
-      {/* Price Range Filter */}
-      <div className="filter-section">
-        <h4 className="filter-section-title">Maks. cena po noćenju</h4>
-        <div className="range-inputs">
-          <div className="manual-range-row">
-            <div className="manual-range-field">
-              <span>Od:</span>
-              <div className="manual-input-box-wrapper">
-                <input 
-                  type="number" 
-                  className="manual-filter-input"
-                  placeholder="Min"
-                  value={filters.minPrice === null || filters.minPrice === undefined ? '' : filters.minPrice}
-                  onChange={handleMinPriceChange}
-                  min="0"
-                />
-                <span className="manual-input-suffix">€</span>
+      <div className="filters-content-wrapper">
+        {/* Price Range Filter */}
+        <div className="filter-section">
+          <h4 className="filter-section-title">Maks. cena po noćenju</h4>
+          <div className="range-inputs">
+            <div className="manual-range-row">
+              <div className="manual-range-field">
+                <span>Od:</span>
+                <div className="manual-input-box-wrapper">
+                  <input 
+                    type="number" 
+                    className="manual-filter-input"
+                    placeholder="Min"
+                    value={filters.minPrice === null || filters.minPrice === undefined ? '' : filters.minPrice}
+                    onChange={handleMinPriceChange}
+                    min="0"
+                  />
+                  <span className="manual-input-suffix">€</span>
+                </div>
+              </div>
+              <div className="manual-range-field">
+                <span>Do:</span>
+                <div className="manual-input-box-wrapper">
+                  <input 
+                    type="number" 
+                    className="manual-filter-input"
+                    placeholder="Max"
+                    value={filters.maxPrice === null || filters.maxPrice === undefined ? '' : filters.maxPrice}
+                    onChange={handleMaxPriceChange}
+                    min="20"
+                  />
+                  <span className="manual-input-suffix">€</span>
+                </div>
               </div>
             </div>
-            <div className="manual-range-field">
-              <span>Do:</span>
-              <div className="manual-input-box-wrapper">
-                <input 
-                  type="number" 
-                  className="manual-filter-input"
-                  placeholder="Max"
-                  value={filters.maxPrice === null || filters.maxPrice === undefined ? '' : filters.maxPrice}
-                  onChange={handleMaxPriceChange}
-                  min="20"
-                />
-                <span className="manual-input-suffix">€</span>
-              </div>
+            <input 
+              type="range" 
+              name="maxPrice" 
+              min="20" 
+              max={maxPriceLimit} 
+              value={Math.min(activeMaxPrice, maxPriceLimit)} 
+              onChange={handleRangeChange}
+            />
+            <div className="range-values">
+              <span>20€</span>
+              <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
+                {getPriceDisplay()}
+              </span>
+              <span>1000+€</span>
             </div>
-          </div>
-          <input 
-            type="range" 
-            name="maxPrice" 
-            min="20" 
-            max={maxPriceLimit} 
-            value={Math.min(activeMaxPrice, maxPriceLimit)} 
-            onChange={handleRangeChange}
-          />
-          <div className="range-values">
-            <span>20€</span>
-            <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
-              {getPriceDisplay()}
-            </span>
-            <span>1000+€</span>
           </div>
         </div>
-      </div>
-      
-      {/* Distance to Beach Filter */}
-      <div className="filter-section">
-        <h4 className="filter-section-title">Udaljenost od plaže</h4>
-        <div className="range-inputs">
-          <div className="manual-range-row">
-            <div className="manual-range-field">
-              <span>Od:</span>
-              <div className="manual-input-box-wrapper">
-                <input 
-                  type="number" 
-                  className="manual-filter-input"
-                  placeholder="Min"
-                  value={filters.minDistance === null || filters.minDistance === undefined ? '' : filters.minDistance}
-                  onChange={handleMinDistanceChange}
-                  min="0"
-                />
-                <span className="manual-input-suffix">m</span>
+        
+        {/* Distance to Beach Filter */}
+        <div className="filter-section">
+          <h4 className="filter-section-title">Udaljenost od plaže</h4>
+          <div className="range-inputs">
+            <div className="manual-range-row">
+              <div className="manual-range-field">
+                <span>Od:</span>
+                <div className="manual-input-box-wrapper">
+                  <input 
+                    type="number" 
+                    className="manual-filter-input"
+                    placeholder="Min"
+                    value={filters.minDistance === null || filters.minDistance === undefined ? '' : filters.minDistance}
+                    onChange={handleMinDistanceChange}
+                    min="0"
+                  />
+                  <span className="manual-input-suffix">m</span>
+                </div>
+              </div>
+              <div className="manual-range-field">
+                <span>Do:</span>
+                <div className="manual-input-box-wrapper">
+                  <input 
+                    type="number" 
+                    className="manual-filter-input"
+                    placeholder="Max"
+                    value={filters.maxDistance === null || filters.maxDistance === undefined || filters.maxDistance === 1200 ? '' : filters.maxDistance}
+                    onChange={handleMaxDistanceChange}
+                    min="10"
+                  />
+                  <span className="manual-input-suffix">m</span>
+                </div>
               </div>
             </div>
-            <div className="manual-range-field">
-              <span>Do:</span>
-              <div className="manual-input-box-wrapper">
+            <input 
+              type="range" 
+              name="maxDistance" 
+              min="10" 
+              max="1200" 
+              step="10"
+              value={Math.min(filters.maxDistance, 1200)} 
+              onChange={handleRangeChange}
+            />
+            <div className="range-values">
+              <span>10m</span>
+              <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
+                {getDistanceDisplay()}
+              </span>
+              <span>1200m+</span>
+            </div>
+            <div className="beach-checkbox-wrapper">
+              <label className="checkbox-label">
                 <input 
-                  type="number" 
-                  className="manual-filter-input"
-                  placeholder="Max"
-                  value={filters.maxDistance === null || filters.maxDistance === undefined || filters.maxDistance === 1200 ? '' : filters.maxDistance}
-                  onChange={handleMaxDistanceChange}
-                  min="10"
+                  type="checkbox" 
+                  name="beachfront" 
+                  checked={filters.amenities.beachfront} 
+                  onChange={handleCheckboxChange}
                 />
-                <span className="manual-input-suffix">m</span>
-              </div>
+                Na samoj plaži
+              </label>
             </div>
           </div>
-          <input 
-            type="range" 
-            name="maxDistance" 
-            min="10" 
-            max="1200" 
-            step="10"
-            value={Math.min(filters.maxDistance, 1200)} 
-            onChange={handleRangeChange}
-          />
-          <div className="range-values">
-            <span>10m</span>
-            <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>
-              {getDistanceDisplay()}
-            </span>
-            <span>1200m+</span>
-          </div>
-          <div className="beach-checkbox-wrapper">
+        </div>
+        
+        {/* Amenities Filter */}
+        <div className="filter-section">
+          <h4 className="filter-section-title">Sadržaj i pogodnosti</h4>
+          <div className="checkbox-group">
             <label className="checkbox-label">
               <input 
                 type="checkbox" 
-                name="beachfront" 
-                checked={filters.amenities.beachfront} 
+                name="wifi" 
+                checked={filters.amenities.wifi} 
                 onChange={handleCheckboxChange}
               />
-              Na samoj plaži
+              Besplatan Wi-Fi
+            </label>
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                name="pool" 
+                checked={filters.amenities.pool} 
+                onChange={handleCheckboxChange}
+              />
+              Bazen
+            </label>
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                name="parking" 
+                checked={filters.amenities.parking} 
+                onChange={handleCheckboxChange}
+              />
+              Besplatan parking
+            </label>
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                name="airConditioning" 
+                checked={filters.amenities.airConditioning} 
+                onChange={handleCheckboxChange}
+              />
+              Klima uređaj
+            </label>
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                name="pets" 
+                checked={filters.amenities.pets} 
+                onChange={handleCheckboxChange}
+              />
+              Dozvoljeni ljubimci
             </label>
           </div>
-        </div>
-      </div>
-      
-      {/* Amenities Filter */}
-      <div className="filter-section">
-        <h4 className="filter-section-title">Sadržaj i pogodnosti</h4>
-        <div className="checkbox-group">
-          <label className="checkbox-label">
-            <input 
-              type="checkbox" 
-              name="wifi" 
-              checked={filters.amenities.wifi} 
-              onChange={handleCheckboxChange}
-            />
-            Besplatan Wi-Fi
-          </label>
-          <label className="checkbox-label">
-            <input 
-              type="checkbox" 
-              name="pool" 
-              checked={filters.amenities.pool} 
-              onChange={handleCheckboxChange}
-            />
-            Bazen
-          </label>
-          <label className="checkbox-label">
-            <input 
-              type="checkbox" 
-              name="parking" 
-              checked={filters.amenities.parking} 
-              onChange={handleCheckboxChange}
-            />
-            Besplatan parking
-          </label>
-          <label className="checkbox-label">
-            <input 
-              type="checkbox" 
-              name="airConditioning" 
-              checked={filters.amenities.airConditioning} 
-              onChange={handleCheckboxChange}
-            />
-            Klima uređaj
-          </label>
-          <label className="checkbox-label">
-            <input 
-              type="checkbox" 
-              name="pets" 
-              checked={filters.amenities.pets} 
-              onChange={handleCheckboxChange}
-            />
-            Dozvoljeni ljubimci
-          </label>
         </div>
       </div>
     </aside>
