@@ -418,6 +418,7 @@ export default function PropertyDetails({
   
 
   const [bookingGuests, setBookingGuests] = useState('2');
+  const [bookingChildren, setBookingChildren] = useState(0);
 
   const [checkIn, setCheckIn] = useState(initialCheckIn);
 
@@ -967,9 +968,9 @@ export default function PropertyDetails({
 
   const guestCountExceeded = useMemo(() => {
 
-    return parseInt(bookingGuests, 10) > activeMaxGuests;
+    return (parseInt(bookingGuests, 10) + bookingChildren) > activeMaxGuests;
 
-  }, [bookingGuests, activeMaxGuests]);
+  }, [bookingGuests, bookingChildren, activeMaxGuests]);
 
 
 
@@ -1057,13 +1058,20 @@ export default function PropertyDetails({
 
       nights: nights,
 
-      guests: Math.min(parseInt(bookingGuests, 10) || 2, activeMaxGuests),
+      guests: Math.min((parseInt(bookingGuests, 10) || 2) + bookingChildren, activeMaxGuests),
 
       totalPrice: invoice.total,
 
       status: 'Poslato', // Sent status
 
-      message: inquiryMessage,
+      message: (() => {
+        let finalMsg = inquiryMessage;
+        if (bookingChildren > 0) {
+          const suffix = `(Sa nama putuje i ${bookingChildren} dece/dete)`;
+          finalMsg = finalMsg ? `${finalMsg} ${suffix}` : suffix;
+        }
+        return finalMsg;
+      })(),
 
       roomTitle: selectedRoom ? selectedRoom.title : null
 
@@ -2035,48 +2043,21 @@ export default function PropertyDetails({
 
                   <div ref={calendarRef} style={{ position: 'relative' }}>
 
-                    <div className="host-form-grid" style={{ marginBottom: '0.8rem' }}>
-
-                      <div 
-
-                        className="form-field" 
-
-                        onClick={() => setShowCalendar(!showCalendar)} 
-
-                        style={{ cursor: 'pointer' }}
-
-                      >
-
-                        <label style={{ cursor: 'pointer' }}>Dolazak (Check-In)</label>
-
-                        <div className="date-display-box" style={{ cursor: 'pointer' }}>
-
-                          {checkIn ? new Date(checkIn).toLocaleDateString('sr-RS') : "Izaberite datum"}
-
-                        </div>
-
+                    <div 
+                      className="form-field" 
+                      onClick={() => setShowCalendar(!showCalendar)} 
+                      style={{ cursor: 'pointer', marginBottom: '0.8rem' }}
+                    >
+                      <label style={{ cursor: 'pointer' }}>Dolazak / Odlazak</label>
+                      <div className="date-display-box" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>📅</span>
+                        <span>
+                          {checkIn 
+                            ? `${new Date(checkIn).toLocaleDateString('sr-RS')} - ${checkOut ? new Date(checkOut).toLocaleDateString('sr-RS') : 'Izaberite datum odlaska'}` 
+                            : 'Izaberite datume boravka'
+                          }
+                        </span>
                       </div>
-
-                      <div 
-
-                        className="form-field" 
-
-                        onClick={() => setShowCalendar(!showCalendar)} 
-
-                        style={{ cursor: 'pointer' }}
-
-                      >
-
-                        <label style={{ cursor: 'pointer' }}>Odlazak (Check-Out)</label>
-
-                        <div className="date-display-box" style={{ cursor: 'pointer' }}>
-
-                          {checkOut ? new Date(checkOut).toLocaleDateString('sr-RS') : "Izaberite datum"}
-
-                        </div>
-
-                      </div>
-
                     </div>
 
 
@@ -2291,28 +2272,32 @@ export default function PropertyDetails({
 
 
 
-                  <div className="form-field">
+                  <div className="host-form-grid form-grid-2-col" style={{ marginBottom: '1rem' }}>
+                    <div className="form-field">
+                      <label htmlFor="booking-guests">Odrasli</label>
+                      <select 
+                        id="booking-guests" 
+                        value={Math.min(parseInt(bookingGuests, 10) || 2, activeMaxGuests)} 
+                        onChange={(e) => setBookingGuests(e.target.value)}
+                      >
+                        {Array.from({ length: activeMaxGuests }, (_, i) => i + 1).map(n => (
+                          <option key={n} value={n}>{n} {n === 1 ? 'odrasla osoba' : n < 5 ? 'odrasle osobe' : 'odraslih'}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                    <label htmlFor="booking-guests">Broj gostiju</label>
-
-                    <select 
-
-                      id="booking-guests" 
-
-                      value={Math.min(parseInt(bookingGuests, 10) || 2, activeMaxGuests)} 
-
-                      onChange={(e) => setBookingGuests(e.target.value)}
-
-                    >
-
-                      {Array.from({ length: activeMaxGuests }, (_, i) => i + 1).map(n => (
-
-                        <option key={n} value={n}>{n} {n === 1 ? 'gost' : n < 5 ? 'gosta' : 'gostiju'}</option>
-
-                      ))}
-
-                    </select>
-
+                    <div className="form-field">
+                      <label htmlFor="booking-children">Deca</label>
+                      <select 
+                        id="booking-children" 
+                        value={bookingChildren} 
+                        onChange={(e) => setBookingChildren(parseInt(e.target.value, 10))}
+                      >
+                        {[0, 1, 2, 3, 4].map(n => (
+                          <option key={n} value={n}>{n} {n === 0 ? 'bez dece' : n === 1 ? 'dete' : n < 5 ? 'deteta' : 'dece'}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
 
