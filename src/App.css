@@ -5438,6 +5438,34 @@ g:hover > .pin-hover-label {
   position: relative;
 }
 
+/* Notifications Dropdown inside Admin Sidebar */
+.admin-notifications-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  padding: 0.8rem;
+  z-index: 1000;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+[data-theme="dark"] .admin-notifications-dropdown {
+  background-color: #071c29; /* fully opaque theme color matching var(--bg-card) to prevent overlap text showing through */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 .admin-avatar-wrapper {
   position: relative;
   display: inline-block;

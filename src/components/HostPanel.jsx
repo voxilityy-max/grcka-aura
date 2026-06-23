@@ -1625,7 +1625,7 @@ export default function HostPanel({
             </div>
 
             {currentUser.isAdmin && (
-              <div ref={bellContainerRef} className="admin-notifications-bell-container" style={{ position: 'relative' }}>
+              <div ref={bellContainerRef} className="admin-notifications-bell-container">
                 <button 
                   type="button" 
                   className="admin-notifications-bell-btn"
@@ -1672,30 +1672,9 @@ export default function HostPanel({
                 </button>
                 
                 {isNotifOpen && (
-                  <div 
-                    className="admin-notifications-dropdown"
-                    style={{
-                      position: 'absolute',
-                      top: '115%',
-                      right: '-10px',
-                      width: '280px',
-                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      borderRadius: '8px',
-                      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
-                      padding: '0.8rem',
-                      zIndex: 1000,
-                      maxHeight: '320px',
-                      overflowY: 'auto',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.6rem'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.4rem' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#fff' }}>Obaveštenja ({unreadCount})</span>
+                  <div className="admin-notifications-dropdown">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-main)' }}>Obaveštenja ({unreadCount})</span>
                       {unreadCount > 0 && (
                         <button 
                           type="button" 
@@ -1725,13 +1704,13 @@ export default function HostPanel({
                           <div 
                             key={notif.id} 
                             style={{ 
-                              padding: '0.5rem', 
-                              borderRadius: '4px', 
-                              backgroundColor: notif.isRead ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 180, 216, 0.08)',
-                              borderLeft: notif.isRead ? '2px solid transparent' : '2px solid var(--accent)',
+                              padding: '0.5rem 0.6rem', 
+                              borderRadius: '8px', 
+                              backgroundColor: notif.isRead ? 'transparent' : 'rgba(0, 132, 255, 0.06)',
+                              borderLeft: notif.isRead ? '3px solid transparent' : '3px solid var(--accent)',
                               fontSize: '0.75rem',
-                              color: notif.isRead ? '#cbd5e1' : '#fff',
-                              transition: 'background-color 0.2s',
+                              color: notif.isRead ? 'var(--text-muted)' : 'var(--text-main)',
+                              transition: 'all 0.2s ease',
                               textAlign: 'left'
                             }}
                           >
