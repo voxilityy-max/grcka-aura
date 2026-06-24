@@ -14,6 +14,92 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || 'aura_jwt_secret_key_2026';
 
+const nodemailer = require('nodemailer');
+
+// Setup email transporter using environment variables with a safe fallback
+const createMailTransporter = () => {
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (host && user && pass) {
+    return nodemailer.createTransport({
+      host,
+      port: parseInt(port) || 587,
+      secure: parseInt(port) === 465,
+      auth: { user, pass }
+    });
+  }
+  return null;
+};
+
+const mailTransporter = createMailTransporter();
+
+async function sendInquiryEmail(inquiry, propertyName, guestUser) {
+  const emailTo = process.env.EMAIL_TO || 'info@ellinas.com';
+  
+  const guestName = guestUser ? guestUser.fullName : 'Neregistrovani gost';
+  const guestEmail = guestUser ? guestUser.email : 'Nije dostupno';
+  const guestPhone = guestUser && guestUser.phone ? guestUser.phone : 'Nije navedeno';
+  const roomInfo = inquiry.roomTitle ? '<p style="margin: 5px 0;"><strong>Jedinica/Soba:</strong> ' + inquiry.roomTitle + '</p>' : '';
+  const periodInfo = inquiry.dates || (inquiry.checkIn + ' do ' + inquiry.checkOut);
+  const guestMessageHtml = inquiry.message ? `
+        <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #0f172a; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px;">💬 Poruka gosta:</h3>
+          <p style="margin: 5px 0; font-style: italic; color: #475569;">"${inquiry.message}"</p>
+        </div>
+  ` : '';
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || '"Ellinas Agency" <noreply@ellinas.com>',
+    to: emailTo,
+    subject: `🌴 Novi Upit za Smeštaj: ${propertyName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #f8fafc;">
+        <h2 style="color: #0084ff; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">🌴 Novi upit za smeštaj</h2>
+        
+        <p style="font-size: 16px; color: #1e293b;">Primili ste novi upit za proveru kapaciteta preko portala <strong>Ellinas</strong>.</p>
+        
+        <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #0f172a; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px;">📍 Detalji smeštaja:</h3>
+          <p style="margin: 5px 0;"><strong>Smeštaj:</strong> ${propertyName}</p>
+          ${roomInfo}
+          <p style="margin: 5px 0;"><strong>Period:</strong> ${periodInfo}</p>
+          <p style="margin: 5px 0;"><strong>Broj noćenja:</strong> ${inquiry.nights}</p>
+          <p style="margin: 5px 0;"><strong>Gosti:</strong> ${inquiry.guests} osoba</p>
+          <p style="margin: 5px 0;"><strong>Procenjena cena:</strong> €${inquiry.totalPrice}</p>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #0f172a; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px;">👤 Detalji gosta:</h3>
+          <p style="margin: 5px 0;"><strong>Ime i prezime:</strong> ${guestName}</p>
+          <p style="margin: 5px 0;"><strong>Email adresa:</strong> ${guestEmail}</p>
+          <p style="margin: 5px 0;"><strong>Telefon:</strong> ${guestPhone}</p>
+        </div>
+
+        ${guestMessageHtml}
+
+        <p style="font-size: 12px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; margin-bottom: 0;">
+          Ova poruka je automatski generisana od strane Ellinas Travel portala.
+        </p>
+      </div>
+    `
+  };
+
+  if (mailTransporter) {
+    try {
+      await mailTransporter.sendMail(mailOptions);
+      console.log(`[Email] Uspešno poslat email za upit #${inquiry.id} na adresu ${emailTo}`);
+    } catch (error) {
+      console.error(`[Email] Greška pri slanju emaila za upit #${inquiry.id}:`, error);
+    }
+  } else {
+    console.log(`[Email Mock/Log] SMTP nije konfigurisan. Upit bi bio poslat na: ${emailTo}`);
+    console.log(`[Email Mock/Log] Sadržaj: ${mailOptions.subject}`);
+  }
+}
+
 // In-memory active users tracker (userId -> lastSeenTimestamp)
 const activeUsers = new Map();
 
@@ -1033,6 +1119,18 @@ app.post('/api/inquiries', async (req, res) => {
     );
     const inquiryId = result.lastID;
     
+    // Fetch info for email notification
+    const property = await dbHelper.get('SELECT title FROM properties WHERE id = ?', [propertyId]);
+    const propertyName = property ? property.title : `Smeštaj #${propertyId}`;
+    const guestUser = await dbHelper.get('SELECT fullName, email, phone FROM users WHERE id = ?', [userId]);
+
+    // Send email notification in the background
+    sendInquiryEmail(
+      { id: inquiryId, checkIn, checkOut, dates, nights, guests, totalPrice, message, roomTitle },
+      propertyName,
+      guestUser
+    ).catch(err => console.error('[Email Background Error]:', err));
+
     if (message) {
       await dbHelper.run(
         'INSERT INTO chat_messages (inquiryId, sender, text, timestamp) VALUES (?, ?, ?, ?)',
