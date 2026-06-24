@@ -255,11 +255,11 @@
 
 .nav-link {
   font-weight: 600;
-  padding: 0.4rem 0.65rem !important;
+  padding: 0.4rem 0.55rem !important;
   color: rgba(255, 255, 255, 0.8) !important;
   position: relative;
   cursor: pointer;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   transition: all 0.2s ease;
   border-radius: 30px;
   white-space: nowrap;
@@ -283,7 +283,7 @@
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.6rem;
   flex: 0 0 auto;
   justify-content: flex-end;
 }
@@ -2858,7 +2858,7 @@
 
 }
 
-@media (min-width: 1181px) and (max-width: 1320px) {
+@media (min-width: 1181px) and (max-width: 1440px) {
 
   .navbar-wrapper-outer {
     width: 95vw;
