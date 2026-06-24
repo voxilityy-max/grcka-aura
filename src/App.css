@@ -10647,6 +10647,47 @@ select option {
   100% { transform: translate(270px, 210px) scale(0.9); opacity: 0; }
 }
 
+/* Seagull Banner trailing 'Chat support' */
+.seagull-banner {
+  position: absolute;
+  right: 90%;
+  top: 40%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.seagull-banner-thread {
+  width: 18px;
+  height: 1.5px;
+  background: rgba(0, 242, 254, 0.6);
+  box-shadow: 0 0 4px rgba(0, 242, 254, 0.8);
+  transform: rotate(-10deg);
+  transform-origin: right center;
+}
+
+.seagull-banner-text {
+  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+  color: #071c29;
+  font-family: var(--font-heading);
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.8), 0 2px 5px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  animation: bannerWave 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes bannerWave {
+  0% { transform: rotate(-3deg) translateY(0); }
+  100% { transform: rotate(3deg) translateY(-2px); }
+}
+
 .seagull-1 {
   animation: seagullFly1 25s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
   animation-delay: 3s;
