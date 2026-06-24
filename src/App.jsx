@@ -610,24 +610,7 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInputText, setChatInputText] = useState('');
   const [isAiTyping, setIsAiTyping] = useState(false);
-  const [showPromoBalloon, setShowPromoBalloon] = useState(false);
   const [hasUnreadMessage, setHasUnreadMessage] = useState(true);
-
-  useEffect(() => {
-    const isClosed = sessionStorage.getItem('chat_promo_closed') === 'true';
-    if (!isClosed) {
-      const timer = setTimeout(() => {
-        setShowPromoBalloon(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  const handleClosePromoBalloon = (e) => {
-    e.stopPropagation();
-    setShowPromoBalloon(false);
-    sessionStorage.setItem('chat_promo_closed', 'true');
-  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -3023,14 +3006,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Promo Speech Balloon */}
-        {showPromoBalloon && (
-          <div className="chat-promo-balloon">
-            <button className="chat-promo-close" onClick={handleClosePromoBalloon}>✕</button>
-            <p>{currentUser ? "Pitajte našeg AI asistenta za preporuku i pregovore! 🌴" : "Isprobajte našeg AI asistenta za brzu preporuku smeštaja! 🌴"}</p>
-          </div>
-        )}
-
         <button 
           className={`chat-widget-trigger ${isChatWidgetOpen ? 'active' : ''}`}
           onClick={() => {
@@ -3038,7 +3013,6 @@ export default function App() {
             setShowChatWidgetSuccess(false);
             setChatWidgetOptionSelected(null);
             setHasUnreadMessage(false);
-            setShowPromoBalloon(false);
           }}
           aria-label="Podrška i brza rezervacija"
         >
