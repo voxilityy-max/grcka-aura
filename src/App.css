@@ -2858,7 +2858,7 @@
 
 }
 
-@media (min-width: 1081px) and (max-width: 1320px) {
+@media (min-width: 1181px) and (max-width: 1320px) {
 
   .navbar-wrapper-outer {
     width: 95vw;
@@ -2900,7 +2900,7 @@
 
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
 
   .app-header {
     top: 0.5rem;
@@ -12579,7 +12579,7 @@ select option {
   flex: 1;
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .navbar-hamburger-btn {
     display: flex;
   }
