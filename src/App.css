@@ -2858,7 +2858,7 @@
 
 }
 
-@media (min-width: 769px) and (max-width: 1320px) {
+@media (min-width: 1081px) and (max-width: 1320px) {
 
   .navbar-wrapper-outer {
     width: 95vw;
@@ -2900,11 +2900,11 @@
 
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1080px) {
 
   .app-header {
     top: 0.5rem;
-}
+  }
 
   .navbar-wrapper-outer {
     width: 95vw;
@@ -2926,42 +2926,36 @@
     box-sizing: border-box;
   }
 
-  
-
   .nav-menu {
     gap: 0.4rem;
     flex-wrap: wrap;
     justify-content: center !important;
     margin-left: 0 !important;
     flex: 0 0 auto !important;
+  }
+
 }
 
-  
+@media (max-width: 768px) {
 
   .hero-title {
     font-size: 2.2rem;
-}
-
-  
+  }
 
   .hero-subtitle {
     font-size: 1rem;
     margin-bottom: 1.2rem;
-}
-
-  
+  }
 
   .search-form {
     grid-template-columns: 1fr;
     gap: 0.9rem;
-}
-
-  
+  }
 
   .search-bar-container {
     padding: 1.2rem;
     margin: 0 auto;
-}
+  }
 
 }
 
@@ -12585,7 +12579,7 @@ select option {
   flex: 1;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1080px) {
   .navbar-hamburger-btn {
     display: flex;
   }
