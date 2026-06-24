@@ -631,19 +631,16 @@ export default function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (currentUser) {
-        setChatMessages([
-          {
-            id: 1,
-            sender: 'ai',
-            text: `Zdravo, ${currentUser.name || 'goste'}! Ja sam vaš Ellinas AI Asistent. ⛵ Kako vam mogu pomoći danas? Slobodno me pitajte za preporuku smeštaja (npr. "vila na Lefkadi sa bazenom" ili "povoljan apartman na Tasosu").`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            recommendedPropertyIds: []
-          }
-        ]);
-      } else {
-        setChatMessages([]);
-      }
+      const welcomeName = currentUser ? (currentUser.name || 'goste') : 'goste';
+      setChatMessages([
+        {
+          id: 1,
+          sender: 'ai',
+          text: `Zdravo, ${welcomeName}! Ja sam vaš Ellinas AI Asistent. ⛵ Kako vam mogu pomoći danas? Slobodno me pitajte za preporuku smeštaja (npr. "vila na Lefkadi sa bazenom" ili "povoljan apartman na Tasosu").`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          recommendedPropertyIds: []
+        }
+      ]);
     }, 0);
     return () => clearTimeout(timer);
   }, [currentUser]);
@@ -685,7 +682,8 @@ export default function App() {
         },
         body: JSON.stringify({
           message: userMsgText,
-          history: history
+          history: history,
+          isLoggedIn: !!currentUser
         })
       });
 
@@ -3103,6 +3101,27 @@ export default function App() {
                   </span>
                 </div>
               </div>
+              {/* Social shortcuts in header */}
+              <div className="chat-header-socials" style={{ display: 'flex', gap: '8px', marginLeft: 'auto', marginRight: '12px' }}>
+                <a 
+                  href="https://wa.me/381601234567?text=Dobar%20dan%2C%20zanima%20me%20sme%C5%A1taj%20u%20Gr%C4%8Dkoj" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ color: '#25D366', display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }}
+                  title="WhatsApp"
+                >
+                  <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 2C6.49 2 2 6.49 2 12.03c0 1.896.536 3.739 1.547 5.344L2 23l5.759-1.509a9.92 9.92 0 0 0 5.272 1.285c5.54 0 10.03-4.49 10.03-10.03C23.061 6.49 18.572 2 12.031 2zm6.39 13.9c-.268.679-1.312 1.27-1.848 1.338-.477.06-.921.129-2.991-.707-2.653-1.071-4.364-3.806-4.498-3.985-.133-.179-1.067-1.418-1.067-2.708 0-1.29.679-1.929.919-2.194.24-.265.518-.32.689-.32.17 0 .348.005.498.01.164.007.382-.062.583.447.209.522.736 1.79.805 1.929.07.139.115.279.02.458-.09.18-.135.28-.264.428-.13.155-.274.349-.394.453-.13.129-.264.269-.11.528.15.258.672 1.099 1.438 1.785.965.866 1.791 1.125 2.04 1.254.249.129.393.109.542-.06.15-.179.647-.746.816-1.01.17-.264.348-.21.587-.12.24.09 1.498.7 1.756.83.259.129.418.189.488.299.07.11.07.63-.204 1.3z"/></svg>
+                </a>
+                <a 
+                  href="viber://chat?number=%2B381601234567" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ color: '#7360F2', display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }}
+                  title="Viber"
+                >
+                  <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M11.398.002C9.473.028 5.331.344 3.014 2.467 1.294 4.177.693 6.698.623 9.82c-.06 3.11-.13 8.95 5.5 10.541v2.42s-.038.97.602 1.17c.79.25 1.24-.499 1.99-1.299l1.4-1.58c3.85.32 6.8-.419 7.14-.529.78-.25 5.181-.811 5.901-6.652.74-6.031-.36-9.831-2.34-11.551l-.01-.002c-.6-.55-3-2.3-8.37-2.32 0 0-.396-.025-1.038-.016zm.067 1.697c.545-.003.88.02.88.02 4.54.01 6.711 1.38 7.221 1.84 1.67 1.429 2.528 4.856 1.9 9.892-.6 4.88-4.17 5.19-4.83 5.4-.28.09-2.88.73-6.152.52 0 0-2.439 2.941-3.199 3.701-.12.13-.26.17-.35.15-.13-.03-.17-.19-.16-.41l.02-4.019c-4.771-1.32-4.491-6.302-4.441-8.902.06-2.6.55-4.732 2-6.172 1.957-1.77 5.475-2.01 7.11-2.02zm.36 2.6a.299.299 0 0 0-.3.299.3.3 0 0 0 .3.3 5.631 5.631 0 0 1 4.03 1.59c1.09 1.06 1.621 2.48 1.641 4.34a.3.3 0 0 0 .3.3v-.009a.3.3 0 0 0 .3-.3 6.451 6.451 0 0 0-1.81-4.76c-1.19-1.16-2.692-1.76-4.462-1.76zm-3.954.69a.955.955 0 0 0-.615.12h-.012c-.41.24-.788.54-1.148.94-.27.32-.421.639-.461.949a1.24 1.24 0 0 0 .05.541l.02.01a13.722 13.722 0 0 0 1.2 2.6 15.383 15.383 0 0 0 2.32 3.171l.03.04.04.03.03.03.03.03a15.603 15.603 0 0 0 3.18 2.33c1.32.72 2.122 1.06 2.602 1.2v.01c.14.04.268.06.398.06a1.84 1.84 0 0 0 1.102-.472c.39-.35.7-.738.93-1.148v-.01c.23-.43.15-.841-.18-1.121a13.632 13.632 0 0 0-2.15-1.54c-.51-.28-1.03-.11-1.24.17l-.45.569c-.23.28-.65.24-.65.24l-.012.01c-3.12-.8-3.95-3.959-3.95-3.959s-.04-.43.25-.65l.56-.45c.27-.22.46-.74.17-1.25a13.522 13.522 0 0 0-1.54-2.15.843.843 0 0 0-.504-.3zm4.473.89a.3.3 0 0 0 .002.6 3.78 3.78 0 0 1 2.65 1.15 3.5 3.5 0 0 1 .9 2.57.3.3 0 0 0 .3.299l.01.012a.3.3 0 0 0 .3-.301c.03-1.19-.34-2.19-1.07-2.99-.73-.8-1.75-1.25-3.05-1.34a.3.3 0 0 0-.042 0zm.49 1.619a.305.305 0 0 0-.018.611c.99.05 1.47.55 1.53 1.58a.3.3 0 0 0 .3.29h.01a.3.3 0 0 0 .29-.32c-.07-1.34-.8-2.091-2.1-2.161a.305.305 0 0 0-.012 0z"/></svg>
+                </a>
+              </div>
               <button className="chat-widget-close" onClick={() => setIsChatWidgetOpen(false)}>✕</button>
             </div>
 
@@ -3116,8 +3135,8 @@ export default function App() {
                     : "Hvala vam. Vaš zahtev je uspešno zabeležen. Naš tim podrške će vas kontaktirati u najkraćem roku."}
                 </p>
               </div>
-            ) : currentUser ? (
-              /* Active AI Chat Mode for logged-in users */
+            ) : (
+              /* Active AI Chat Mode for guests (uses fallback AI on server) */
               <div className="chat-ai-container">
                 <div className="chat-messages-list" id="chat-messages-scroll">
                   {chatMessages.map(msg => (
@@ -3178,115 +3197,6 @@ export default function App() {
                   </button>
                 </div>
               </div>
-            ) : (
-              /* Standard mode with Lock Panel for Guests */
-              <>
-                <div className="chat-widget-body">
-                  <div className="chat-ai-locked-card">
-                    <h4 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00f2fe" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 3px rgba(0, 242, 254, 0.4))' }}>
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                      </svg>
-                      Ellinas Live Chat
-                    </h4>
-                    <p>Prijavite se da otključate Podršku Inteligencije i četujete uživo sa našim timom!</p>
-                    <button 
-                      className="chat-ai-unlock-btn"
-                      onClick={() => {
-                        setIsChatWidgetOpen(false);
-                        setIsAuthModalOpen(true);
-                      }}
-                    >
-                      Prijavite se i četujte
-                    </button>
-                  </div>
-
-                  <div className="chat-options-grid">
-                    <button 
-                      onClick={() => handleSelectChatWidgetOption(1)} 
-                      className={`chat-option-btn ${chatWidgetOptionSelected === 1 ? 'selected' : ''}`}
-                    >
-                      <span className="chat-option-icon">🏖️</span>
-                      <span className="chat-option-text">Tasos</span>
-                    </button>
-                    <button 
-                      onClick={() => handleSelectChatWidgetOption(2)} 
-                      className={`chat-option-btn ${chatWidgetOptionSelected === 2 ? 'selected' : ''}`}
-                    >
-                      <span className="chat-option-icon">🏨</span>
-                      <span className="chat-option-text">Sitonija</span>
-                    </button>
-                    <button 
-                      onClick={() => handleSelectChatWidgetOption(3)} 
-                      className={`chat-option-btn ${chatWidgetOptionSelected === 3 ? 'selected' : ''}`}
-                    >
-                      <span className="chat-option-icon">📅</span>
-                      <span className="chat-option-text">Jul 2026</span>
-                    </button>
-                    <button 
-                      onClick={() => handleSelectChatWidgetOption(4)} 
-                      className={`chat-option-btn ${chatWidgetOptionSelected === 4 ? 'selected' : ''}`}
-                    >
-                      <span className="chat-option-icon">💰</span>
-                      <span className="chat-option-text">Najbolje cene</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="chat-widget-footer" style={{ flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Nastavi preko:</span>
-                  <div className="chat-social-grid">
-                    <a 
-                      href="https://wa.me/381601234567?text=Dobar%20dan%2C%20zanima%20me%20sme%C5%A1taj%20u%20Gr%C4%8Dkoj"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="chat-social-btn whatsapp"
-                      title="WhatsApp"
-                      onClick={() => setIsChatWidgetOpen(false)}
-                    >
-                      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style={{ display: 'block' }}>
-                        <path d="M12.031 2C6.49 2 2 6.49 2 12.03c0 1.896.536 3.739 1.547 5.344L2 23l5.759-1.509a9.92 9.92 0 0 0 5.272 1.285c5.54 0 10.03-4.49 10.03-10.03C23.061 6.49 18.572 2 12.031 2zm6.39 13.9c-.268.679-1.312 1.27-1.848 1.338-.477.06-.921.129-2.991-.707-2.653-1.071-4.364-3.806-4.498-3.985-.133-.179-1.067-1.418-1.067-2.708 0-1.29.679-1.929.919-2.194.24-.265.518-.32.689-.32.17 0 .348.005.498.01.164.007.382-.062.583.447.209.522.736 1.79.805 1.929.07.139.115.279.02.458-.09.18-.135.28-.264.428-.13.155-.274.349-.394.453-.13.129-.264.269-.11.528.15.258.672 1.099 1.438 1.785.965.866 1.791 1.125 2.04 1.254.249.129.393.109.542-.06.15-.179.647-.746.816-1.01.17-.264.348-.21.587-.12.24.09 1.498.7 1.756.83.259.129.418.189.488.299.07.11.07.63-.204 1.3z"/>
-                      </svg>
-                    </a>
-                    <a 
-                      href="viber://chat?number=%2B381601234567"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="chat-social-btn viber"
-                      title="Viber"
-                      onClick={() => setIsChatWidgetOpen(false)}
-                    >
-                      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style={{ display: 'block' }}>
-                        <path d="M11.398.002C9.473.028 5.331.344 3.014 2.467 1.294 4.177.693 6.698.623 9.82c-.06 3.11-.13 8.95 5.5 10.541v2.42s-.038.97.602 1.17c.79.25 1.24-.499 1.99-1.299l1.4-1.58c3.85.32 6.8-.419 7.14-.529.78-.25 5.181-.811 5.901-6.652.74-6.031-.36-9.831-2.34-11.551l-.01-.002c-.6-.55-3-2.3-8.37-2.32 0 0-.396-.025-1.038-.016zm.067 1.697c.545-.003.88.02.88.02 4.54.01 6.711 1.38 7.221 1.84 1.67 1.429 2.528 4.856 1.9 9.892-.6 4.88-4.17 5.19-4.83 5.4-.28.09-2.88.73-6.152.52 0 0-2.439 2.941-3.199 3.701-.12.13-.26.17-.35.15-.13-.03-.17-.19-.16-.41l.02-4.019c-4.771-1.32-4.491-6.302-4.441-8.902.06-2.6.55-4.732 2-6.172 1.957-1.77 5.475-2.01 7.11-2.02zm.36 2.6a.299.299 0 0 0-.3.299.3.3 0 0 0 .3.3 5.631 5.631 0 0 1 4.03 1.59c1.09 1.06 1.621 2.48 1.641 4.34a.3.3 0 0 0 .3.3v-.009a.3.3 0 0 0 .3-.3 6.451 6.451 0 0 0-1.81-4.76c-1.19-1.16-2.692-1.76-4.462-1.76zm-3.954.69a.955.955 0 0 0-.615.12h-.012c-.41.24-.788.54-1.148.94-.27.32-.421.639-.461.949a1.24 1.24 0 0 0 .05.541l.02.01a13.722 13.722 0 0 0 1.2 2.6 15.383 15.383 0 0 0 2.32 3.171l.03.04.04.03.03.03.03.03a15.603 15.603 0 0 0 3.18 2.33c1.32.72 2.122 1.06 2.602 1.2v.01c.14.04.268.06.398.06a1.84 1.84 0 0 0 1.102-.472c.39-.35.7-.738.93-1.148v-.01c.23-.43.15-.841-.18-1.121a13.632 13.632 0 0 0-2.15-1.54c-.51-.28-1.03-.11-1.24.17l-.45.569c-.23.28-.65.24-.65.24l-.012.01c-3.12-.8-3.95-3.959-3.95-3.959s-.04-.43.25-.65l.56-.45c.27-.22.46-.74.17-1.25a13.522 13.522 0 0 0-1.54-2.15.843.843 0 0 0-.504-.3zm4.473.89a.3.3 0 0 0 .002.6 3.78 3.78 0 0 1 2.65 1.15 3.5 3.5 0 0 1 .9 2.57.3.3 0 0 0 .3.299l.01.012a.3.3 0 0 0 .3-.301c.03-1.19-.34-2.19-1.07-2.99-.73-.8-1.75-1.25-3.05-1.34a.3.3 0 0 0-.042 0zm.49 1.619a.305.305 0 0 0-.018.611c.99.05 1.47.55 1.53 1.58a.3.3 0 0 0 .3.29h.01a.3.3 0 0 0 .29-.32c-.07-1.34-.8-2.091-2.1-2.161a.305.305 0 0 0-.012 0z"/>
-                      </svg>
-                    </a>
-                    <a 
-                      href="https://instagram.com/ellinas.gr"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="chat-social-btn instagram"
-                      title="Instagram"
-                      onClick={() => setIsChatWidgetOpen(false)}
-                    >
-                      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style={{ display: 'block' }}>
-                        <path d="M12 0C8.74 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051C.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 1 0 12.324 6.162 6.162 0 0 1 0-12.324zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm6.406-11.845a1.44 1.44 0 1 1 0 2.881 1.44 1.44 0 0 1 0-2.881z"/>
-                      </svg>
-                    </a>
-                    <a 
-                      href="https://facebook.com/ellinas.gr"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="chat-social-btn facebook"
-                      title="Facebook"
-                      onClick={() => setIsChatWidgetOpen(false)}
-                    >
-                      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style={{ display: 'block' }}>
-                        <path d="M9 8H7v3h2v9h4v-9h3.6l.4-3H13V6c0-.5.5-1 1-1h3V1h-4c-2.8 0-5 2.2-5 5v2z"/>
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-              </>
             )}
           </div>
         )}

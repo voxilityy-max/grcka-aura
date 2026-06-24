@@ -1853,16 +1853,32 @@ function getFallbackResponse(message, properties, history = []) {
     });
   }
 
-  // Match location
+  // Match location (with synonyms/typo-tolerance)
   let matchedLoc = null;
-  if (combinedText.includes("tasos")) matchedLoc = "Tasos";
+  if (combinedText.includes("tasos") || combinedText.includes("thassos")) matchedLoc = "Tasos";
   else if (combinedText.includes("lefkad")) matchedLoc = "Lefkada";
-  else if (combinedText.includes("sitonij")) matchedLoc = "Sitonija";
-  else if (combinedText.includes("krf")) matchedLoc = "Krf";
+  else if (combinedText.includes("sitonij") || combinedText.includes("sithonij")) matchedLoc = "Sitonija";
+  else if (combinedText.includes("krf") || combinedText.includes("corfu")) matchedLoc = "Krf";
 
-  // Extract guest capacity requested (e.g. "za 5 osoba")
-  const guestMatch = combinedText.match(/(\d+)\s*(?:osob|gost|ljud|krevet|odrasl|dec|član|clan)/i) || combinedText.match(/\b([1-9]|1[0-2])\b/);
-  const requestedGuests = guestMatch ? parseInt(guestMatch[1], 10) : 0;
+  // Extract guest capacity requested (e.g. "za 5 osoba" or word-based numbers like "dvoje")
+  let requestedGuests = 0;
+  
+  // Checking Serbian phrase equivalents for guest counts
+  if (combinedText.includes("dvoje") || combinedText.includes("nas dvoje") || combinedText.includes("bracni par") || combinedText.includes("bračni par") || combinedText.includes("mene i suprug") || combinedText.includes("mene i zen") || combinedText.includes("muza i mene")) {
+    requestedGuests = 2;
+  } else if (combinedText.includes("troje") || combinedText.includes("nas troje")) {
+    requestedGuests = 3;
+  } else if (combinedText.includes("cetvoro") || combinedText.includes("četvoro") || combinedText.includes("nas cetvoro") || combinedText.includes("nas četvoro")) {
+    requestedGuests = 4;
+  } else if (combinedText.includes("petoro") || combinedText.includes("nas petoro")) {
+    requestedGuests = 5;
+  } else if (combinedText.includes("sam ") || combinedText.includes(" solo") || combinedText.includes("jedna osoba")) {
+    requestedGuests = 1;
+  } else {
+    const guestMatch = combinedText.match(/(\d+)\s*(?:osob|gost|ljud|krevet|odrasl|dec|član|clan)/i) || combinedText.match(/\b([1-9]|1[0-2])\b/);
+    requestedGuests = guestMatch ? parseInt(guestMatch[1], 10) : 0;
+  }
+  
   const hasGuests = requestedGuests > 0;
 
   // Extract dates / period of stay
@@ -1880,7 +1896,7 @@ function getFallbackResponse(message, properties, history = []) {
 
   // Match amenities
   const wantsPool = combinedText.includes("bazen") || combinedText.includes("pool");
-  const wantsBeach = combinedText.includes("plaž") || combinedText.includes("beach") || combinedText.includes("mor") || combinedText.includes("vode");
+  const wantsBeach = combinedText.includes("plaž") || combinedText.includes("plaz") || combinedText.includes("beach") || combinedText.includes("mor") || combinedText.includes("vode") || combinedText.includes("obali");
   const wantsPets = combinedText.includes("ljubim") || combinedText.includes("pas") || combinedText.includes("dog") || combinedText.includes("kuce");
   const wantsWifi = combinedText.includes("wifi") || combinedText.includes("internet");
   const wantsParking = combinedText.includes("parking") || combinedText.includes("kola") || combinedText.includes("auto");
@@ -1989,7 +2005,7 @@ function getFallbackResponse(message, properties, history = []) {
 // AI Support Chat Widget Endpoint (Groq API or local fallback)
 app.post('/api/ai/chat', async (req, res) => {
   try {
-    const { message, history } = req.body;
+    const { message, history, isLoggedIn } = req.body;
 
     // Fetch properties from database to feed context
     const propertiesList = await dbHelper.all('SELECT * FROM properties');
@@ -2041,7 +2057,7 @@ ${roomsText || '  * Nema registrovanih soba'}`;
 
     const apiKey = process.env.GROQ_API_KEY;
 
-    if (apiKey) {
+    if (isLoggedIn && apiKey) {
       // Call Groq API inside a try-catch for complete safety against rate limits / downtime
       let response;
       try {
