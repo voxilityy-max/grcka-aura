@@ -141,18 +141,9 @@ export default function Navbar({
                 <span className="nav-username">{currentUser.fullName.split(' ')[0]}</span>
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: '0.5rem', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button 
-                  className="btn-nav-login glass" 
-                  style={{ backgroundColor: 'rgba(0, 180, 216, 0.15)', borderColor: 'rgba(0, 180, 216, 0.4)', color: 'var(--accent)' }}
-                  onClick={() => { onOpenAuth({ initialIsRegister: true, initialIsHost: true }); setIsGridMenuOpen(false); setIsMobileMenuOpen(false); }}
-                >
-                  🤝 Izdaj smeštaj
-                </button>
-                <button className="btn-nav-login glass" onClick={() => { onOpenAuth(); setIsGridMenuOpen(false); setIsMobileMenuOpen(false); }}>
-                  Prijavi se
-                </button>
-              </div>
+              <button className="btn-nav-login glass" onClick={() => { onOpenAuth(); setIsGridMenuOpen(false); setIsMobileMenuOpen(false); }}>
+                Prijavi se
+              </button>
             )}
           </div>
         </div>

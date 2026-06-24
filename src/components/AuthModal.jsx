@@ -798,22 +798,7 @@ export default function AuthModal({ onClose, onLogin, onRegister, registeredUser
             </div>
           )}
 
-          {isRegister && (
-            <div className="auth-helper-row" style={{ marginTop: '0.4rem', marginBottom: '0.8rem', justifyContent: 'flex-start' }}>
-              <label className="remember-me-checkbox" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', userSelect: 'none' }}>
-                <input 
-                  type="checkbox" 
-                  name="isHost"
-                  checked={formData.isHost || false} 
-                  onChange={(e) => setFormData(prev => ({ ...prev, isHost: e.target.checked }))} 
-                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent)' }}
-                />
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: '500' }}>
-                  Registrujem se kao vlasnik objekta (Domaćin)
-                </span>
-              </label>
-            </div>
-          )}
+
 
           {/* Remember me & Forgot Password Row */}
           {!isRegister && (
