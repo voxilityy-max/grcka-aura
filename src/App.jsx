@@ -619,7 +619,7 @@ export default function App() {
         {
           id: 1,
           sender: 'ai',
-          text: `Zdravo, ${welcomeName}! Ja sam vaš Ellinas AI Asistent. ⛵ Kako vam mogu pomoći danas? Slobodno me pitajte za preporuku smeštaja (npr. "vila na Lefkadi sa bazenom" ili "povoljan apartman na Tasosu").`,
+          text: `Ćao, ${welcomeName}! ⛵ Gde planirate letovanje ove godine i za koliko osoba tražite smeštaj?`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           recommendedPropertyIds: []
         }

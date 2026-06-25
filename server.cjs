@@ -1983,7 +1983,7 @@ function getFallbackResponse(message, properties, history = []) {
 
     // Warm response depending on what's missing
     if (missing.length === 3) {
-      replyText = `Zdravo! Ja sam vaš Ellinas AI asistent. ⛵ Tu sam da vam pomognem da lako nađete i rezervišete smeštaj.\n\nKoju regiju planirate da posetite (Tasos, Lefkada, Sitonija ili Krf), za koliko osoba i kada planirate letovanje?\n\n💡 *Savet: Registrujte se besplatno za čuvanje omiljenih smeštaja u listu želja i još brže slanje upita!*`;
+      replyText = `Ćao! Ja sam Ellinas AI. ⛵ Gde putujete (Tasos, Lefkada, Sitonija, Krf), za koliko osoba i kada?\n\n*(Savet: Registrujte se besplatno za listu želja i brže upite!)*`;
     } else {
       let missingListStr = "";
       if (missing.length === 1) {
@@ -1991,7 +1991,7 @@ function getFallbackResponse(message, properties, history = []) {
       } else {
         missingListStr = missing.slice(0, -1).join(", ") + " i " + missing[missing.length - 1];
       }
-      replyText = `Hvala na detaljima! Letovanje možete rezervisati direktno na stranici smeštaja – čak i bez registracije. 🌴\n\nDa bih vam izbacio slobodne ponude, recite mi još samo: **${missingListStr}**?`;
+      replyText = `Super! 🌴 Fali mi još samo: **${missingListStr}** kako bih pronašao ponude? (Upit šaljete i bez registracije!)`;
     }
     recommendedIds = [];
 
@@ -2026,7 +2026,7 @@ function getFallbackResponse(message, properties, history = []) {
   }
 
   if (isAskingBooking) {
-    replyText = `Slanje upita je veoma lako: kliknite na karticu smeštaja ispod i popunite formu (Ime, Email, Telefon) na dnu stranice. Upit možete poslati direktno kao gost! 📅\n\n*Savet: Ako se registrujete, vaši podaci se čuvaju pa je svaki sledeći upit još brži.*`;
+    replyText = `Samo kliknite na smeštaj ispod i na dnu popunite formu (Ime, Email, Telefon). Registracija nije obavezna, ali olakšava buduće upite! 📅`;
     if (matches.length > 0) {
       recommendedIds = [matches[0].id];
     } else {
@@ -2036,26 +2036,26 @@ function getFallbackResponse(message, properties, history = []) {
     matches.sort((a, b) => a.price - b.price);
     if (matches.length > 0) {
       const cheapest = matches[0];
-      replyText = `Razumem, budžet je uvek važan. 💰 Predlažem vam **${cheapest.title}** (${cheapest.location}) za samo **${cheapest.price}€/noć**. Upit možete poslati direktno sa stranice tog smeštaja.\n\nDa li vam ova opcija zvuči dobro?`;
+      replyText = `Razumem. 💰 Najpovoljniji je **${cheapest.title}** po ceni od **${cheapest.price}€/noć**. Da li vam odgovara?`;
       recommendedIds = [cheapest.id];
     } else {
       const overallCheapest = [...properties].sort((a, b) => a.price - b.price);
       const cheapest = overallCheapest[0];
-      replyText = `Razumem vas. Trenutno nema povoljnijih opcija za te uslove, ali najjeftiniji smeštaj u našoj ponudi je **${cheapest.title}** za **${cheapest.price}€/noć**.\n\nDa li biste pogledali tu opciju?`;
+      replyText = `Trenutno nema povoljnijih opcija za te uslove, ali najjeftiniji u našoj ponudi je **${cheapest.title}** za **${cheapest.price}€/noć**. Da li biste to pogledali?`;
       recommendedIds = [cheapest.id];
     }
   } else {
     // Normal recommendation where hasAllInfo is true
     if (matches.length > 0) {
       const selected = matches[0];
-      replyText = `Pronašao sam odličan smeštaj na lokaciji **${matchedLoc}** za **${requestedGuests} osoba**. 🏖️\n\nPreporučujem **${selected.title}** po ceni od **${selected.price}€/noć**. Možete poslati upit direktno na dnu njegove stranice.\n\nKako vam se čini ovaj predlog?`;
+      replyText = `Evo sjajnog smeštaja: **${selected.title}** na lokaciji **${matchedLoc}** za **${requestedGuests} osoba** po ceni od **${selected.price}€/noć**. Kako vam se čini? 🏖️`;
       recommendedIds = [selected.id];
       if (matches.length > 1) {
         recommendedIds.push(matches[1].id);
       }
     } else {
       const alternative = properties.find(p => p.location.toLowerCase().includes(matchedLoc.toLowerCase())) || properties[0];
-      replyText = `Trenutno nemamo smeštaj na lokaciji **${matchedLoc}** za **${requestedGuests} osoba** sa svim tim specifičnim filterima. 😔\n\nKao odličnu alternativu preporučujem **${alternative.title}** za **${alternative.price}€/noć**.\n\nDa li želite da ga pogledate?`;
+      replyText = `Nemamo tačan pogodak za te filtere na lokaciji **${matchedLoc}**, ali preporučujem **${alternative.title}** za **${alternative.price}€/noć**. Da li želite da ga pogledate?`;
       recommendedIds = [alternative.id];
     }
   }
