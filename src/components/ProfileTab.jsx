@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import PropertyCard from './PropertyCard';
 
 const AVATAR_PRESETS = [
@@ -35,6 +35,14 @@ export default function ProfileTab({
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [selectedInqForChat, setSelectedInqForChat] = useState(null);
   const [chatText, setChatText] = useState('');
+
+  const chatMessagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (chatMessagesEndRef.current) {
+      chatMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selectedInqForChat, inquiries]);
 
   // Password change states
   const [passwords, setPasswords] = useState({
@@ -687,15 +695,17 @@ export default function ProfileTab({
           onSendChatMessage(selectedInqForChat.id, 'client', text);
           setChatText('');
           
-          setTimeout(() => {
-            let hostReply = "Hvala na poruci! Vaš upit je prosleđen našem timu podrške. Javićemo vam se sa odgovorom u najkraćem roku.";
-            if (selectedInqForChat.status === 'Odobreno') {
-              hostReply = "Radujemo se Vašem dolasku! Sve je pripremljeno za Vaš boravak. Ako imate dodatnih pitanja u vezi check-in vremena ili lokacije, slobodno pišite.";
-            } else if (selectedInqForChat.status === 'Odbijeno') {
-              hostReply = "Nažalost, termini koje ste tražili su zauzeti. Možete pogledati druge slobodne termine u ponudi.";
-            }
-            onSendChatMessage(selectedInqForChat.id, 'host', hostReply);
-          }, 1500);
+          if (!backendActive) {
+            setTimeout(() => {
+              let hostReply = "Hvala na poruci! Vaš upit je prosleđen našem timu podrške. Javićemo vam se sa odgovorom u najkraćem roku.";
+              if (selectedInqForChat.status === 'Odobreno') {
+                hostReply = "Radujemo se Vašem dolasku! Sve je pripremljeno za Vaš boravak. Ako imate dodatnih pitanja u vezi check-in vremena ili lokacije, slobodno pišite.";
+              } else if (selectedInqForChat.status === 'Odbijeno') {
+                hostReply = "Nažalost, termini koje ste tražili su zauzeti. Možete pogledati druge slobodne termine u ponudi.";
+              }
+              onSendChatMessage(selectedInqForChat.id, 'host', hostReply);
+            }, 1500);
+          }
         };
 
         return (
@@ -729,6 +739,7 @@ export default function ProfileTab({
                     <span className="chat-time">{msg.timestamp}</span>
                   </div>
                 ))}
+                <div ref={chatMessagesEndRef} />
               </div>
 
               <form className="chat-input-footer" onSubmit={handleSendMessageClick}>

@@ -1081,8 +1081,54 @@ export default function App() {
 
     // Run every 20 seconds
     const interval = setInterval(sendHeartbeatAndPoll, 20000);
-    return () => clearInterval(interval);
   }, [currentUser, backendActive]);
+
+  // Real-time Inquiries & Chat Messages Polling (Live Chat Support)
+  useEffect(() => {
+    if (!backendActive) return;
+
+    const pollInquiries = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/inquiries`);
+        if (res.ok) {
+          const data = await res.json();
+          setInquiries(prev => {
+            // Check if there are any changes in the inquiries array (size, status, or chat count)
+            let hasChanged = false;
+            if (prev.length !== data.length) {
+              hasChanged = true;
+            } else {
+              for (let i = 0; i < prev.length; i++) {
+                const prevInq = prev[i];
+                const newInq = data.find(d => d.id === prevInq.id);
+                if (!newInq) {
+                  hasChanged = true;
+                  break;
+                }
+                if (prevInq.status !== newInq.status) {
+                  hasChanged = true;
+                  break;
+                }
+                const prevChatLength = (prevInq.chat || []).length;
+                const newChatLength = (newInq.chat || []).length;
+                if (prevChatLength !== newChatLength) {
+                  hasChanged = true;
+                  break;
+                }
+              }
+            }
+            return hasChanged ? data : prev;
+          });
+        }
+      } catch (err) {
+        console.warn("Failing to poll inquiries/chat updates:", err.message);
+      }
+    };
+
+    // Run poll every 4 seconds to simulate a live chat experience
+    const interval = setInterval(pollInquiries, 4000);
+    return () => clearInterval(interval);
+  }, [backendActive]);
 
   // Sync theme
   useEffect(() => {

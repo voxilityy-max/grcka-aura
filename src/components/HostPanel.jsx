@@ -205,6 +205,14 @@ export default function HostPanel({
   const [selectedHostToReview, setSelectedHostToReview] = useState(null);
   const [reviewReason, setReviewReason] = useState('');
   const [chatText, setChatText] = useState('');
+  const chatMessagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (chatMessagesEndRef.current) {
+      chatMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selectedInqForChat, inquiries]);
+
   const [inquiryNotes, setInquiryNotes] = useState(() => {
     try {
       const saved = localStorage.getItem('aura_inquiry_notes');
@@ -4648,16 +4656,18 @@ export default function HostPanel({
           const text = chatText.trim();
           onSendChatMessage(selectedInqForChat.id, 'host', text);
           setChatText('');
-          setTimeout(() => {
-            const guestReplies = [
-              "Hvala Vam puno na brzom odgovoru! Da li nam možete reći u koliko sati možemo ući u apartman (check-in)?",
-              "U redu, hvala vam puno na informacijama! Vidimo se uskoro.",
-              "Sjajno! Da li u smeštaju imamo obezbeđen parking za automobil?",
-              "Dogovoreno. Hvala još jednom."
-            ];
-            const randomReply = guestReplies[Math.floor(Math.random() * guestReplies.length)];
-            onSendChatMessage(selectedInqForChat.id, 'client', randomReply);
-          }, 1500);
+          if (!backendActive) {
+            setTimeout(() => {
+              const guestReplies = [
+                "Hvala Vam puno na brzom odgovoru! Da li nam možete reći u koliko sati možemo ući u apartman (check-in)?",
+                "U redu, hvala vam puno na informacijama! Vidimo se uskoro.",
+                "Sjajno! Da li u smeštaju imamo obezbeđen parking za automobil?",
+                "Dogovoreno. Hvala još jednom."
+              ];
+              const randomReply = guestReplies[Math.floor(Math.random() * guestReplies.length)];
+              onSendChatMessage(selectedInqForChat.id, 'client', randomReply);
+            }, 1500);
+          }
         };
 
         return (
@@ -4680,6 +4690,7 @@ export default function HostPanel({
                     <span className="chat-time">{msg.timestamp}</span>
                   </div>
                 ))}
+                <div ref={chatMessagesEndRef} />
               </div>
 
               <form className="chat-input-footer" onSubmit={handleSendMessageClick}>
