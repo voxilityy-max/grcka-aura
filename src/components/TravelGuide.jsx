@@ -246,7 +246,7 @@ const BEACH_DATA = {
 };
 
 export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, onSubTabChange, initialWeatherLoc, onSelectDestination }) {
-  const [localSubTab, setLocalSubTab] = useState('calculator');
+  const [localSubTab, setLocalSubTab] = useState('ai-planner');
   const subTab = initialSubTab || localSubTab;
   const setSubTab = onSubTabChange || setLocalSubTab;
 
@@ -271,6 +271,99 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
   // Discount Card Mock claim animation
   const [cardClaimed, setCardClaimed] = useState(false);
 
+  // AI Trip Planner States
+  const [plannerFilters, setPlannerFilters] = useState({
+    destination: 'Tasos',
+    style: 'porodični',
+    days: '7',
+    transport: 'sopstveni automobil'
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStep, setGenerationStep] = useState('');
+  const [generatedPlan, setGeneratedPlan] = useState(null);
+
+  const handleGeneratePlan = async () => {
+    setIsGenerating(true);
+    setGenerationStep('Inicijalizujemo AI planer...');
+    
+    const steps = [
+      'Pretražujemo najlepše uvale i plaže...',
+      'Analiziramo lokalne taverne i preporuke...',
+      'Konfigurišemo optimalne rute...',
+      'Sastavljamo personalizovani plan...'
+    ];
+    
+    let currentStepIdx = 0;
+    const stepInterval = setInterval(() => {
+      if (currentStepIdx < steps.length) {
+        setGenerationStep(steps[currentStepIdx]);
+        currentStepIdx++;
+      }
+    }, 700);
+
+    try {
+      const response = await fetch('/api/ai/trip-planner', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          destination: plannerFilters.destination,
+          style: plannerFilters.style,
+          days: plannerFilters.days,
+          transport: plannerFilters.transport
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Server responded with an error');
+      }
+
+      const data = await response.json();
+      setGeneratedPlan(data.days || []);
+    } catch (err) {
+      console.warn("Failed to call AI Trip Planner, using local generator fallback:", err.message);
+      const localPlan = getLocalTripPlan(plannerFilters.destination, plannerFilters.style, plannerFilters.days);
+      setGeneratedPlan(localPlan.days || []);
+    } finally {
+      clearInterval(stepInterval);
+      setIsGenerating(false);
+    }
+  };
+
+  const getLocalTripPlan = (destination, style, days) => {
+    const count = parseInt(days, 10) || 7;
+    const list = [];
+    
+    for (let i = 1; i <= count; i++) {
+      let title = `Istraživanje regije - Dan ${i}`;
+      let activity = `Provedite predivan dan istražujući skrivene uvale i slikovita grčka sela u regiji ${destination}. Uživajte u ručku u lokalnoj taverni uz svežu ribu i grčko vino, a veče iskoristite za šetnju pored mora.`;
+      let beachName = '';
+
+      if (destination === 'Tasos') {
+        if (i === 1) { title = 'Zlatno jutro na Zlatnoj plaži'; activity = 'Uživajte na pesku Golden Beach-a. Voda je plitka i topla, idealna za lagan početak.'; beachName = 'Golden Beach (Zlatna plaža)'; }
+        else if (i === 3) { title = 'Tirkizna avantura na mermernoj plaži'; activity = 'Posetite Marble Beach rano ujutru kako biste snimili neverovatne fotografije sa belim kamenčićima.'; beachName = 'Marble Beach (Saliara)'; }
+        else if (i === 5) { title = 'Zalazak sunca na Paradise plaži'; activity = 'Okupajte se na Paradise Beach-u, a popodne uživajte u talasima i mirisu borove šume.'; beachName = 'Paradise Beach'; }
+      } else if (destination === 'Lefkada') {
+        if (i === 1) { title = 'Pejzaž iz snova na Porto Katsiki'; activity = 'Posetite najpoznatiju plažu na Lefkadi. Tirkizna voda i džinovske bele stene ostaviće vas bez daha.'; beachName = 'Porto Katsiki'; }
+        else if (i === 3) { title = 'Muzika i sunce na Katizmi'; activity = 'Uživajte u modernom ritmu na plaži Kathisma, idealnoj za mlade i ljubitelje barova.'; beachName = 'Kathisma (Katizma)'; }
+        else if (i === 5) { title = 'Divlja lepota plaže Egremni'; activity = 'Spustite se stepenicama ili dođite brodom do Egremnija, beskrajno dugačke i tirkizne plaže.'; beachName = 'Egremni'; }
+      } else if (destination === 'Sitonija') {
+        if (i === 1) { title = 'Beli pesak plaže Karidi'; activity = 'Provedite dan na plaži Karidi gde je pesak mekan kao brašno, a topla voda idealna za decu.'; beachName = 'Karidi Beach'; }
+        else if (i === 3) { title = 'Uvale i borovi Orange plaže'; activity = 'Istražite male stene i tirkiznu vodu na Kavourotripesu. Idealno za kupanje i sunčanje u borovoj šumi.'; beachName = 'Orange Beach (Kavourotripes)'; }
+        else if (i === 5) { title = 'Zaliv i taverne na Klimatariji'; activity = 'Uživajte na plaži Klimataria koja je zaklonjena od vetra, i ručajte u taverni na samom pesku.'; beachName = 'Klimataria'; }
+      } else if (destination === 'Krf') {
+        if (i === 1) { title = 'Ronjenje u Paleokastrici'; activity = 'Posetite spektakularan zaliv Paleokastritsa i iznajmite čamac za obilazak okolnih pećina.'; beachName = 'Paleokastritsa'; }
+        else if (i === 3) { title = 'Legenda o Kanalu Ljubavi'; activity = 'Preplivajte čuveni Canal d\'Amour u Sidariju za dugovečnu ljubav i napravite unikatne slike stena.'; beachName = 'Canal d\'Amour (Kanal ljubavi)'; }
+        else if (i === 5) { title = 'Zlatni zalazak na Glifadi'; activity = 'Okupajte se na peščanoj plaži Glyfada, a veče dočekajte uz čaroban zalazak sunca na zapadnoj obali.'; beachName = 'Glyfada (Glifada)'; }
+      }
+
+      list.push({ day: `Dan ${i}`, title, activity, beachName });
+    }
+
+    return { days: list };
+  };
+
   // Price category filter
   const filteredPrices = GREECE_PRICES.filter(p => {
     const matchesSearch = p.item.toLowerCase().includes(searchPrice.toLowerCase()) || 
@@ -283,6 +376,12 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
     <div className="guide-wrapper">
       {/* Sub tabs header */}
       <div className="forum-filters-bar" style={{ justifyContent: 'center', marginBottom: '2rem' }}>
+        <button 
+          className={`btn-filter-item ai-planner-tab-btn ${subTab === 'ai-planner' ? 'active' : ''}`}
+          onClick={() => setSubTab('ai-planner')}
+        >
+          ✨ AI Planer Letovanja 🚀
+        </button>
         <button 
           className={`btn-filter-item ${subTab === 'calculator' ? 'active' : ''}`}
           onClick={() => setSubTab('calculator')}
@@ -328,6 +427,264 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
       </div>
 
       {/* Content Render based on SubTab */}
+      {subTab === 'ai-planner' && (
+        <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 700, color: '#fff', marginBottom: '0.5rem' }}>
+              ✨ Personalizovani AI Planer Letovanja 🚀
+            </h2>
+            <p style={{ color: '#a4b8c0', maxWidth: '600px', margin: '0 auto', fontSize: '1rem' }}>
+              Sastavite jedinstven plan puta, aktivnosti i preporuka za vaš savršen odmor u Grčkoj za samo nekoliko sekundi.
+            </p>
+          </div>
+
+          {!currentUser ? (
+            /* LOCKED SCREEN (Neregistrovani korisnici) */
+            <div className="planner-locked-card">
+              <div className="planner-lock-icon">🔒</div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#fff', marginBottom: '1rem' }}>
+                Ekskluzivna opcija za članove
+              </h3>
+              <p style={{ color: '#a4b8c0', fontSize: '1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+                AI Planer Letovanja je dostupan isključivo za registrovane članove Aura kluba. Prijavite se ili kreirajte besplatan nalog da dobijete personalizovan plan puta za 7 sekundi!
+              </p>
+              <button 
+                className="listings-view-details-btn"
+                style={{
+                  padding: '0.8rem 2rem',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  borderRadius: '30px',
+                  background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+                  color: '#071c29',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(0, 242, 254, 0.4)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 242, 254, 0.6)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 242, 254, 0.4)';
+                }}
+                onClick={onOpenAuth}
+              >
+                Prijavi se / Registruj se
+              </button>
+            </div>
+          ) : (
+            /* LOGGED IN VIEW */
+            <>
+              {isGenerating ? (
+                /* LOADER */
+                <div className="planner-loader-container">
+                  <div className="planner-loader-spinner"></div>
+                  <div className="planner-loader-text">{generationStep}</div>
+                  <p style={{ color: '#8fa0a6', fontSize: '0.9rem' }}>
+                    Naš Ellinas AI analizira stotine preporuka...
+                  </p>
+                  <div className="planner-progress-bg">
+                    <div className="planner-progress-bar"></div>
+                  </div>
+                </div>
+              ) : !generatedPlan ? (
+                /* INPUT FORM */
+                <div className="planner-form-container">
+                  <div className="planner-form-grid">
+                    <div className="planner-form-group">
+                      <label className="planner-label">Destinacija</label>
+                      <select 
+                        className="planner-select"
+                        value={plannerFilters.destination}
+                        onChange={e => setPlannerFilters({ ...plannerFilters, destination: e.target.value })}
+                      >
+                        <option value="Tasos">Tasos</option>
+                        <option value="Lefkada">Lefkada</option>
+                        <option value="Sitonija">Sitonija</option>
+                        <option value="Krf">Krf</option>
+                      </select>
+                    </div>
+
+                    <div className="planner-form-group">
+                      <label className="planner-label">Stil odmora</label>
+                      <select 
+                        className="planner-select"
+                        value={plannerFilters.style}
+                        onChange={e => setPlannerFilters({ ...plannerFilters, style: e.target.value })}
+                      >
+                        <option value="porodični">Porodični (Opušten / Sa decom)</option>
+                        <option value="avanturistički">Avantura (Aktivnosti / Istraživanje)</option>
+                        <option value="romantični">Romantični (Parovi / Zalazak sunca)</option>
+                        <option value="opušteni">Opušten (Samo plaža i hrana)</option>
+                      </select>
+                    </div>
+
+                    <div className="planner-form-group">
+                      <label className="planner-label">Trajanje (Dana)</label>
+                      <select 
+                        className="planner-select"
+                        value={plannerFilters.days}
+                        onChange={e => setPlannerFilters({ ...plannerFilters, days: e.target.value })}
+                      >
+                        <option value="5">5 Dana</option>
+                        <option value="7">7 Dana</option>
+                        <option value="10">10 Dana</option>
+                      </select>
+                    </div>
+
+                    <div className="planner-form-group">
+                      <label className="planner-label">Prevoz</label>
+                      <select 
+                        className="planner-select"
+                        value={plannerFilters.transport}
+                        onChange={e => setPlannerFilters({ ...plannerFilters, transport: e.target.value })}
+                      >
+                        <option value="sopstveni automobil">Sopstveni automobil</option>
+                        <option value="avion">Avion + Rent-a-car</option>
+                        <option value="autobus">Autobus / Organizovan prevoz</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <button 
+                      className="listings-view-details-btn"
+                      style={{
+                        padding: '1rem 2.5rem',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        borderRadius: '30px',
+                        background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+                        color: '#071c29',
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 20px rgba(0, 242, 254, 0.4)',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 242, 254, 0.7)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 242, 254, 0.4)';
+                      }}
+                      onClick={handleGeneratePlan}
+                    >
+                      Generiši Moj Plan Letovanja 🚀
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* GENERATED TIMELINE RESULT */
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '1.5rem' }}>📍</span>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#fff' }}>
+                          Plan za {plannerFilters.destination} ({plannerFilters.days} dana)
+                        </h4>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#8fa0a6' }}>
+                          Stil odmora: {plannerFilters.style} | Prevoz: {plannerFilters.transport}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      className="btn-filter-item"
+                      style={{ 
+                        padding: '0.6rem 1.2rem', 
+                        fontSize: '0.9rem', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '6px',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        background: 'rgba(255, 255, 255, 0.05)'
+                      }}
+                      onClick={() => setGeneratedPlan(null)}
+                    >
+                      🔄 Napravi novi plan
+                    </button>
+                  </div>
+
+                  <div className="planner-timeline">
+                    {generatedPlan.map((dayItem, index) => (
+                      <div className="planner-day-item" key={index} style={{ animationDelay: `${index * 0.1}s` }}>
+                        <div className="planner-day-dot">
+                          <span style={{ fontSize: '0.8rem', color: '#00f2fe', fontWeight: 'bold' }}>{index + 1}</span>
+                        </div>
+                        <div className="planner-day-card">
+                          <div className="planner-day-header">
+                            <div>
+                              <div className="planner-day-number">{dayItem.day || `Dan ${index + 1}`}</div>
+                              <h4 className="planner-day-title">{dayItem.title}</h4>
+                            </div>
+                          </div>
+                          <p className="planner-day-activity">{dayItem.activity}</p>
+                          
+                          {dayItem.beachName && (
+                            <div 
+                              className="planner-beach-badge"
+                              onClick={() => {
+                                setSelectedBeachLoc(plannerFilters.destination);
+                                setSubTab('beaches');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                            >
+                              🏝️ Vodič kroz plažu: <strong>{dayItem.beachName}</strong>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                    <p style={{ color: '#8fa0a6', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                      Sviđa vam se ovaj plan puta? Rezervišite smeštaj na destinaciji {plannerFilters.destination} i ostvarite popuste.
+                    </p>
+                    <button 
+                      className="listings-view-details-btn"
+                      style={{
+                        padding: '0.8rem 2rem',
+                        fontSize: '1rem',
+                        fontWeight: 'bold',
+                        borderRadius: '30px',
+                        background: 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+                        color: '#071c29',
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 15px rgba(0, 242, 254, 0.4)',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 242, 254, 0.6)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 242, 254, 0.4)';
+                      }}
+                      onClick={() => {
+                        if (onSelectDestination) {
+                          onSelectDestination(plannerFilters.destination);
+                        }
+                      }}
+                    >
+                      Prikaži smeštaje na destinaciji {plannerFilters.destination} 🏨
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {subTab === 'calculator' && (
         <RoadPlanner currentUser={currentUser} onOpenAuth={onOpenAuth} />
       )}

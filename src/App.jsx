@@ -278,7 +278,7 @@ export default function App() {
   });
 
   const [backendActive, setBackendActive] = useState(false);
-  const [guideSubTab, setGuideSubTab] = useState('calculator');
+  const [guideSubTab, setGuideSubTab] = useState('ai-planner');
   const [initialWeatherLoc, setInitialWeatherLoc] = useState('Tasos');
 
   const handleViewWeather = (loc) => {

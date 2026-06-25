@@ -2358,6 +2358,114 @@ Pravila komunikacije (Tvoj Trening):
   }
 });
 
+// Fallback Trip Plan Generator in case of Groq failure / missing key
+function getFallbackTripPlan(destination, style, days) {
+  const count = parseInt(days, 10) || 7;
+  const list = [];
+  
+  for (let i = 1; i <= count; i++) {
+    let title = `Istraživanje regije - Dan ${i}`;
+    let activity = `Provedite predivan dan istražujući skrivene uvale i slikovita grčka sela u regiji ${destination}. Uživajte u ručku u lokalnoj taverni uz svežu ribu i grčko vino, a veče iskoristite za šetnju pored mora.`;
+    let beachName = '';
+
+    if (destination === 'Tasos') {
+      if (i === 1) { title = 'Zlatno jutro na Zlatnoj plaži'; activity = 'Uživajte na pesku Golden Beach-a. Voda je plitka i topla, idealna za lagan početak.'; beachName = 'Golden Beach (Zlatna plaža)'; }
+      else if (i === 3) { title = 'Tirkizna avantura na mermernoj plaži'; activity = 'Posetite Marble Beach rano ujutru kako biste snimili neverovatne fotografije sa belim kamenčićima.'; beachName = 'Marble Beach (Saliara)'; }
+      else if (i === 5) { title = 'Zalazak sunca na Paradise plaži'; activity = 'Okupajte se na Paradise Beach-u, a popodne uživajte u talasima i mirisu borove šume.'; beachName = 'Paradise Beach'; }
+    } else if (destination === 'Lefkada') {
+      if (i === 1) { title = 'Pejzaž iz snova na Porto Katsiki'; activity = 'Posetite najpoznatiju plažu na Lefkadi. Tirkizna voda i džinovske bele stene ostaviće vas bez daha.'; beachName = 'Porto Katsiki'; }
+      else if (i === 3) { title = 'Muzika i sunce na Katizmi'; activity = 'Uživajte u modernom ritmu na plaži Kathisma, idealnoj za mlade i ljubitelje barova.'; beachName = 'Kathisma (Katizma)'; }
+      else if (i === 5) { title = 'Divlja lepota plaže Egremni'; activity = 'Spustite se stepenicama ili dođite brodom do Egremnija, beskrajno dugačke i tirkizne plaže.'; beachName = 'Egremni'; }
+    } else if (destination === 'Sitonija') {
+      if (i === 1) { title = 'Beli pesak plaže Karidi'; activity = 'Provedite dan na plaži Karidi gde je pesak mekan kao brašno, a topla voda idealna za decu.'; beachName = 'Karidi Beach'; }
+      else if (i === 3) { title = 'Uvale i borovi Orange plaže'; activity = 'Istražite male stene i tirkiznu vodu na Kavourotripesu. Idealno za kupanje i sunčanje u borovoj šumi.'; beachName = 'Orange Beach (Kavourotripes)'; }
+      else if (i === 5) { title = 'Zaliv i taverne na Klimatariji'; activity = 'Uživajte na plaži Klimataria koja je zaklonjena od vetra, i ručajte u taverni na samom pesku.'; beachName = 'Klimataria'; }
+    } else if (destination === 'Krf') {
+      if (i === 1) { title = 'Ronjenje u Paleokastrici'; activity = 'Posetite spektakularan zaliv Paleokastritsa i iznajmite čamac za obilazak okolnih pećina.'; beachName = 'Paleokastritsa'; }
+      else if (i === 3) { title = 'Legenda o Kanalu Ljubavi'; activity = 'Preplivajte čuveni Canal d\'Amour u Sidariju za dugovečnu ljubav i napravite unikatne slike stena.'; beachName = 'Canal d\'Amour (Kanal ljubavi)'; }
+      else if (i === 5) { title = 'Zlatni zalazak na Glifadi'; activity = 'Okupajte se na peščanoj plaži Glyfada, a veče dočekajte uz čaroban zalazak sunca na zapadnoj obali.'; beachName = 'Glyfada (Glifada)'; }
+    }
+
+    list.push({ day: `Dan ${i}`, title, activity, beachName });
+  }
+
+  return { days: list };
+}
+
+// AI Trip Planner Endpoint
+app.post('/api/ai/trip-planner', async (req, res) => {
+  const { destination, style, days, transport } = req.body;
+
+  if (!destination || !style || !days) {
+    return res.status(400).json({ error: 'Nedostaju obavezni parametri za planiranje.' });
+  }
+
+  // API Key priority: 1) PLANNER_GROQ_API_KEY, 2) GROQ_API_KEY
+  const apiKey = process.env.PLANNER_GROQ_API_KEY || process.env.GROQ_API_KEY;
+
+  if (apiKey) {
+    try {
+      const prompt = `Kreiraj detaljan plan letovanja za destinaciju: ${destination}.
+Tip putovanja/odmor: ${style} (stil).
+Trajanje odmora: ${days} dana.
+Prevoz: ${transport || 'sopstveni automobil'}.
+
+Zahtevi za format:
+Vrati isključivo ispravan JSON objekat sa jednim ključem "days" koji sadrži niz objekata za svaki dan.
+Svaki objekat u nizu mora imati sledeća polja na srpskom jeziku:
+- "day": tekst npr. "Dan 1", "Dan 2" itd.
+- "title": privlačan i kratak naslov aktivnosti na srpskom jeziku (npr. "Zlatni zalazak sunca na plaži", "Otkrivanje skrivenog vidikovca")
+- "activity": detaljan opis aktivnosti za taj dan na srpskom jeziku u 2 do najviše 3 rečenice. Budi kreativan i spomeni konkretne aktivnosti, lokalnu hranu (npr. giros, sveža riba, grčki jogurt) i atmosferu.
+- "beachName": opciono, naziv jedne od poznatih plaža na toj destinaciji ukoliko se posećuje tog dana. Naziv plaže mora odgovarati tačno jednom od ovih naziva:
+  * Za Tasos: "Golden Beach (Zlatna plaža)", "Paradise Beach", "Marble Beach (Saliara)"
+  * Za Lefkadu: "Porto Katsiki", "Kathisma (Katizma)", "Egremni"
+  * Za Sitoniju: "Karidi Beach", "Orange Beach (Kavourotripes)", "Klimataria"
+  * Za Krf: "Paleokastritsa", "Canal d'Amour (Kanal ljubavi)", "Glyfada (Glifada)"
+  Ako nijedna od ovih plaža nije pomenuta tog dana, stavi prazan string "".
+
+Izbegavaj bilo kakav uvodni ili zaključni tekst van JSON-a. Odgovori isključivo u JSON formatu.`;
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          response_format: { type: 'json_object' },
+          messages: [
+            {
+              role: 'system',
+              content: 'Ti si Ellinas AI Planer Letovanja. Pomažeš turistima da naprave savršen plan puta po Grčkoj. Odgovaraš isključivo u validnom JSON formatu.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Groq API responded with status ${response.status}`);
+      }
+
+      const rawData = await response.json();
+      const aiContent = rawData.choices[0].message.content;
+      const parsedPlan = JSON.parse(aiContent);
+      return res.json(parsedPlan);
+    } catch (err) {
+      console.error('Greška pri komunikaciji sa Groq API-jem za planer, koristim lokalni fallback:', err);
+      const fallbackPlan = getFallbackTripPlan(destination, style, days);
+      return res.json(fallbackPlan);
+    }
+  } else {
+    const fallbackPlan = getFallbackTripPlan(destination, style, days);
+    return res.json(fallbackPlan);
+  }
+});
+
 // Booking.com Property Importer Endpoint
 app.post('/api/import-booking', async (req, res) => {
   const { url } = req.body;
