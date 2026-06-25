@@ -1907,6 +1907,20 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
 
 // Rule-based fallback recommendation engine for AI Chat
 function getFallbackResponse(message, properties, history = []) {
+  // Check if user is agreeing to a previous recommendation to prevent loops
+  const lastAssistantMsg = [...history].reverse().find(h => h.role === 'assistant');
+  const isUserAgreeing = ['da', 'moze', 'može', 'pošalji', 'posalji', 'potvrđujem', 'potvrdjujem', 'ok', 'yes', 'naravno', 'hoću', 'hocu', 'prikaži', 'prikazi', 'otvori', 'sviđa', 'svidja', 'dopada', 'super', 'pogledam'].some(word => message.toLowerCase().includes(word));
+
+  if (lastAssistantMsg && isUserAgreeing) {
+    const recommendedProp = properties.find(p => lastAssistantMsg.content.includes(p.title));
+    if (recommendedProp) {
+      return {
+        text: `Odlično! Kliknite na karticu smeštaja **${recommendedProp.title}** ispod kako biste otvorili detalje i poslali upit. 📅`,
+        recommendedPropertyIds: [recommendedProp.id]
+      };
+    }
+  }
+
   // Combine current message with previous user messages from history to check what information has been collected so far
   let combinedText = message.toLowerCase();
   if (Array.isArray(history)) {

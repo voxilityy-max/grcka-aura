@@ -573,6 +573,7 @@ export default function App() {
   const [showChatWidgetSuccess, setShowChatWidgetSuccess] = useState(false);
   const chatWidgetRef = useRef(null);
   const scrollPositionRef = useRef(0);
+  const sendingMessageRef = useRef(false);
 
   // Reset scroll to top on tab change
   useEffect(() => {
@@ -711,7 +712,8 @@ export default function App() {
   };
 
   const handleSendAiMessage = async () => {
-    if (!chatInputText.trim() || isAiTyping) return;
+    if (!chatInputText.trim() || isAiTyping || sendingMessageRef.current) return;
+    sendingMessageRef.current = true;
 
     const userMsgText = chatInputText;
     setChatInputText('');
@@ -729,6 +731,7 @@ export default function App() {
       };
       setChatMessages(prev => [...prev, userMsg]);
       await handleConfirmInquiryDraft(lastAiMsg.id, lastAiMsg.inquiryDraft);
+      sendingMessageRef.current = false;
       return;
     }
 
@@ -796,6 +799,7 @@ export default function App() {
       setChatMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsAiTyping(false);
+      sendingMessageRef.current = false;
       // Scroll to bottom
       setTimeout(() => {
         const chatList = document.getElementById('chat-messages-scroll');
