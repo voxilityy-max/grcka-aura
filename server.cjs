@@ -1983,7 +1983,7 @@ function getFallbackResponse(message, properties, history = []) {
 
     // Warm response depending on what's missing
     if (missing.length === 3) {
-      replyText = `Ćao! Ja sam Ellinas AI. ⛵ Gde putujete (Tasos, Lefkada, Sitonija, Krf), za koliko osoba i kada?\n\n*(Savet: Registrujte se besplatno za listu želja i brže upite!)*`;
+      replyText = `Zdravo! Koju regiju (Tasos, Lefkada, Sitonija ili Krf) planirate da posetite, za koliko osoba i kada putujete? 🌴`;
     } else {
       let missingListStr = "";
       if (missing.length === 1) {
@@ -1991,7 +1991,7 @@ function getFallbackResponse(message, properties, history = []) {
       } else {
         missingListStr = missing.slice(0, -1).join(", ") + " i " + missing[missing.length - 1];
       }
-      replyText = `Super! 🌴 Fali mi još samo: **${missingListStr}** kako bih pronašao ponude? (Upit šaljete i bez registracije!)`;
+      replyText = `Odličan izbor! Da bih pronašao idealne ponude, napišite mi samo još **${missingListStr}**. ☀️`;
     }
     recommendedIds = [];
 
@@ -2026,7 +2026,7 @@ function getFallbackResponse(message, properties, history = []) {
   }
 
   if (isAskingBooking) {
-    replyText = `Samo kliknite na smeštaj ispod i na dnu popunite formu (Ime, Email, Telefon). Registracija nije obavezna, ali olakšava buduće upite! 📅`;
+    replyText = `Možete poslati upit klikom na karticu smeštaja ispod ili na dugme 'Pogledaj' na njoj. Registracija nije obavezna! 📅`;
     if (matches.length > 0) {
       recommendedIds = [matches[0].id];
     } else {
@@ -2036,26 +2036,26 @@ function getFallbackResponse(message, properties, history = []) {
     matches.sort((a, b) => a.price - b.price);
     if (matches.length > 0) {
       const cheapest = matches[0];
-      replyText = `Razumem. 💰 Najpovoljniji je **${cheapest.title}** po ceni od **${cheapest.price}€/noć**. Da li vam odgovara?`;
+      replyText = `Potpuno vas razumem. 💰 Najpovoljnija opcija za vas je **${cheapest.title}** po ceni od **${cheapest.price}€/noć**. Da li vam se dopada ovaj izbor?`;
       recommendedIds = [cheapest.id];
     } else {
       const overallCheapest = [...properties].sort((a, b) => a.price - b.price);
       const cheapest = overallCheapest[0];
-      replyText = `Trenutno nema povoljnijih opcija za te uslove, ali najjeftiniji u našoj ponudi je **${cheapest.title}** za **${cheapest.price}€/noć**. Da li biste to pogledali?`;
+      replyText = `Trenutno nemamo jeftinijih opcija sa tim uslovima, ali najpovoljniji smeštaj u ponudi je **${cheapest.title}** za **${cheapest.price}€/noć**. Da li biste želeli da pogledate? ✨`;
       recommendedIds = [cheapest.id];
     }
   } else {
     // Normal recommendation where hasAllInfo is true
     if (matches.length > 0) {
       const selected = matches[0];
-      replyText = `Evo sjajnog smeštaja: **${selected.title}** na lokaciji **${matchedLoc}** za **${requestedGuests} osoba** po ceni od **${selected.price}€/noć**. Kako vam se čini? 🏖️`;
+      replyText = `Za vas izdvajam smeštaj **${selected.title}** na lokaciji **${matchedLoc}** po ceni od **${selected.price}€/noć**. Kako vam se čini ovaj predlog? 🏖️`;
       recommendedIds = [selected.id];
       if (matches.length > 1) {
         recommendedIds.push(matches[1].id);
       }
     } else {
       const alternative = properties.find(p => p.location.toLowerCase().includes(matchedLoc.toLowerCase())) || properties[0];
-      replyText = `Nemamo tačan pogodak za te filtere na lokaciji **${matchedLoc}**, ali preporučujem **${alternative.title}** za **${alternative.price}€/noć**. Da li želite da ga pogledate?`;
+      replyText = `Na lokaciji **${matchedLoc}** trenutno nema slobodnih smeštaja sa tim uslovima, ali preporučujem **${alternative.title}** po ceni od **${alternative.price}€/noć**. Da li želite da pogledate ovaj smeštaj? 🏖️`;
       recommendedIds = [alternative.id];
     }
   }
@@ -2234,7 +2234,7 @@ Pravila komunikacije (Tvoj Trening):
         if (isAskingBooking) {
           const hasCorrectBookingText = aiReply.text && (aiReply.text.includes("klikom") || aiReply.text.includes("karticu") || aiReply.text.includes("Pogledaj"));
           if (!hasCorrectBookingText) {
-            aiReply.text = `Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj. 📅\n\nDa li želite da vam pomognem oko izbora ili imate još pitanja?`;
+            aiReply.text = `Možete poslati upit klikom na karticu smeštaja ispod ili na dugme 'Pogledaj' na njoj. Registracija nije obavezna! 📅`;
           }
         }
 
