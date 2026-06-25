@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Colors - Nikana.gr Style */
-  --primary: #0b3146;
+  /* Colors - Nikana.gr Style - Permanently Dark mode only */
+  --primary: #0084ff; /* Aegean Blue for active background states */
   --primary-dark: #072230;
-  --primary-light: #154562;
+  --primary-light: rgba(0, 132, 255, 0.2);
   --accent: #0084ff;
   --accent-light: #e6f0ff;
   --accent-rgb: 0, 132, 255;
@@ -12,18 +12,18 @@
   --success: #2ec4b6;
   --danger: #e63946;
   
-  /* Light Mode Colors */
-  --bg-main: #f4f6f9;
-  --bg-card: #ffffff;
-  --bg-input: #ffffff;
-  --border: #e2e8f0;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
+  /* Dark Mode Colors by default */
+  --bg-main: #05141e;
+  --bg-card: rgba(7, 28, 41, 0.85);
+  --bg-input: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
   --text-light: #ffffff;
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --glass-bg: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(226, 232, 240, 0.8);
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --shadow-hover: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+  --glass-bg: rgba(7, 28, 41, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.12);
 
   /* Fonts */
   --font-heading: 'Outfit', sans-serif;
@@ -37,8 +37,8 @@
 }
 
 [data-theme="dark"] {
-  /* Dark Mode Colors */
-  --primary: #0084ff; /* Aegean Blue for active background states */
+  /* Keep mapping for consistency */
+  --primary: #0084ff;
   --primary-light: rgba(0, 132, 255, 0.2);
   --bg-main: #05141e;
   --bg-card: rgba(7, 28, 41, 0.85);

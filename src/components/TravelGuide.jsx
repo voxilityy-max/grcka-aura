@@ -1,6 +1,101 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import RoadPlanner from './RoadPlanner';
 import BorderStatus from './BorderStatus';
+
+const WEATHER_DATA = {
+  Tasos: {
+    temp: '30°C',
+    seaTemp: '25°C',
+    condition: 'Sunčano',
+    icon: '☀️',
+    wind: '8 km/h',
+    uv: '8 (Visok)',
+    humidity: '45%',
+    description: 'Voda je topla i izuzetno mirna. Idealno za kupanje dece na Zlatnoj plaži (Golden Beach).',
+    monthlyTemp: [
+      { month: 'Maj', air: '22°C', sea: '18°C' },
+      { month: 'Jun', air: '27°C', sea: '22°C' },
+      { month: 'Jul', air: '31°C', sea: '25°C' },
+      { month: 'Avg', air: '32°C', sea: '26°C' },
+      { month: 'Sep', air: '26°C', sea: '23°C' },
+      { month: 'Okt', air: '20°C', sea: '19°C' }
+    ],
+    forecast: [
+      { day: 'Danas', temp: '30°C / 21°C', sea: '25°C', icon: '☀️', cond: 'Sunčano' },
+      { day: 'Sutra', temp: '31°C / 22°C', sea: '25°C', icon: '☀️', cond: 'Sunčano' },
+      { day: 'Prekosutra', temp: '29°C / 20°C', sea: '24°C', icon: '🌤️', cond: 'Malo oblačno' }
+    ]
+  },
+  Lefkada: {
+    temp: '31°C',
+    seaTemp: '24°C',
+    condition: 'Sunčano',
+    icon: '☀️',
+    wind: '12 km/h',
+    uv: '9 (Vrlo visok)',
+    humidity: '50%',
+    description: 'Jonsko more na zapadnoj obali je osvežavajuće. Mogući su blagi popodnevni talasi na plaži Katizma.',
+    monthlyTemp: [
+      { month: 'Maj', air: '21°C', sea: '17°C' },
+      { month: 'Jun', air: '26°C', sea: '21°C' },
+      { month: 'Jul', air: '30°C', sea: '24°C' },
+      { month: 'Avg', air: '31°C', sea: '25°C' },
+      { month: 'Sep', air: '27°C', sea: '23°C' },
+      { month: 'Okt', air: '21°C', sea: '20°C' }
+    ],
+    forecast: [
+      { day: 'Danas', temp: '31°C / 22°C', sea: '24°C', icon: '☀️', cond: 'Sunčano' },
+      { day: 'Sutra', temp: '32°C / 23°C', sea: '24°C', icon: '☀️', cond: 'Sunčano' },
+      { day: 'Prekosutra', temp: '30°C / 21°C', sea: '23°C', icon: '☀️', cond: 'Sunčano' }
+    ]
+  },
+  Sitonija: {
+    temp: '30°C',
+    seaTemp: '26°C',
+    condition: 'Blag vetar',
+    icon: '🌤️',
+    wind: '10 km/h',
+    uv: '8 (Visok)',
+    humidity: '48%',
+    description: 'Voda u zalivu je izuzetno topla i plitka. Savršeno za kupanje na plaži Karidi.',
+    monthlyTemp: [
+      { month: 'Maj', air: '22°C', sea: '19°C' },
+      { month: 'Jun', air: '28°C', sea: '23°C' },
+      { month: 'Jul', air: '31°C', sea: '26°C' },
+      { month: 'Avg', air: '32°C', sea: '26°C' },
+      { month: 'Sep', air: '27°C', sea: '24°C' },
+      { month: 'Okt', air: '21°C', sea: '21°C' }
+    ],
+    forecast: [
+      { day: 'Danas', temp: '30°C / 22°C', sea: '26°C', icon: '🌤️', cond: 'Blag vetar' },
+      { day: 'Sutra', temp: '31°C / 23°C', sea: '26°C', icon: '☀️', cond: 'Sunčano' },
+      { day: 'Prekosutra', temp: '31°C / 22°C', sea: '25°C', icon: '☀️', cond: 'Sunčano' }
+    ]
+  },
+  Krf: {
+    temp: '29°C',
+    seaTemp: '23°C',
+    condition: 'Sunčano',
+    icon: '☀️',
+    wind: '14 km/h',
+    uv: '8 (Visok)',
+    humidity: '52%',
+    description: 'Voda je čista i bistra, ali tradicionalno nešto svežija nego na Egejskom moru.',
+    monthlyTemp: [
+      { month: 'Maj', air: '20°C', sea: '17°C' },
+      { month: 'Jun', air: '25°C', sea: '20°C' },
+      { month: 'Jul', air: '29°C', sea: '23°C' },
+      { month: 'Avg', air: '30°C', sea: '24°C' },
+      { month: 'Sep', air: '26°C', sea: '22°C' },
+      { month: 'Okt', air: '20°C', sea: '19°C' }
+    ],
+    forecast: [
+      { day: 'Danas', temp: '29°C / 20°C', sea: '23°C', icon: '☀️', cond: 'Sunčano' },
+      { day: 'Sutra', temp: '29°C / 21°C', sea: '23°C', icon: '☀️', cond: 'Sunčano' },
+      { day: 'Prekosutra', temp: '28°C / 19°C', sea: '22°C', icon: '🌤️', cond: 'Blago oblačno' }
+    ]
+  }
+};
 
 const GREECE_PRICES = [
   { item: 'Giros pita', price: '4.20€ - 4.80€', category: 'restoran', icon: '🌯', desc: 'Prosečna cena u brzim hranama i tavernama.' },
@@ -31,10 +126,19 @@ const DISCOUNTS_LIST = [
   { shop: 'Restoran "Thalassa" (Heraklion, Krit)', discount: '-10%', category: 'Hrana i piće', desc: 'Važi uz poručena dva ili više glavnih jela od sveže ribe.' }
 ];
 
-export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, onSubTabChange }) {
+export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, onSubTabChange, initialWeatherLoc }) {
   const [localSubTab, setLocalSubTab] = useState('calculator');
   const subTab = initialSubTab || localSubTab;
   const setSubTab = onSubTabChange || setLocalSubTab;
+
+  // Weather Selected Location State
+  const [selectedWeatherLoc, setSelectedWeatherLoc] = useState(initialWeatherLoc || 'Tasos');
+
+  useEffect(() => {
+    if (initialWeatherLoc) {
+      setSelectedWeatherLoc(initialWeatherLoc);
+    }
+  }, [initialWeatherLoc]);
 
   // Search & Filters for Prices
   const [searchPrice, setSearchPrice] = useState('');
@@ -71,6 +175,12 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
           🚧 Kamere & Stanje na Granicama
         </button>
         <button 
+          className={`btn-filter-item ${subTab === 'weather' ? 'active' : ''}`}
+          onClick={() => setSubTab('weather')}
+        >
+          ☀️ Vreme & Temp. Mora
+        </button>
+        <button 
           className={`btn-filter-item ${subTab === 'prices' ? 'active' : ''}`}
           onClick={() => setSubTab('prices')}
         >
@@ -97,6 +207,160 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
 
       {subTab === 'borders' && (
         <BorderStatus />
+      )}
+
+      {/* Weather & Sea Surface Temp Tab */}
+      {subTab === 'weather' && (
+        <div className="weather-tab-layout animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Location Selector Tabs */}
+          <div className="price-categories-filter" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {Object.keys(WEATHER_DATA).map(loc => (
+              <button
+                key={loc}
+                className={`btn-filter-item ${selectedWeatherLoc === loc ? 'active' : ''}`}
+                style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={() => setSelectedWeatherLoc(loc)}
+              >
+                <span>{WEATHER_DATA[loc].icon}</span> {loc}
+              </button>
+            ))}
+          </div>
+
+          {/* Current Weather Card */}
+          {(() => {
+            const w = WEATHER_DATA[selectedWeatherLoc];
+            const seaTempNum = parseInt(w.seaTemp, 10);
+            let advisoryText = "Voda je osvežavajuća i idealna za plivanje.";
+            let advisoryClass = "orange";
+            if (seaTempNum >= 25) {
+              advisoryText = "Voda je izuzetno topla i savršena za decu i duži boravak u moru. 🏖️";
+              advisoryClass = "green";
+            } else if (seaTempNum < 23) {
+              advisoryText = "Voda je nešto hladnija. Preporučuje se kraći boravak u vodi i postepeno prilagođavanje.";
+              advisoryClass = "blue";
+            }
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                  gap: '1.5rem'
+                }}>
+                  {/* Left: Current Conditions */}
+                  <div className="inquiries-panel-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', fontSize: '6rem', opacity: '0.12' }}>{w.icon}</div>
+                    <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)' }}>Trenutno vreme</span>
+                    <h3 style={{ fontSize: '2.5rem', fontWeight: '800', margin: '0.5rem 0', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {w.temp} <span style={{ fontSize: '1.5rem', fontWeight: '400', color: 'var(--text-muted)' }}>/ {w.condition}</span>
+                    </h3>
+                    <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{w.description}</p>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1.2rem' }}>
+                      <div>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>💨 Vetar</span>
+                        <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-main)' }}>{w.wind}</div>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>☀️ UV Indeks</span>
+                        <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-main)' }}>{w.uv}</div>
+                      </div>
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>💧 Vlažnost vazduha</span>
+                        <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-main)' }}>{w.humidity}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Sea Surface Temperature highlight */}
+                  <div className="inquiries-panel-card" style={{ 
+                    padding: '2rem', 
+                    background: 'linear-gradient(135deg, rgba(10, 79, 112, 0.08) 0%, rgba(56, 189, 248, 0.08) 100%)',
+                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'center',
+                    position: 'relative'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+                      <span style={{ fontSize: '2rem' }}>🌡️</span>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)' }}>Temperatura Mora</h4>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Satelitska merenja u realnom vremenu</span>
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', margin: '0.5rem 0' }}>
+                      <span style={{ fontSize: '4.5rem', fontWeight: '900', color: 'var(--primary)', lineHeight: '1' }}>{w.seaTemp}</span>
+                      <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)', fontWeight: '600' }}>Temperatura vode</span>
+                    </div>
+
+                    <div style={{ 
+                      marginTop: '1rem',
+                      padding: '0.8rem 1rem', 
+                      borderRadius: '8px', 
+                      backgroundColor: advisoryClass === 'green' ? 'rgba(16, 185, 129, 0.1)' : advisoryClass === 'blue' ? 'rgba(56, 189, 248, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                      borderLeft: `4px solid ${advisoryClass === 'green' ? '#10b981' : advisoryClass === 'blue' ? '#38bdf8' : '#f59e0b'}`,
+                      fontSize: '0.85rem',
+                      color: 'var(--text-main)',
+                      fontWeight: '500'
+                    }}>
+                      {advisoryText}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3-Day Forecast & Monthly trend */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                  {/* Left: 3-Day Forecast */}
+                  <div className="inquiries-panel-card" style={{ padding: '1.5rem' }}>
+                    <h4 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '1.2rem', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.4rem' }}>
+                      📅 Trodnevna Prognoza
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {w.forecast.map((f, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)' }}>
+                          <span style={{ fontWeight: '600', width: '90px', color: 'var(--text-main)' }}>{f.day}</span>
+                          <span style={{ fontSize: '1.4rem' }}>{f.icon}</span>
+                          <span style={{ fontSize: '0.85rem', width: '100px', color: 'var(--text-muted)' }}>{f.cond}</span>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{f.temp}</div>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>🌊 More: {f.sea}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right: Monthly Sea Temp Trends */}
+                  <div className="inquiries-panel-card" style={{ padding: '1.5rem' }}>
+                    <h4 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '1.2rem', color: 'var(--primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.4rem' }}>
+                      📈 Prosečne Temperature po Mesecima
+                    </h4>
+                    <table className="db-table" style={{ margin: 0, width: '100%', fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr>
+                          <th>Mesec</th>
+                          <th>Prosek Vazduh</th>
+                          <th>Prosek More</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {w.monthlyTemp.map((m, idx) => (
+                          <tr key={idx}>
+                            <td style={{ fontWeight: '600', color: 'var(--text-main)' }}>{m.month}</td>
+                            <td style={{ fontWeight: '600' }}>{m.air}</td>
+                            <td style={{ fontWeight: '700', color: 'var(--primary)' }}>{m.sea}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
       )}
 
       {/* Prices List Tab */}

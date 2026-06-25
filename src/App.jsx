@@ -260,10 +260,7 @@ const getTomorrowDateString = () => {
 
 export default function App() {
   // Theme State
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    return saved ? saved === 'dark' : true;
-  });
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   // App Navigation Tab
   const [activeTab, setActiveTab] = useState(() => {
@@ -282,6 +279,14 @@ export default function App() {
 
   const [backendActive, setBackendActive] = useState(false);
   const [guideSubTab, setGuideSubTab] = useState('calculator');
+  const [initialWeatherLoc, setInitialWeatherLoc] = useState('Tasos');
+
+  const handleViewWeather = (loc) => {
+    setGuideSubTab('weather');
+    setInitialWeatherLoc(loc || 'Tasos');
+    handleTabChange('guide');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleTabChange = (tabName) => {
     scrollPositionRef.current = 0;
@@ -1132,14 +1137,9 @@ export default function App() {
 
   // Sync theme
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   // Sync URL for Admin Panel
   useEffect(() => {
@@ -2431,6 +2431,7 @@ export default function App() {
               onOpenAuth={handleOpenAuthModal}
               initialSubTab={guideSubTab}
               onSubTabChange={setGuideSubTab}
+              initialWeatherLoc={initialWeatherLoc}
             />
           </div>
         );
@@ -2543,6 +2544,7 @@ export default function App() {
               onSelectDestination={handleSelectDestination}
               setActiveTab={handleTabChange}
               setSelectedProperty={setSelectedProperty}
+              onViewWeather={handleViewWeather}
             />
           );
         }

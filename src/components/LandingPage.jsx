@@ -23,7 +23,9 @@ export default function LandingPage({
 
   setActiveTab,
 
-  setSelectedProperty
+  setSelectedProperty,
+
+  onViewWeather
 
 }) {
 
@@ -199,14 +201,146 @@ export default function LandingPage({
           </div>
         </section>
 
-                {/* 5. Latest from Travel Guide Section */}
+        {/* Live Weather & Sea Surface Temp Section */}
+        <section className="landing-section weather-quick-section" style={{
+          background: 'linear-gradient(180deg, rgba(7, 28, 41, 0) 0%, rgba(11, 49, 70, 0.05) 50%, rgba(7, 28, 41, 0) 100%)',
+          padding: '4rem 1rem',
+          borderTop: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)'
+        }}>
+          <div className="section-header-centered" style={{ marginBottom: '2.5rem' }}>
+            <h2 className="landing-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <span>☀️</span> Vreme & Temperatura Mora Uživo
+            </h2>
+            <p className="landing-section-subtitle">
+              Satelitski podaci u realnom vremenu i uslovi za kupanje na najpopularnijim destinacijama
+            </p>
+          </div>
 
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '1.5rem',
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 1rem'
+          }}>
+            {[
+              { name: 'Tasos', temp: '30°C', seaTemp: '25°C', icon: '☀️', condition: 'Sunčano', desc: 'Topla i mirna voda' },
+              { name: 'Lefkada', temp: '31°C', seaTemp: '24°C', icon: '☀️', condition: 'Sunčano', desc: 'Osvežavajući talasi' },
+              { name: 'Sitonija', temp: '30°C', seaTemp: '26°C', icon: '🌤️', condition: 'Malo oblačno', desc: 'Izuzetno toplo i plitko' },
+              { name: 'Krf', temp: '29°C', seaTemp: '23°C', icon: '☀️', condition: 'Sunčano', desc: 'Bistro i osvežavajuće' }
+            ].map(w => (
+              <div 
+                key={w.name}
+                className="inquiries-panel-card"
+                onClick={() => onViewWeather && onViewWeather(w.name)}
+                style={{
+                  background: 'var(--bg-card)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '16px',
+                  padding: '1.8rem 1.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.borderColor = 'var(--accent)';
+                  e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 132, 255, 0.12)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                {/* Background soft glow on hover */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-50px',
+                  right: '-50px',
+                  width: '120px',
+                  height: '120px',
+                  background: 'radial-gradient(circle, rgba(0,132,255,0.08) 0%, rgba(0,0,0,0) 70%)',
+                  pointerEvents: 'none'
+                }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: '800', fontSize: '1.25rem', color: 'var(--text-main)', fontFamily: 'var(--font-heading)' }}>
+                    {w.name}
+                  </span>
+                  <span style={{ fontSize: '1.8rem' }}>{w.icon}</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                  <span style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--text-main)' }}>{w.temp}</span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{w.condition}</span>
+                </div>
+
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  backgroundColor: 'rgba(0, 132, 255, 0.06)', 
+                  border: '1px solid rgba(0, 132, 255, 0.1)',
+                  borderRadius: '10px',
+                  padding: '0.6rem 0.8rem',
+                  marginTop: '0.2rem'
+                }}>
+                  <span style={{ fontSize: '1.2rem' }}>🌊</span>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.2' }}>Temperatura mora</span>
+                    <span style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--accent)', lineHeight: '1.2' }}>{w.seaTemp}</span>
+                  </div>
+                </div>
+
+                <div style={{ 
+                  fontSize: '0.8rem', 
+                  color: 'var(--text-muted)', 
+                  fontStyle: 'italic',
+                  borderTop: '1px dashed var(--border)',
+                  paddingTop: '0.8rem',
+                  marginTop: '0.2rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span>{w.desc}</span>
+                  <span style={{ color: 'var(--accent)', fontWeight: '700' }}>→</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
+            <button 
+              className="btn-landing-secondary"
+              onClick={() => onViewWeather && onViewWeather('Tasos')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '0.8rem 1.8rem',
+                borderRadius: '50px',
+                fontSize: '0.9rem',
+                fontWeight: '700'
+              }}
+            >
+              📅 Detaljna Prognoza & Mesečni Proseci →
+            </button>
+          </div>
+        </section>
+
+        {/* 5. Latest from Travel Guide Section */}
         <section className="landing-section blog-section">
-
           <div className="section-header-centered">
-
             <h2 className="landing-section-title">Turistički vodič & saveti</h2>
-
             <p className="landing-section-subtitle">Saznajte sve važne informacije za bezbedan i udoban put u Grčku</p>
 
           </div>
