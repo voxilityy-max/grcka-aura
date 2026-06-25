@@ -2017,39 +2017,7 @@ export default function PropertyDetails({
 
               
 
-              {!currentUser ? (
-
-                // Guest Prompt to Login
-
-                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }} className="animate-scale">
-
-                  <h4 style={{ fontWeight: '700', color: 'var(--primary)' }}>Rezervišite Smeštaj</h4>
-
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-
-                    Da biste poslali upit našem timu i pratili status svojih rezervacija, molimo Vas da se prijavite na svoj profil.
-
-                  </p>
-
-                  <button 
-
-                    type="button" 
-
-                    className="btn-submit-inquiry" 
-
-                    style={{ background: 'linear-gradient(135deg, var(--accent), var(--primary-light))' }}
-
-                    onClick={onOpenAuth}
-
-                  >
-
-                    Prijavi se za rezervaciju
-
-                  </button>
-
-                </div>
-
-              ) : inquirySubmitted ? (
+              {inquirySubmitted ? (
 
                 <div className="success-message animate-scale">
 
@@ -2063,7 +2031,13 @@ export default function PropertyDetails({
 
                   <p style={{ fontWeight: 'normal', fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--text-main)' }}>
 
-                    Upit je zabeležen na Vašem profilu. Naš tim će Vas kontaktirati na email <strong>{inquiryEmail}</strong>.
+                    {currentUser 
+
+                      ? 'Upit je zabeležen na Vašem profilu. Naš tim će Vas kontaktirati na email '
+
+                      : 'Naš tim će Vas kontaktirati na email '
+
+                    }<strong>{inquiryEmail}</strong>.
 
                   </p>
 
