@@ -628,11 +628,109 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [currentUser]);
 
+  const handleConfirmInquiryDraft = async (msgId, draft) => {
+    const logUser = currentUser || { fullName: draft.guestName, email: draft.guestEmail };
+    const newInquiry = {
+      userId: currentUser ? currentUser.id : 0,
+      propertyId: draft.propertyId,
+      checkIn: draft.checkIn,
+      checkOut: draft.checkOut,
+      dates: draft.dates,
+      nights: draft.nights,
+      guests: draft.guests,
+      totalPrice: draft.totalPrice,
+      status: 'Poslato',
+      message: draft.message || 'Rezervisano preko AI asistenta.',
+      roomTitle: draft.roomTitle || null,
+      guestName: draft.guestName,
+      guestEmail: draft.guestEmail,
+      guestPhone: draft.guestPhone
+    };
+
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/api/inquiries`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newInquiry)
+        });
+        const saved = await res.json();
+        setInquiries(prev => [saved, ...prev]);
+        const prop = properties.find(p => p.id === saved.propertyId);
+        const propTitle = prop ? prop.title : 'nepoznat smeštaj';
+        logActivity(logUser, `Poslat novi rezervacioni upit preko AI asistenta za smeštaj "${propTitle}" (${saved.dates}, ukupna cena: ${saved.totalPrice}€).`, 'inquiry');
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      setInquiries(prev => [newInquiry, ...prev]);
+      const prop = properties.find(p => p.id === newInquiry.propertyId);
+      const propTitle = prop ? prop.title : 'nepoznat smeštaj';
+      logActivity(logUser, `Poslat novi rezervacioni upit preko AI asistenta za smeštaj "${propTitle}" (${newInquiry.dates}, ukupna cena: ${newInquiry.totalPrice}€).`, 'inquiry');
+    }
+
+    setChatMessages(prev => prev.map(m => {
+      if (m.id === msgId) {
+        return {
+          ...m,
+          inquiryDraft: {
+            ...m.inquiryDraft,
+            submitted: true
+          }
+        };
+      }
+      return m;
+    }));
+
+    const aiResponseText = `Vaš upit je uspešno poslat! Domaćin će vas kontaktirati na email **${draft.guestEmail}** ili telefon **${draft.guestPhone}**. Hvala vam! Letovanje je rezervisano. Let's go! 🌴`;
+    setChatMessages(prev => [
+      ...prev,
+      {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: aiResponseText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        recommendedPropertyIds: []
+      }
+    ]);
+
+    setTimeout(() => {
+      const chatList = document.getElementById('chat-messages-scroll');
+      if (chatList) chatList.scrollTop = chatList.scrollHeight;
+    }, 100);
+  };
+
+  const handleCancelInquiryDraft = (msgId) => {
+    setChatMessages(prev => prev.map(m => {
+      if (m.id === msgId) {
+        const { inquiryDraft, ...rest } = m;
+        return rest;
+      }
+      return m;
+    }));
+  };
+
   const handleSendAiMessage = async () => {
     if (!chatInputText.trim() || isAiTyping) return;
 
     const userMsgText = chatInputText;
     setChatInputText('');
+
+    // Check if the last AI message has an active draft and the user confirms it
+    const lastAiMsg = [...chatMessages].reverse().find(m => m.sender === 'ai');
+    const isYes = ['da', 'moze', 'može', 'pošalji', 'posalji', 'potvrđujem', 'potvrdjujem', 'ok', 'yes', 'naravno'].includes(userMsgText.trim().toLowerCase());
+    if (lastAiMsg && lastAiMsg.inquiryDraft && !lastAiMsg.inquiryDraft.submitted && isYes) {
+      const userMsg = {
+        id: Date.now(),
+        sender: 'user',
+        text: userMsgText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        recommendedPropertyIds: []
+      };
+      setChatMessages(prev => [...prev, userMsg]);
+      await handleConfirmInquiryDraft(lastAiMsg.id, lastAiMsg.inquiryDraft);
+      return;
+    }
 
     // Add user message
     const userMsg = {
@@ -681,7 +779,8 @@ export default function App() {
         sender: 'ai',
         text: data.text || "Izvinite, trenutno ne mogu da procesiram vaš upit.",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        recommendedPropertyIds: data.recommendedPropertyIds || []
+        recommendedPropertyIds: data.recommendedPropertyIds || [],
+        inquiryDraft: data.inquiryDraft || null
       };
 
       setChatMessages(prev => [...prev, aiMsg]);
@@ -3118,6 +3217,74 @@ export default function App() {
                     <div key={msg.id} className={`chat-message-item ${msg.sender}`}>
                       <div className="chat-message-bubble">
                         {msg.text}
+                        
+                        {msg.inquiryDraft && (
+                          <div className="chat-inquiry-draft-card animate-scale" style={{
+                            marginTop: '0.8rem',
+                            padding: '0.8rem',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.5rem',
+                            textAlign: 'left'
+                          }}>
+                            <h5 style={{ fontWeight: '700', margin: '0', fontSize: '0.85rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              📝 Rezervacioni Upit (Nacrt)
+                            </h5>
+                            <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.85)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                              <span><strong>Smeštaj:</strong> {properties.find(p => p.id === msg.inquiryDraft.propertyId)?.title || `Smeštaj #${msg.inquiryDraft.propertyId}`}</span>
+                              {msg.inquiryDraft.roomTitle && <span><strong>Soba:</strong> {msg.inquiryDraft.roomTitle}</span>}
+                              <span><strong>Termin:</strong> {msg.inquiryDraft.dates} ({msg.inquiryDraft.nights} noći)</span>
+                              <span><strong>Gosti:</strong> {msg.inquiryDraft.guests}</span>
+                              <span><strong>Ukupna cena:</strong> {msg.inquiryDraft.totalPrice}€</span>
+                              <span><strong>Ime:</strong> {msg.inquiryDraft.guestName}</span>
+                              <span><strong>Email:</strong> {msg.inquiryDraft.guestEmail}</span>
+                              <span><strong>Telefon:</strong> {msg.inquiryDraft.guestPhone}</span>
+                            </div>
+                            
+                            {msg.inquiryDraft.submitted ? (
+                              <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '600', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                ✅ Upit je uspešno poslat!
+                              </span>
+                            ) : (
+                              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem' }}>
+                                <button 
+                                  style={{
+                                    flex: 1,
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    background: 'var(--accent, #0a4f70)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer'
+                                  }}
+                                  onClick={() => handleConfirmInquiryDraft(msg.id, msg.inquiryDraft)}
+                                >
+                                  Pošalji Upit 🚀
+                                </button>
+                                <button 
+                                  style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    background: 'rgba(255,255,255,0.1)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    fontSize: '0.75rem',
+                                    cursor: 'pointer'
+                                  }}
+                                  onClick={() => handleCancelInquiryDraft(msg.id)}
+                                >
+                                  Otkaži
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {msg.recommendedPropertyIds && msg.recommendedPropertyIds.length > 0 && (
                           <div className="chat-properties-recommendations">
                             {msg.recommendedPropertyIds.map(pid => {

@@ -2161,14 +2161,38 @@ Pravila komunikacije (Tvoj Trening):
 8. **Format**: Odgovori ISKLJUČIVO u sledećem JSON formatu, bez ikakvog dodatnog teksta van JSON-a:
 {
   "text": "Tekst tvog odgovora...",
-  "recommendedPropertyIds": [] // ID-jevi preporučenih smeštaja sa liste iznad (prazan niz ako klijentu još ništa ne preporučuješ)
+  "recommendedPropertyIds": [], // ID-jevi preporučenih smeštaja
+  "inquiryDraft": null // ili objekat sa nacrtom upita ako su svi podaci iz pravila 10 prikupljeni, inače null
 }
-9. **BEZ LINKOVA (STRIKTNO PRAVILO)**: U svom tekstu (polje "text" in JSON) nikada, ni pod kojim uslovima, nemoj ispisivati nikakve URL linkove, veb adrese (npr. www.nesto.com, http://...) niti markdown linkove (npr. [naziv](link)). Zabranjeno je slanje bilo kakvih linkova korisniku! Umesto toga, samo napiši ime smeštaja običnim rečima, a njegove ID-jeve prosledi u nizu "recommendedPropertyIds". Sistem će te ID-jeve automatski pretvoriti u prelepe kartice na klijentu.`
+9. **BEZ LINKOVA (STRIKTNO PRAVILO)**: U svom tekstu (polje "text" in JSON) nikada, ni pod kojim uslovima, nemoj ispisivati nikakve URL linkove, veb adrese (npr. www.nesto.com, http://...) niti markdown linkove (npr. [naziv](link)). Zabranjeno je slanje bilo kakvih linkova korisniku! Umesto toga, samo napiši ime smeštaja običnim rečima, a njegove ID-jeve prosledi u nizu "recommendedPropertyIds". Sistem će te ID-jeve automatski pretvoriti u prelepe kartice na klijentu.
+10. **Automatsko popunjavanje nacrta upita (inquiryDraft)**: Ako ti korisnik pruži sledeće podatke kroz ćaskanje:
+   - Koji smeštaj želi (ID ili tačan naziv, izaberi propertyId iz liste)
+   - Datume dolaska i odlaska (checkIn i checkOut u formatu YYYY-MM-DD)
+   - Broj gostiju (guests)
+   - Puno ime i prezime (guestName)
+   - Email adresu (guestEmail)
+   - Broj telefona (guestPhone)
+   Tada MORAŠ generisati 'inquiryDraft' objekat u JSON-u. U tom objektu sam izračunaj broj noćenja (nights), formatiraj datume (dates, npr. '10. Jul - 20. Jul') i izračunaj ukupnu cenu (totalPrice = nights * cena_po_noći tog smeštaja).
+   Primer:
+   {
+     "propertyId": 2,
+     "checkIn": "2026-07-10",
+     "checkOut": "2026-07-20",
+     "dates": "10. Jul - 20. Jul",
+     "nights": 10,
+     "guests": 2,
+     "totalPrice": 550,
+     "guestName": "Stefan Petrović",
+     "guestEmail": "stefan@email.com",
+     "guestPhone": "+38160123456",
+     "roomTitle": null // ili naziv sobe ako je naveden
+   }
+   U polju 'text' napiši da si popunio detalje i ponudi da pošalješ upit u njegovo ime.`
               },
               ...history,
               { 
                 role: 'user', 
-                content: `${message}\n\n[UPUTSTVO ZA ODGOVOR: Odgovori na srpskom jeziku, toplo, prirodno i izuzetno sažeto (najviše 1-2 rečenice ukupno). Izbegavaj prevelike poruke i dugačke pasuse. Odgovori ISKLJUČIVO u JSON formatu: { "text": "...", "recommendedPropertyIds": [...] }. Ako te gost pita kako da rezerviše, OBAVEZNO i doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." STRIKTNO JE ZABRANJENO slanje bilo kakvih linkova ili URL-ova u polju "text". Smeštaje preporuči isključivo kroz niz "recommendedPropertyIds" (u tekstu navedi samo njihova imena običnim rečima) i TO TEK nakon što prikupiš sve tri informacije (destinaciju, broj osoba i period letovanja).]`
+                content: `${message}\n\n[UPUTSTVO ZA ODGOVOR: Odgovori na srpskom jeziku, toplo, prirodno i izuzetno sažeto (najviše 1-2 rečenice ukupno). Izbegavaj prevelike poruke i dugačke pasuse. Odgovori ISKLJUČIVO u JSON formatu: { "text": "...", "recommendedPropertyIds": [...], "inquiryDraft": null ili popunjen objekat }. Ako te gost pita kako da rezerviše, OBAVEZNO i doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." STRIKTNO JE ZABRANJENO slanje bilo kakvih linkova ili URL-ova u polju "text". Smeštaje preporuči isključivo kroz niz "recommendedPropertyIds" (u tekstu navedi samo njihova imena običnim rečima) i TO TEK nakon što prikupiš sve tri informacije (destinaciju, broj osoba i period letovanja). Ako prikupiš sve detalje o rezervaciji (smeštaj, datumi, gosti, ime, email, telefon), OBAVEZNO generiši inquiryDraft objekat i ponudi slanje upita.]`
               }
             ],
             response_format: { type: 'json_object' }
