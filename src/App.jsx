@@ -720,7 +720,7 @@ export default function App() {
 
     // Check if the last AI message has an active draft and the user confirms it
     const lastAiMsg = [...chatMessages].reverse().find(m => m.sender === 'ai');
-    const isYes = ['da', 'moze', 'može', 'pošalji', 'posalji', 'potvrđujem', 'potvrdjujem', 'ok', 'yes', 'naravno'].includes(userMsgText.trim().toLowerCase());
+    const isYes = ['da', 'moze', 'može', 'pošalji', 'posalji', 'potvrdi', 'potvrđujem', 'potvrdjujem', 'ok', 'yes', 'naravno'].some(word => userMsgText.trim().toLowerCase().includes(word));
     if (lastAiMsg && lastAiMsg.inquiryDraft && !lastAiMsg.inquiryDraft.submitted && isYes) {
       const userMsg = {
         id: Date.now(),

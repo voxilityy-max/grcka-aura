@@ -2074,9 +2074,71 @@ function getFallbackResponse(message, properties, history = []) {
     }
   }
 
+  // Extract email, phone, name, and dates to build auto-inquiry draft in fallback mode
+  const emailMatch = combinedText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const guestEmail = emailMatch ? emailMatch[0] : null;
+
+  const phoneMatch = combinedText.match(/\+?[0-9][0-9\s\-]{6,14}[0-9]/);
+  const guestPhone = phoneMatch ? phoneMatch[0].trim() : null;
+
+  let guestName = null;
+  const nameIntroMatch = combinedText.match(/(?:zovem se|ime mi je|ja sam)\s+([a-zšđčćž]+(?:\s+[a-zšđčćž]+){1,2})/i);
+  if (nameIntroMatch) {
+    guestName = nameIntroMatch[1].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  } else if (guestEmail) {
+    const emailParts = guestEmail.split('@')[0].split(/[\._-]/);
+    guestName = emailParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+
+  let inquiryDraft = null;
+  if (guestName && guestEmail && guestPhone && matchedLoc) {
+    let checkIn = "2026-07-10";
+    let checkOut = "2026-07-20";
+    let datesStr = "10. Jul - 20. Jul";
+    let nightsCount = 10;
+
+    const dateRangeMatch = combinedText.match(/(\d{1,2})\.?\s*(?:do|-)\s*(\d{1,2})\.?\s*(jun|jul|avg|sep)/i);
+    if (dateRangeMatch) {
+      const startDay = parseInt(dateRangeMatch[1], 10);
+      const endDay = parseInt(dateRangeMatch[2], 10);
+      const monthName = dateRangeMatch[3].toLowerCase();
+      
+      let monthNum = "07";
+      let monthLabel = "Jul";
+      if (monthName.includes("jun")) { monthNum = "06"; monthLabel = "Jun"; }
+      else if (monthName.includes("avg")) { monthNum = "08"; monthLabel = "Avg"; }
+      else if (monthName.includes("sep")) { monthNum = "09"; monthLabel = "Sep"; }
+
+      checkIn = `2026-${monthNum}-${String(startDay).padStart(2, '0')}`;
+      checkOut = `2026-${monthNum}-${String(endDay).padStart(2, '0')}`;
+      datesStr = `${startDay}. ${monthLabel} - ${endDay}. ${monthLabel}`;
+      nightsCount = endDay - startDay;
+    }
+
+    const selectedProp = matches.length > 0 ? matches[0] : (properties.find(p => p.location.toLowerCase().includes(matchedLoc.toLowerCase())) || properties[0]);
+    inquiryDraft = {
+      propertyId: selectedProp.id,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      dates: datesStr,
+      nights: nightsCount,
+      guests: requestedGuests || 2,
+      totalPrice: nightsCount * selectedProp.price,
+      guestName: guestName,
+      guestEmail: guestEmail,
+      guestPhone: guestPhone,
+      roomTitle: null,
+      submitted: false
+    };
+
+    replyText = `Popunio sam nacrt upita za **${selectedProp.title}** (termin: ${datesStr}, ${requestedGuests || 2} osobe, ukupna cena: ${nightsCount * selectedProp.price}€). Da li želite da pošaljem upit? 🚀`;
+    recommendedIds = [selectedProp.id];
+  }
+
   return {
     text: replyText,
-    recommendedPropertyIds: recommendedIds
+    recommendedPropertyIds: recommendedIds,
+    inquiryDraft: inquiryDraft
   };
 }
 
