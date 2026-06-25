@@ -1407,6 +1407,7 @@ export default function App() {
 
   // Inquiry Operations
   const handleAddInquiry = async (newInquiry) => {
+    const logUser = currentUser || (newInquiry.guestName ? { fullName: newInquiry.guestName, email: newInquiry.guestEmail } : null);
     if (backendActive) {
       try {
         const res = await fetch(`${API_URL}/api/inquiries`, {
@@ -1418,7 +1419,7 @@ export default function App() {
         setInquiries(prev => [saved, ...prev]);
         const prop = properties.find(p => p.id === saved.propertyId);
         const propTitle = prop ? prop.title : 'nepoznat smeštaj';
-        logActivity(currentUser, `Poslat novi rezervacioni upit za smeštaj "${propTitle}" (${saved.dates}, ukupna cena: ${saved.totalPrice}€).`, 'inquiry');
+        logActivity(logUser, `Poslat novi rezervacioni upit za smeštaj "${propTitle}" (${saved.dates}, ukupna cena: ${saved.totalPrice}€).`, 'inquiry');
       } catch (err) {
         console.error(err);
       }
@@ -1426,7 +1427,7 @@ export default function App() {
       setInquiries(prev => [newInquiry, ...prev]);
       const prop = properties.find(p => p.id === newInquiry.propertyId);
       const propTitle = prop ? prop.title : 'nepoznat smeštaj';
-      logActivity(currentUser, `Poslat novi rezervacioni upit za smeštaj "${propTitle}" (${newInquiry.dates}, ukupna cena: ${newInquiry.totalPrice}€).`, 'inquiry');
+      logActivity(logUser, `Poslat novi rezervacioni upit za smeštaj "${propTitle}" (${newInquiry.dates}, ukupna cena: ${newInquiry.totalPrice}€).`, 'inquiry');
     }
   };
 

@@ -618,6 +618,8 @@ export default function PropertyDetails({
 
   const [inquiryEmail, setInquiryEmail] = useState(currentUser ? currentUser.email : '');
 
+  const [inquiryPhone, setInquiryPhone] = useState(currentUser && currentUser.phone ? currentUser.phone : '');
+
   const [inquiryMessage, setInquiryMessage] = useState(`Dobar dan, zainteresovan sam za smeštaj "${title}". Molim Vas za proveru slobodnih kapaciteta.`);
 
   const [inquirySubmitted, setInquirySubmitted] = useState(false);
@@ -792,13 +794,18 @@ export default function PropertyDetails({
 
   // Sync state if currentUser changes
   useEffect(() => {
-  if (currentUser) {
-  const timer = setTimeout(() => {
-  setInquiryName(currentUser.fullName || '');
-  setInquiryEmail(currentUser.email || '');
-  }, 0);
-  return () => clearTimeout(timer);
-  }
+    if (currentUser) {
+      const timer = setTimeout(() => {
+        setInquiryName(currentUser.fullName || '');
+        setInquiryEmail(currentUser.email || '');
+        setInquiryPhone(currentUser.phone || '');
+      }, 0);
+      return () => clearTimeout(timer);
+    } else {
+      setInquiryName('');
+      setInquiryEmail('');
+      setInquiryPhone('');
+    }
   }, [currentUser]);
 
 
@@ -992,78 +999,133 @@ export default function PropertyDetails({
 
 
 
+  // Inquiry Helper Guides
+  const getInquiryNameHelper = () => {
+    if (!inquiryName.trim()) return { text: 'Ime i prezime su obavezni.', status: 'required' };
+    const trimmed = inquiryName.trim();
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    if (words.length < 2) {
+      return { text: 'Unesite i prezime (npr. Stefan Petrović) kako bi domaćin znao kome odgovara.', status: 'warning' };
+    }
+    const hasInvalidChars = /[^a-zA-Z\sŠšĐđŽžČčĆćа-яА-Я]/.test(trimmed); // Allow letters & spaces
+    if (hasInvalidChars) {
+      return { text: 'Ime može sadržati samo slova.', status: 'error' };
+    }
+    if (words.some(w => w.length < 2)) {
+      return { text: 'Svaka reč u imenu mora imati najmanje 2 slova.', status: 'warning' };
+    }
+    return { text: 'Ime i prezime su ispravno uneti. ✅', status: 'valid' };
+  };
+
+  const getInquiryEmailHelper = () => {
+    if (!inquiryEmail.trim()) return { text: 'E-mail je obavezan.', status: 'required' };
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inquiryEmail.trim())) {
+      return { text: 'Unesite ispravnu e-mail adresu (npr. stefan@email.com).', status: 'error' };
+    }
+    return { text: 'E-mail adresa je ispravna. ✅', status: 'valid' };
+  };
+
+  const getInquiryPhoneHelper = () => {
+    if (!inquiryPhone.trim()) return { text: 'Broj telefona je obavezan.', status: 'required' };
+    const cleaned = inquiryPhone.replace(/[\s\-\+\(\)]/g, '');
+    if (!/^\d+$/.test(cleaned)) {
+      return { text: 'Telefon može sadržati samo cifre, razmake, minuse ili +.', status: 'error' };
+    }
+    if (cleaned.length < 9) {
+      return { text: 'Broj telefona je prekratak (najmanje 9 cifara).', status: 'warning' };
+    }
+    if (cleaned.length > 15) {
+      return { text: 'Broj telefona je predugačak (maksimalno 15 cifara).', status: 'error' };
+    }
+    return { text: 'Broj telefona je ispravan. ✅', status: 'valid' };
+  };
+
+  const getInquiryMessageHelper = () => {
+    if (!inquiryMessage.trim()) return { text: 'Preporučujemo da ostavite kratku poruku ili podrazumevanu poruku.', status: 'warning' };
+    const trimmed = inquiryMessage.trim();
+    if (trimmed.length < 5) {
+      return { text: 'Poruka je prekratka.', status: 'warning' };
+    }
+    if (/(.)\1{3,}/.test(trimmed)) {
+      return { text: 'Izbegavajte ponavljanje istih slova (npr. aaaa).', status: 'error' };
+    }
+    const words = trimmed.toLowerCase().split(/[\s\,\.\!\?]+/);
+    const vowelRegex = /[aeiouyаеиоу]/;
+    for (const word of words) {
+      if (word.length > 5 && !vowelRegex.test(word)) {
+        return { text: 'Unesite smislenu poruku na srpskom ili engleskom jeziku.', status: 'error' };
+      }
+    }
+    return { text: 'Poruka je ispravna. ✅', status: 'valid' };
+  };
+
   // Inquiry Submission
-
   const handleInquirySubmit = (e) => {
-
     e.preventDefault();
-
     setInquiryError('');
 
-
-
-    if (!currentUser) {
-
-      onOpenAuth();
-
-      return;
-
+    // Check rate limit (3 minutes cooldown)
+    const cooldownKey = `inquiry_cooldown_${id}`;
+    const lastSent = sessionStorage.getItem(cooldownKey);
+    if (lastSent) {
+      const diff = Date.now() - parseInt(lastSent, 10);
+      if (diff < 3 * 60 * 1000) {
+        const remainingSec = Math.ceil((3 * 60 * 1000 - diff) / 1000);
+        setInquiryError(`Već ste poslali upit za ovaj smeštaj. Molimo sačekajte još ${remainingSec} sekundi.`);
+        return;
+      }
     }
 
     if (guestCountExceeded) {
-
       setInquiryError(`Greška: Broj gostiju premašuje maksimalni kapacitet objekta (${activeMaxGuests} osobe).`);
-
       return;
-
     }
 
     if (nights <= 0) {
-
       setInquiryError('Greška: Datum odlaska mora biti posle datuma dolaska.');
-
       return;
-
     }
 
-    if (!inquiryName.trim() || !inquiryEmail.trim()) {
-
-      setInquiryError('Molimo popunite sva obavezna polja.');
-
+    // Validate using helper statuses
+    const nameHelper = getInquiryNameHelper();
+    if (nameHelper.status === 'error' || nameHelper.status === 'warning' || nameHelper.status === 'required') {
+      setInquiryError(nameHelper.text);
       return;
-
     }
 
+    const emailHelper = getInquiryEmailHelper();
+    if (emailHelper.status === 'error' || emailHelper.status === 'required') {
+      setInquiryError(emailHelper.text);
+      return;
+    }
 
+    const phoneHelper = getInquiryPhoneHelper();
+    if (phoneHelper.status === 'error' || phoneHelper.status === 'warning' || phoneHelper.status === 'required') {
+      setInquiryError(phoneHelper.text);
+      return;
+    }
+
+    const messageHelper = getInquiryMessageHelper();
+    if (messageHelper.status === 'error') {
+      setInquiryError(messageHelper.text);
+      return;
+    }
 
     const startD = new Date(checkIn).toLocaleDateString('sr-RS', { day: 'numeric', month: 'short' });
-
     const endD = new Date(checkOut).toLocaleDateString('sr-RS', { day: 'numeric', month: 'short' });
 
-
-
     const newInquiry = {
-
       id: Date.now(),
-
-      userId: currentUser.id,
-
+      userId: currentUser ? currentUser.id : 0,
       propertyId: id,
-
       checkIn: checkIn,
-
       checkOut: checkOut,
-
       dates: `${startD} - ${endD}`,
-
       nights: nights,
-
       guests: Math.min((parseInt(bookingGuests, 10) || 2) + bookingChildren, activeMaxGuests),
-
       totalPrice: invoice.total,
-
-      status: 'Poslato', // Sent status
-
+      status: 'Poslato',
       message: (() => {
         let finalMsg = inquiryMessage;
         if (bookingChildren > 0) {
@@ -1072,17 +1134,15 @@ export default function PropertyDetails({
         }
         return finalMsg;
       })(),
-
-      roomTitle: selectedRoom ? selectedRoom.title : null
-
+      roomTitle: selectedRoom ? selectedRoom.title : null,
+      guestName: inquiryName.trim(),
+      guestEmail: inquiryEmail.trim(),
+      guestPhone: inquiryPhone.trim()
     };
 
-
-
     onAddInquiry(newInquiry);
-
+    sessionStorage.setItem(cooldownKey, Date.now().toString());
     setInquirySubmitted(true);
-
   };
 
 
@@ -2351,79 +2411,129 @@ export default function PropertyDetails({
 
 
                   <div className="form-field">
-
                     <label htmlFor="inq-name">Ime i Prezime *</label>
-
                     <input 
-
                       type="text" 
-
                       id="inq-name" 
-
                       value={inquiryName} 
-
                       onChange={(e) => setInquiryName(e.target.value)} 
-
                       placeholder="npr. Stefan Petrović" 
-
                       required 
-
                     />
-
+                    {(() => {
+                      const helper = getInquiryNameHelper();
+                      return (
+                        <span style={{ 
+                          display: 'block', 
+                          fontSize: '0.75rem', 
+                          marginTop: '4px', 
+                          fontWeight: '500',
+                          color: helper.status === 'valid' ? '#10b981' : 
+                                 helper.status === 'error' ? '#ef4444' : 
+                                 helper.status === 'warning' ? '#f59e0b' : '#64748b'
+                        }}>
+                          {helper.text}
+                        </span>
+                      );
+                    })()}
                   </div>
 
-                  
-
                   <div className="form-field">
-
                     <label htmlFor="inq-email">E-mail adresa *</label>
-
                     <input 
-
                       type="email" 
-
                       id="inq-email" 
-
                       value={inquiryEmail} 
-
                       onChange={(e) => setInquiryEmail(e.target.value)} 
-
                       placeholder="npr. stefan@email.com" 
-
                       required 
-
                     />
-
+                    {(() => {
+                      const helper = getInquiryEmailHelper();
+                      return (
+                        <span style={{ 
+                          display: 'block', 
+                          fontSize: '0.75rem', 
+                          marginTop: '4px', 
+                          fontWeight: '500',
+                          color: helper.status === 'valid' ? '#10b981' : 
+                                 helper.status === 'error' ? '#ef4444' : 
+                                 helper.status === 'warning' ? '#f59e0b' : '#64748b'
+                        }}>
+                          {helper.text}
+                        </span>
+                      );
+                    })()}
                   </div>
-
-                  
 
                   <div className="form-field">
-
-                    <label htmlFor="inq-msg">Dodatna poruka</label>
-
-                    <textarea 
-
-                      id="inq-msg" 
-
-                      value={inquiryMessage} 
-
-                      onChange={(e) => setInquiryMessage(e.target.value)} 
-
-                      rows="1" 
-
+                    <label htmlFor="inq-phone">Broj telefona *</label>
+                    <input 
+                      type="tel" 
+                      id="inq-phone" 
+                      value={inquiryPhone} 
+                      onChange={(e) => setInquiryPhone(e.target.value)} 
+                      placeholder="npr. +381 60 123 4567" 
+                      required 
                     />
-
+                    {(() => {
+                      const helper = getInquiryPhoneHelper();
+                      return (
+                        <span style={{ 
+                          display: 'block', 
+                          fontSize: '0.75rem', 
+                          marginTop: '4px', 
+                          fontWeight: '500',
+                          color: helper.status === 'valid' ? '#10b981' : 
+                                 helper.status === 'error' ? '#ef4444' : 
+                                 helper.status === 'warning' ? '#f59e0b' : '#64748b'
+                        }}>
+                          {helper.text}
+                        </span>
+                      );
+                    })()}
                   </div>
 
-                  
+                  <div className="form-field">
+                    <label htmlFor="inq-msg">Dodatna poruka</label>
+                    <textarea 
+                      id="inq-msg" 
+                      value={inquiryMessage} 
+                      onChange={(e) => setInquiryMessage(e.target.value)} 
+                      rows="1" 
+                    />
+                    {(() => {
+                      const helper = getInquiryMessageHelper();
+                      return (
+                        <span style={{ 
+                          display: 'block', 
+                          fontSize: '0.75rem', 
+                          marginTop: '4px', 
+                          fontWeight: '500',
+                          color: helper.status === 'valid' ? '#10b981' : 
+                                 helper.status === 'error' ? '#ef4444' : 
+                                 helper.status === 'warning' ? '#f59e0b' : '#64748b'
+                        }}>
+                          {helper.text}
+                        </span>
+                      );
+                    })()}
+                  </div>
 
-                  <button type="submit" className="btn-submit-inquiry" disabled={guestCountExceeded || nights <= 0}>
-
+                  <button 
+                    type="submit" 
+                    className="btn-submit-inquiry" 
+                    disabled={
+                      guestCountExceeded || 
+                      nights <= 0 || 
+                      getInquiryNameHelper().status === 'error' || 
+                      getInquiryEmailHelper().status === 'error' || 
+                      getInquiryPhoneHelper().status === 'error' || 
+                      getInquiryMessageHelper().status === 'error'
+                    }
+                  >
                     Pošalji Upit
-
                   </button>
-
                 </form>
 
               )}

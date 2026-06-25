@@ -220,12 +220,14 @@ async function checkAndInitializeSchema() {
     // Enable Foreign Keys if supported
     await dbHelper.run('PRAGMA foreign_keys = ON');
     
-    // Check if checkIn column exists in inquiries table
+    // Check if checkIn column exists and userId constraint is correct in inquiries table
     try {
       const columns = await dbHelper.all("PRAGMA table_info(inquiries)");
       if (columns && columns.length > 0) {
         const hasCheckIn = columns.some(c => c.name === 'checkIn');
-        if (!hasCheckIn) {
+        const userIdCol = columns.find(c => c.name === 'userId');
+        const userIdIsNotNull = userIdCol && userIdCol.notnull === 1;
+        if (!hasCheckIn || userIdIsNotNull) {
           console.log('Detektovana stara struktura tabele inquiries. Resetujem bazu...');
           await dbHelper.run('DROP TABLE IF EXISTS chat_messages');
           await dbHelper.run('DROP TABLE IF EXISTS inquiries');
@@ -354,7 +356,7 @@ async function initializeSchema() {
   // 4. Inquiries Table
   await dbHelper.run(`CREATE TABLE IF NOT EXISTS inquiries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userId INTEGER NOT NULL,
+    userId INTEGER,
     propertyId INTEGER NOT NULL,
     checkIn TEXT NOT NULL,
     checkOut TEXT NOT NULL,
@@ -364,6 +366,10 @@ async function initializeSchema() {
     totalPrice INTEGER NOT NULL,
     status TEXT NOT NULL,
     message TEXT,
+    roomTitle TEXT,
+    guestName TEXT,
+    guestEmail TEXT,
+    guestPhone TEXT,
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (propertyId) REFERENCES properties(id) ON DELETE CASCADE
   )`);
@@ -430,8 +436,23 @@ async function initializeSchema() {
       await dbHelper.run("ALTER TABLE inquiries ADD COLUMN roomTitle TEXT");
       console.log("Dodata kolona 'roomTitle' u tabelu inquiries.");
     }
+    const hasGuestName = columns.some(c => c.name === 'guestName');
+    if (!hasGuestName) {
+      await dbHelper.run("ALTER TABLE inquiries ADD COLUMN guestName TEXT");
+      console.log("Dodata kolona 'guestName' u tabelu inquiries.");
+    }
+    const hasGuestEmail = columns.some(c => c.name === 'guestEmail');
+    if (!hasGuestEmail) {
+      await dbHelper.run("ALTER TABLE inquiries ADD COLUMN guestEmail TEXT");
+      console.log("Dodata kolona 'guestEmail' u tabelu inquiries.");
+    }
+    const hasGuestPhone = columns.some(c => c.name === 'guestPhone');
+    if (!hasGuestPhone) {
+      await dbHelper.run("ALTER TABLE inquiries ADD COLUMN guestPhone TEXT");
+      console.log("Dodata kolona 'guestPhone' u tabelu inquiries.");
+    }
   } catch (err) {
-    console.warn("Nije uspelo automatsko dodavanje kolone roomTitle:", err.message);
+    console.warn("Nije uspelo automatsko dodavanje kolona u inquiries:", err.message);
   }
 
   // Add icalUrl column to properties table if it doesn't exist
@@ -1109,20 +1130,63 @@ app.get('/api/inquiries', async (req, res) => {
 
 // 9. Add Inquiry
 app.post('/api/inquiries', async (req, res) => {
-  const { userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message, roomTitle } = req.body;
+  const { 
+    userId, 
+    propertyId, 
+    checkIn, 
+    checkOut, 
+    dates, 
+    nights, 
+    guests, 
+    totalPrice, 
+    status, 
+    message, 
+    roomTitle,
+    guestName,
+    guestEmail,
+    guestPhone
+  } = req.body;
   
   try {
     const result = await dbHelper.run(
-      `INSERT INTO inquiries (userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message, roomTitle)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status || 'Poslato', message, roomTitle || null]
+      `INSERT INTO inquiries (userId, propertyId, checkIn, checkOut, dates, nights, guests, totalPrice, status, message, roomTitle, guestName, guestEmail, guestPhone)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        (userId && userId !== 0) ? userId : null, 
+        propertyId, 
+        checkIn, 
+        checkOut, 
+        dates, 
+        nights, 
+        guests, 
+        totalPrice, 
+        status || 'Poslato', 
+        message, 
+        roomTitle || null,
+        guestName || null,
+        guestEmail || null,
+        guestPhone || null
+      ]
     );
     const inquiryId = result.lastID;
     
     // Fetch info for email notification
     const property = await dbHelper.get('SELECT title FROM properties WHERE id = ?', [propertyId]);
     const propertyName = property ? property.title : `Smeštaj #${propertyId}`;
-    const guestUser = await dbHelper.get('SELECT fullName, email, phone FROM users WHERE id = ?', [userId]);
+    
+    // Resolve guestUser details
+    let guestUser = null;
+    if (userId && userId !== 0) {
+      guestUser = await dbHelper.get('SELECT fullName, email, phone FROM users WHERE id = ?', [userId]);
+    }
+    
+    if (!guestUser) {
+      guestUser = {
+        fullName: guestName || 'Neregistrovani gost',
+        email: guestEmail || 'Nije dostupno',
+        phone: guestPhone || 'Nije navedeno'
+      };
+    }
 
     // Send email notification in the background
     sendInquiryEmail(
