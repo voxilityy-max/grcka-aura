@@ -2432,6 +2432,7 @@ export default function App() {
               initialSubTab={guideSubTab}
               onSubTabChange={setGuideSubTab}
               initialWeatherLoc={initialWeatherLoc}
+              onSelectDestination={handleSelectDestination}
             />
           </div>
         );

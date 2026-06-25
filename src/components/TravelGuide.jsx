@@ -126,13 +126,134 @@ const DISCOUNTS_LIST = [
   { shop: 'Restoran "Thalassa" (Heraklion, Krit)', discount: '-10%', category: 'Hrana i piće', desc: 'Važi uz poručena dva ili više glavnih jela od sveže ribe.' }
 ];
 
-export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, onSubTabChange, initialWeatherLoc }) {
+const BEACH_DATA = {
+  Tasos: [
+    {
+      name: 'Golden Beach (Zlatna plaža)',
+      type: 'Fini zlatni pesak',
+      suitability: 'Savršeno za decu (dugačak plićak)',
+      parking: 'Besplatan i prostran',
+      sunbeds: 'Uz piće ili besplatna zona',
+      desc: 'Najduža i najpopularnija plaža na ostrvu. Voda je topla, bistra i izuzetno mirna.',
+      img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=80'
+    },
+    {
+      name: 'Paradise Beach',
+      type: 'Fini pesak i talasi',
+      suitability: 'Odlična za zabavu i plivanje',
+      parking: 'Zemljani put, besplatan parking',
+      sunbeds: 'Set ležaljki 15€',
+      desc: 'Okružena borovom šumom, ova plaža nudi tropski ambijent i fine talase popodne.',
+      img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=500&q=80'
+    },
+    {
+      name: 'Marble Beach (Saliara)',
+      type: 'Beli mermerni kamenčići',
+      suitability: 'Egzotične slike i avantura',
+      parking: 'Prašnjav put, besplatan parking',
+      sunbeds: 'Obavezna konzumacija (set 20€)',
+      desc: 'Plaža od mermernog peska koji vodi daje neverovatnu tirkiznu boju sličnu Karibima.',
+      img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=500&q=80'
+    }
+  ],
+  Lefkada: [
+    {
+      name: 'Porto Katsiki',
+      type: 'Beli pesak i šljunak',
+      suitability: 'Divlja priroda i pejzaži',
+      parking: 'Plaća se (5€ dan) na vrhu stene',
+      sunbeds: 'Nema ležaljki (slobodna zona)',
+      desc: 'Najpoznatija plaža Lefkade, okružena gigantskom belom stenom. Pogled sa vrha oduzima dah.',
+      img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=500&q=80'
+    },
+    {
+      name: 'Kathisma (Katizma)',
+      type: 'Krupni pesak',
+      suitability: 'Mladi, barovi i muzika',
+      parking: 'Pored same plaže (besplatan/plaćen)',
+      sunbeds: 'U sklopu kafića (set 15€ - 30€)',
+      desc: 'Prostrana plaža sa tirkiznim morem, idealna za ljubitelje barova na plaži i vodenih sportova.',
+      img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=80'
+    },
+    {
+      name: 'Egremni',
+      type: 'Beli sitni šljunak',
+      suitability: 'Za avanturiste (stepenice ili brod)',
+      parking: 'Plaćen parking na vrhu, 400+ stepenika',
+      sunbeds: 'Slobodna zona',
+      desc: 'Neverovatno dugačka plaža sa najplavljom vodom u Grčkoj. Izolovana i prelepa.',
+      img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=500&q=80'
+    }
+  ],
+  Sitonija: [
+    {
+      name: 'Karidi Beach',
+      type: 'Beli pesak poput brašna',
+      suitability: 'Mala deca i bebe (plitka topla voda)',
+      parking: 'U borovoj šumi (besplatan)',
+      sunbeds: 'Samo sopstvena oprema',
+      desc: 'Prirodni raj u Vourvourouu sa glatkim belim stenama i plitkim zalivom gde je voda uvek topla.',
+      img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=80'
+    },
+    {
+      name: 'Orange Beach (Kavourotripes)',
+      type: 'Pesak i urezane stene',
+      suitability: 'Ljubitelji prirode i kampovanja',
+      parking: 'U borovoj šumi, strm prilaz',
+      sunbeds: 'Mali bar na steni (set 15€)',
+      desc: 'Mnoštvo malih peščanih uvala sa borovima koji se spuštaju do same vode kristalne čistoće.',
+      img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=500&q=80'
+    },
+    {
+      name: 'Klimataria',
+      type: 'Mekani zlatni pesak',
+      suitability: 'Porodice sa decom',
+      parking: 'Besplatan pored plaže',
+      sunbeds: 'U tavernama (uz konzumaciju)',
+      desc: 'Ušuškan zaliv zaštićen od vetra sa izuzetno čistom vodom i nekoliko odličnih ribljih taverni.',
+      img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=500&q=80'
+    }
+  ],
+  Krf: [
+    {
+      name: 'Paleokastritsa',
+      type: 'Pesak i šljunak',
+      suitability: 'Ljubitelji ronjenja i čamaca',
+      parking: 'Plaća se pored luke (3€ dan)',
+      sunbeds: 'Set ležaljki 15€',
+      desc: 'Spektakularan zaliv okružen zelenim brdima. Voda je čista i prozirna, idealna za snorkeling.',
+      img: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=500&q=80'
+    },
+    {
+      name: 'Canal d\'Amour (Kanal ljubavi)',
+      type: 'Glinene žute stene',
+      suitability: 'Parovi i slikanje',
+      parking: 'Besplatan u blizini',
+      sunbeds: 'Mala plaža, set ležaljki 12€',
+      desc: 'Jedinstven geološki fenomen sa uskim kanalima. Legenda kaže da će parovi koji preplivaju kanal ostati zauvek zajedno.',
+      img: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=500&q=80'
+    },
+    {
+      name: 'Glyfada (Glifada)',
+      type: 'Zlatni pesak',
+      suitability: 'Svi uzrasti, ležaljke i komfor',
+      parking: 'Besplatan i plaćen parking',
+      sunbeds: 'Luksuzni barovi (set 20€ - 40€)',
+      desc: 'Jedna od najdužih peščanih plaža na zapadnoj obali sa predivnim zalaskom sunca i plitkom vodom.',
+      img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=80'
+    }
+  ]
+};
+
+export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, onSubTabChange, initialWeatherLoc, onSelectDestination }) {
   const [localSubTab, setLocalSubTab] = useState('calculator');
   const subTab = initialSubTab || localSubTab;
   const setSubTab = onSubTabChange || setLocalSubTab;
 
   // Weather Selected Location State
   const [selectedWeatherLoc, setSelectedWeatherLoc] = useState(initialWeatherLoc || 'Tasos');
+
+  const [selectedBeachLoc, setSelectedBeachLoc] = useState('Tasos');
 
   useEffect(() => {
     if (initialWeatherLoc) {
@@ -179,6 +300,12 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
           onClick={() => setSubTab('weather')}
         >
           ☀️ Vreme & Temp. Mora
+        </button>
+        <button 
+          className={`btn-filter-item ${subTab === 'beaches' ? 'active' : ''}`}
+          onClick={() => setSubTab('beaches')}
+        >
+          🏖️ Najlepše Plaže
         </button>
         <button 
           className={`btn-filter-item ${subTab === 'prices' ? 'active' : ''}`}
@@ -360,6 +487,131 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {/* Beaches Guide Tab */}
+      {subTab === 'beaches' && (
+        <div className="beaches-tab-layout animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Location Selector Tabs */}
+          <div className="price-categories-filter" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {Object.keys(BEACH_DATA).map(loc => (
+              <button
+                key={loc}
+                className={`btn-filter-item ${selectedBeachLoc === loc ? 'active' : ''}`}
+                style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={() => setSelectedBeachLoc(loc)}
+              >
+                <span>📍</span> {loc}
+              </button>
+            ))}
+          </div>
+
+          {/* Beaches Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '2rem'
+          }}>
+            {BEACH_DATA[selectedBeachLoc].map((beach, index) => (
+              <div 
+                key={index} 
+                className="inquiries-panel-card" 
+                style={{ 
+                  padding: '0', 
+                  borderRadius: '16px', 
+                  overflow: 'hidden', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-card)'
+                }}
+              >
+                {/* Beach Image */}
+                <div style={{ height: '200px', width: '100%', position: 'relative', overflow: 'hidden' }}>
+                  <img 
+                    src={beach.img} 
+                    alt={beach.name} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} 
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  />
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '12px', 
+                    left: '12px', 
+                    backgroundColor: 'rgba(0, 132, 255, 0.85)', 
+                    color: '#ffffff', 
+                    padding: '0.3rem 0.6rem', 
+                    borderRadius: '50px', 
+                    fontSize: '0.75rem', 
+                    fontWeight: '700' 
+                  }}>
+                    🏝️ {selectedBeachLoc}
+                  </div>
+                </div>
+
+                {/* Beach Content */}
+                <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                  <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', margin: '0' }}>
+                    {beach.name}
+                  </h4>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', margin: '0', lineHeight: '1.5', flex: 1 }}>
+                    {beach.desc}
+                  </p>
+
+                  {/* Attributes list */}
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: '0.6rem', 
+                    borderTop: '1px solid var(--border)', 
+                    borderBottom: '1px solid var(--border)', 
+                    padding: '0.8rem 0',
+                    fontSize: '0.8rem' 
+                  }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>🏖️ Tip plaže</span>
+                      <strong style={{ color: 'var(--text-main)' }}>{beach.type}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>👨‍👩‍👧‍👦 Pogodnost</span>
+                      <strong style={{ color: 'var(--text-main)' }}>{beach.suitability}</strong>
+                    </div>
+                    <div style={{ marginTop: '0.4rem' }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>🚗 Parking</span>
+                      <strong style={{ color: 'var(--text-main)' }}>{beach.parking}</strong>
+                    </div>
+                    <div style={{ marginTop: '0.4rem' }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>⛱️ Ležaljke</span>
+                      <strong style={{ color: 'var(--text-main)' }}>{beach.sunbeds}</strong>
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <button 
+                    className="btn-landing-primary" 
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.7rem', 
+                      fontSize: '0.85rem', 
+                      fontWeight: '700', 
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      marginTop: '0.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                    onClick={() => onSelectDestination && onSelectDestination(selectedBeachLoc)}
+                  >
+                    🏠 Prikaži smeštaje u blizini →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
