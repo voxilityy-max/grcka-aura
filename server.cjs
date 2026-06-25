@@ -1977,13 +1977,13 @@ function getFallbackResponse(message, properties, history = []) {
   if (!hasAllInfo && !isAskingBooking) {
     // Determine what is missing
     const missing = [];
-    if (!matchedLoc) missing.push("željenu destinaciju ili regiju (Tasos, Lefkada, Sitonija ili Krf)");
-    if (!hasGuests) missing.push("broj osoba (odraslih i dece) za koje tražite smeštaj");
-    if (!hasDates) missing.push("željeni period letovanja ili termine");
+    if (!matchedLoc) missing.push("destinaciju");
+    if (!hasGuests) missing.push("broj osoba");
+    if (!hasDates) missing.push("period");
 
     // Warm response depending on what's missing
     if (missing.length === 3) {
-      replyText = `Dobar dan! Ja sam vaš Ellinas AI turistički agent. ⛵\n\nTu sam da vam pomognem da pronađete savršen smeštaj u Grčkoj. Kako bih vam predložio idealne opcije, možete li mi reći koju regiju planirate da posetite (Tasos, Lefkada, Sitonija ili Krf), za koliko osoba tražite smeštaj i u kom periodu planirate letovanje?`;
+      replyText = `Zdravo! Ja sam vaš Ellinas AI asistent. ⛵ Tu sam da vam pomognem da lako nađete i rezervišete smeštaj.\n\nKoju regiju planirate da posetite (Tasos, Lefkada, Sitonija ili Krf), za koliko osoba i kada planirate letovanje?\n\n💡 *Savet: Registrujte se besplatno za čuvanje omiljenih smeštaja u listu želja i još brže slanje upita!*`;
     } else {
       let missingListStr = "";
       if (missing.length === 1) {
@@ -1991,7 +1991,7 @@ function getFallbackResponse(message, properties, history = []) {
       } else {
         missingListStr = missing.slice(0, -1).join(", ") + " i " + missing[missing.length - 1];
       }
-      replyText = `Hvala vam na dosadašnjim informacijama! 🌴 Kako bih mogao da izvučem tačne slobodne ponude i predložim vam idealan smeštaj, molim vas da mi navedete još samo: **${missingListStr}**.`;
+      replyText = `Hvala na detaljima! Letovanje možete rezervisati direktno na stranici smeštaja – čak i bez registracije. 🌴\n\nDa bih vam izbacio slobodne ponude, recite mi još samo: **${missingListStr}**?`;
     }
     recommendedIds = [];
 
@@ -2026,7 +2026,7 @@ function getFallbackResponse(message, properties, history = []) {
   }
 
   if (isAskingBooking) {
-    replyText = `Rezervaciju možete izvršiti jednostavno i direktno. 📅\n\nKliknite na karticu smeštaja koja se pojavila ispod ove poruke ili na dugme "Pogledaj" kako biste otvorili detalje, izabrali sobu i poslali upit.\n\nKoji smeštaj sa liste biste želeli da pogledate detaljnije?`;
+    replyText = `Slanje upita je veoma lako: kliknite na karticu smeštaja ispod i popunite formu (Ime, Email, Telefon) na dnu stranice. Upit možete poslati direktno kao gost! 📅\n\n*Savet: Ako se registrujete, vaši podaci se čuvaju pa je svaki sledeći upit još brži.*`;
     if (matches.length > 0) {
       recommendedIds = [matches[0].id];
     } else {
@@ -2036,26 +2036,26 @@ function getFallbackResponse(message, properties, history = []) {
     matches.sort((a, b) => a.price - b.price);
     if (matches.length > 0) {
       const cheapest = matches[0];
-      replyText = `Razumem da je budžet važan za planiranje odmora. 💰\n\nNajpovoljniji smeštaj koji ispunjava vaše uslove je **${cheapest.title}** u regiji **${cheapest.location}** po ceni od **${cheapest.price}€** po noćenju.\n\nDa li vam ova ponuda odgovara ili želite da pogledamo neku drugu regiju?`;
+      replyText = `Razumem, budžet je uvek važan. 💰 Predlažem vam **${cheapest.title}** (${cheapest.location}) za samo **${cheapest.price}€/noć**. Upit možete poslati direktno sa stranice tog smeštaja.\n\nDa li vam ova opcija zvuči dobro?`;
       recommendedIds = [cheapest.id];
     } else {
       const overallCheapest = [...properties].sort((a, b) => a.price - b.price);
       const cheapest = overallCheapest[0];
-      replyText = `Razumem vas. Trenutno nemamo jeftinijih opcija za te specifične kriterijume, ali naša najpovoljnija ponuda uopšte je **${cheapest.title}** za **${cheapest.price}€** po noćenju.\n\nDa li bi vam ova lokacija odgovarala?`;
+      replyText = `Razumem vas. Trenutno nema povoljnijih opcija za te uslove, ali najjeftiniji smeštaj u našoj ponudi je **${cheapest.title}** za **${cheapest.price}€/noć**.\n\nDa li biste pogledali tu opciju?`;
       recommendedIds = [cheapest.id];
     }
   } else {
     // Normal recommendation where hasAllInfo is true
     if (matches.length > 0) {
       const selected = matches[0];
-      replyText = `Sjajno! Pronašao sam odličan smeštaj za vas na lokaciji **${matchedLoc}** za **${requestedGuests} osoba**. 🏖️\n\nPreporučujem vam da pogledate **${selected.title}** po ceni od **${selected.price}€** po noćenju.\n\nKako vam se čini ova opcija ili biste želeli da pogledate još neke predloge na istoj lokaciji?`;
+      replyText = `Pronašao sam odličan smeštaj na lokaciji **${matchedLoc}** za **${requestedGuests} osoba**. 🏖️\n\nPreporučujem **${selected.title}** po ceni od **${selected.price}€/noć**. Možete poslati upit direktno na dnu njegove stranice.\n\nKako vam se čini ovaj predlog?`;
       recommendedIds = [selected.id];
       if (matches.length > 1) {
         recommendedIds.push(matches[1].id);
       }
     } else {
       const alternative = properties.find(p => p.location.toLowerCase().includes(matchedLoc.toLowerCase())) || properties[0];
-      replyText = `Trenutno nemamo slobodan smeštaj na lokaciji **${matchedLoc}** koji ispunjava sve te specifične uslove za **${requestedGuests} osoba**. 😔\n\nKao najbolju alternativu na toj lokaciji nudimo **${alternative.title}** za **${alternative.price}€** po noćenju.\n\nDa li biste želeli da pogledate ovaj smeštaj?`;
+      replyText = `Trenutno nemamo smeštaj na lokaciji **${matchedLoc}** za **${requestedGuests} osoba** sa svim tim specifičnim filterima. 😔\n\nKao odličnu alternativu preporučujem **${alternative.title}** za **${alternative.price}€/noć**.\n\nDa li želite da ga pogledate?`;
       recommendedIds = [alternative.id];
     }
   }
@@ -2138,7 +2138,7 @@ ${roomsText || '  * Nema registrovanih soba'}`;
                 role: 'system',
                 content: `Ti si Ellinas AI Asistent, premium AI turistički agent za platformu "Ellinas" (smeštaj u Grčkoj).
 Tvoj cilj je da pomogneš klijentima da pronađu idealan smeštaj na Tasosu, Lefkadi, Sitoniji i Krfu.
-Komuniciraj na srpskom jeziku, toplo, profesionalno, gostoljubivo i prirodno. Razgovaraj lepo sa klijentom, nemoj odmah agresivno nuditi i forsirati smeštaje ako tek započinjete razgovor.
+Komuniciraj na srpskom jeziku, toplo, profesionalno, izuzetno prirodno i human-based (kao pravi ljubazni agent). Razgovaraj opušteno sa klijentom, nemoj forsirati smeštaje ako tek započinjete ćaskanje.
 
 Dostupni smeštaji na našoj platformi (PREPORUČI ISKLJUČIVO ove smeštaje i navedi njihova tačna imena):
 ${propertiesTextList}
@@ -2151,9 +2151,9 @@ Pravila komunikacije (Tvoj Trening):
    Ukoliko bilo koja od ovih informacija nedostaje (uključujući pozdrave, opšta pitanja poput "šta nudite", ili kada unese samo lokaciju bez broja osoba/perioda), polje "recommendedPropertyIds" MORA biti prazan niz [] i NE SMEŠ nuditi specifične smeštaje niti slati njihove ID-jeve. Umesto toga, toplo otpozdravi gosta i pitaj ga lepo za informacije koje nedostaju kako bi mu pomogao u izboru.
 2. **Opšti upiti**: Ako klijent pita opšte pitanje (npr. "šta nudite?", "šta imate u ponudi?", "pokaži mi ponudu" ili "koji smeštaj imate?"), toplo mu objasni da nudimo premium smeštaje na najlepšim lokacijama (Tasos, Lefkada, Sitonija, Krf). Zamoli ga da ti kaže: koju regiju bi najradije posetio, za koliko osoba traži smeštaj i u kom periodu planira odmor. Polje "recommendedPropertyIds" mora biti [].
 3. **Parcijalni unos**: Ako klijent navede samo neke podatke (npr. samo destinaciju "Tasos"), toplo konstatuj njegov izbor ("Tasos je prelepa destinacija..."), a zatim zatraži preostale podatke (npr. broj gostiju i period boravka). Drži "recommendedPropertyIds" praznim [] dok ne dobiješ sve informacije.
-4. **Struktura i dužina**: Odgovoru moraju biti sažeti ali izuzetno topli i ugodni (oko 3-4 rečenice). Koristi novi red (paragraf) za svaku celinu radi preglednosti. Koristi emojije (npr. 🏖️, 🌊, 💰, 🛏️) na prirodan način.
+4. **Struktura i dužina**: Odgovori MORAJU biti izuzetno kratki, topli i sažeti (maksimalno 2-3 rečenice ukupno). Izbegavaj prevelike poruke, dugačka objašnjenja i suvišan tekst. Koristi emojije (npr. 🏖️, 🌊, 💰, 🛏️) na prirodan način.
 5. **Pregovaranje o ceni**: Ako klijent kaže da je skupo, pokaži empatiju (npr. "Razumem da je budžet važan."), objasni vrednost tog smeštaja, i odmah mu ponudi povoljniju alternativu sa liste sa tačnom cenom (samo ukoliko su svi osnovni kriterijumi već prikupljeni).
-6. **Uputstvo za rezervaciju**: Kada gost pita kako da rezerviše, OBAVEZNO doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj."
+6. **Uputstvo za rezervaciju**: Kada gost pita kako da rezerviše ili pošalje upit, objasni da je slanje upita za smeštaj veoma jednostavno. OBAVEZNO doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." Zatim objasni da na dnu stranice smeštaja samo popune kratku formu (Ime, Email, Telefon) i pošalju upit.
 7. **Zadržavanje pažnje**: Na kraju poruke uvek postavi jedno kratko, logično pitanje da nastaviš razgovor i pomogneš gostu (npr. "Koji period letovanja planirate?", "Za koliko osoba tražite smeštaj?").
 8. **Format**: Odgovori ISKLJUČIVO u sledećem JSON formatu, bez ikakvog dodatnog teksta van JSON-a:
 {
@@ -2165,7 +2165,7 @@ Pravila komunikacije (Tvoj Trening):
               ...history,
               { 
                 role: 'user', 
-                content: `${message}\n\n[UPUTSTVO ZA ODGOVOR: Odgovori na srpskom jeziku, toplo, prirodno i profesionalno, u najviše 3-4 rečenice. Ćaskaj lepo sa klijentom, nemoj odmah gurnuti smeštaje ako tek počinjete razgovor, već ga saslušaj i pitaj za želje. Odgovori ISKLJUČIVO u JSON formatu: { "text": "...", "recommendedPropertyIds": [...] }. Ako te gost pita kako da rezerviše, OBAVEZNO i doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." STRIKTNO JE ZABRANJENO slanje bilo kakvih linkova, URL-ova ili markdown linkova u polju "text". Smeštaje preporuči isključivo kroz niz "recommendedPropertyIds" (u tekstu navedi samo njihova imena običnim rečima) i TO TEK nakon što prikupiš sve tri informacije (destinaciju, broj osoba i period letovanja). Ako klijent pita opšte pitanje poput "šta nudite" ili tek započinje razgovor, nemoj slati nikakve smeštaje u recommendedPropertyIds (drži ga praznim []), već predstavi ponudu toplo i pitaj za destinaciju, broj osoba i period boravka.]`
+                content: `${message}\n\n[UPUTSTVO ZA ODGOVOR: Odgovori na srpskom jeziku, toplo, prirodno i izuzetno sažeto (najviše 2-3 rečenice ukupno). Izbegavaj prevelike poruke i nepotrebno pisanje dugačkih pasusa. Ćaskaj lepo i ljudski sa klijentom. Odgovori ISKLJUČIVO u JSON formatu: { "text": "...", "recommendedPropertyIds": [...] }. Ako te gost pita kako da rezerviše, OBAVEZNO i doslovno napiši: "Možete rezervisati klikom na karticu smeštaja koja se pojavila ispod naše poruke ili klikom na dugme 'Pogledaj' na njoj." STRIKTNO JE ZABRANJENO slanje bilo kakvih linkova ili URL-ova u polju "text". Smeštaje preporuči isključivo kroz niz "recommendedPropertyIds" (u tekstu navedi samo njihova imena običnim rečima) i TO TEK nakon što prikupiš sve tri informacije (destinaciju, broj osoba i period letovanja).]`
               }
             ],
             response_format: { type: 'json_object' }
