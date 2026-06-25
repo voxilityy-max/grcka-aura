@@ -246,9 +246,13 @@ const BEACH_DATA = {
 };
 
 export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, onSubTabChange, initialWeatherLoc, onSelectDestination }) {
-  const [localSubTab, setLocalSubTab] = useState('ai-planner');
+  const [localSubTab, setLocalSubTab] = useState(currentUser ? 'ai-planner' : 'calculator');
   const subTab = initialSubTab || localSubTab;
   const setSubTab = onSubTabChange || setLocalSubTab;
+
+  useEffect(() => {
+    setLocalSubTab(currentUser ? 'ai-planner' : 'calculator');
+  }, [currentUser]);
 
   // Weather Selected Location State
   const [selectedWeatherLoc, setSelectedWeatherLoc] = useState(initialWeatherLoc || 'Tasos');
@@ -376,12 +380,14 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
     <div className="guide-wrapper">
       {/* Sub tabs header */}
       <div className="forum-filters-bar" style={{ justifyContent: 'center', marginBottom: '2rem' }}>
-        <button 
-          className={`btn-filter-item ai-planner-tab-btn ${subTab === 'ai-planner' ? 'active' : ''}`}
-          onClick={() => setSubTab('ai-planner')}
-        >
-          ✨ AI Planer Letovanja 🚀
-        </button>
+        {currentUser && (
+          <button 
+            className={`btn-filter-item ai-planner-tab-btn ${subTab === 'ai-planner' ? 'active' : ''}`}
+            onClick={() => setSubTab('ai-planner')}
+          >
+            ✨ AI Planer Letovanja 🚀
+          </button>
+        )}
         <button 
           className={`btn-filter-item ${subTab === 'calculator' ? 'active' : ''}`}
           onClick={() => setSubTab('calculator')}
@@ -424,6 +430,14 @@ export default function TravelGuide({ currentUser, onOpenAuth, initialSubTab, on
         >
           📞 Korisni Kontakti & Grupe
         </button>
+        {!currentUser && (
+          <button 
+            className={`btn-filter-item ai-planner-tab-btn ${subTab === 'ai-planner' ? 'active' : ''}`}
+            onClick={() => setSubTab('ai-planner')}
+          >
+            ✨ AI Planer Letovanja 🚀
+          </button>
+        )}
       </div>
 
       {/* Content Render based on SubTab */}

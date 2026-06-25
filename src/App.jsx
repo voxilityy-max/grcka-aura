@@ -278,7 +278,10 @@ export default function App() {
   });
 
   const [backendActive, setBackendActive] = useState(false);
-  const [guideSubTab, setGuideSubTab] = useState('ai-planner');
+  const [guideSubTab, setGuideSubTab] = useState(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    return savedUser ? 'ai-planner' : 'calculator';
+  });
   const [initialWeatherLoc, setInitialWeatherLoc] = useState('Tasos');
 
   const handleViewWeather = (loc) => {
@@ -471,6 +474,10 @@ export default function App() {
     }
     return null;
   });
+
+  useEffect(() => {
+    setGuideSubTab(currentUser ? 'ai-planner' : 'calculator');
+  }, [currentUser]);
 
   // Booking Inquiries State
   const [inquiries, setInquiries] = useState(() => {
