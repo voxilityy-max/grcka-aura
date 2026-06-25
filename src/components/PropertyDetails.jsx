@@ -22,7 +22,78 @@ const EXTRA_CAROUSEL_IMAGES = [
 
 ];
 
-
+const AMENITY_CATEGORIES = [
+  {
+    title: "Osnovni sadržaji",
+    icon: "🏠",
+    items: [
+      { id: 'airConditioning', label: 'Klima uređaj', icon: '❄️' },
+      { id: 'wifi', label: 'Besplatan Wi-Fi', icon: '📶' },
+      { id: 'tv', label: 'TV', icon: '📺' },
+      { id: 'fridge', label: 'Frižider', icon: '🥤' },
+      { id: 'hairdryer', label: 'Fen za kosu', icon: '💨' },
+      { id: 'bathroom', label: 'Kupatilo', icon: '🚿' },
+      { id: 'bathtub', label: 'Kada', icon: '🛁' },
+      { id: 'shower', label: 'Tuš kabina', icon: '🚿' },
+      { id: 'safe', label: 'Sigurnosni sef', icon: '🔒' },
+      { id: 'mosquito_nets', label: 'Mreže za komarce', icon: '🦟' },
+      { id: 'balcony', label: 'Balkon', icon: '🌅' },
+      { id: 'extra_balcony', label: 'Dodatni balkon', icon: '🌅' },
+      { id: 'washing_machine', label: 'Mašina za veš', icon: '🧼' },
+      { id: 'coffee_maker', label: 'Aparat za kafu / kuvalo', icon: '☕' },
+      { id: 'oven', label: 'Šporet sa rernom', icon: '🍳' },
+      { id: 'iron', label: 'Pegla', icon: '💨' }
+    ]
+  },
+  {
+    title: "Spoljašnjost i parking",
+    icon: "🌳",
+    items: [
+      { id: 'parking', label: 'Privatni parking', icon: '🚗' },
+      { id: 'guaranteed_parking', label: 'Garantovan parking', icon: '🅿️' },
+      { id: 'garden', label: 'Uređeno dvorište', icon: '🌳' },
+      { id: 'shade', label: 'Hlad u dvorištu', icon: '⛱️' },
+      { id: 'bbq', label: 'Zajednički roštilj', icon: '🍖' },
+      { id: 'outdoor_shower', label: 'Spoljni tuš', icon: '🚿' },
+      { id: 'playground', label: 'Igralište za decu', icon: '🛝' },
+      { id: 'elevator', label: 'Lift', icon: '🛗' }
+    ]
+  },
+  {
+    title: "Bazen i plaža",
+    icon: "🏖️",
+    items: [
+      { id: 'pool', label: 'Bazen', icon: '🏊' },
+      { id: 'kids_pool', label: 'Dečji bazen', icon: '🧒' },
+      { id: 'pool_loungers', label: 'Ležaljke pored bazena', icon: '🏖️' },
+      { id: 'seaview', label: 'Pogled na more', icon: '🌊' },
+      { id: 'beachfront', label: 'Na samoj plaži', icon: '🏖️' },
+      { id: 'sandy_beach', label: 'Peščana plaža kod smeštaja', icon: '🏖️' },
+      { id: 'free_beach_sets', label: 'Besplatne ležaljke na plaži', icon: '⛱️' },
+      { id: 'beach_towels', label: 'Peškiri za plažu', icon: '🧣' },
+      { id: 'jacuzzi', label: 'Spoljni đakuzi', icon: '🧼' }
+    ]
+  },
+  {
+    title: "Usluge i pravila",
+    icon: "🛎️",
+    items: [
+      { id: 'pets', label: 'Dozvoljeni ljubimci', icon: '🐾' },
+      { id: 'pets_negotiable', label: 'Ljubimci uz prethodan dogovor', icon: '🐾' },
+      { id: 'small_pets', label: 'Dozvoljeni mali ljubimci', icon: '🐾' },
+      { id: 'breakfast', label: 'Doručak', icon: '🥐' },
+      { id: 'restaurant', label: 'Restoran u objektu', icon: '🍽️' },
+      { id: 'reception', label: 'Recepcija', icon: '🛎️' },
+      { id: 'quiet_location', label: 'Mirna lokacija', icon: '🤫' },
+      { id: 'outside_town', label: 'Izvan mesta', icon: '🏡' },
+      { id: 'babycot', label: 'Dečji krevetac na zahtev', icon: '👶' },
+      { id: 'free_babycot', label: 'Besplatan krevetac', icon: '👶' },
+      { id: 'wifi_common', label: 'WiFi u zajedničkim prostorijama', icon: '📶' },
+      { id: 'value_for_money', label: 'Odličan odnos cene i kvaliteta', icon: '💎' },
+      { id: 'disabled_access', label: 'Pristup za osobe sa invaliditetom', icon: '♿' }
+    ]
+  }
+];
 
 export default function PropertyDetails({ 
 
@@ -369,45 +440,49 @@ export default function PropertyDetails({
 
   const richAmenities = useMemo(() => {
 
-    const hasSeaView = amenities.beachfront || title.toLowerCase().includes('more') || title.toLowerCase().includes('horizon') || description.toLowerCase().includes('pogled na more') || description.toLowerCase().includes('pogledom na more');
+    const actualAmenities = amenities || {};
 
-    const hasGarden = type === 'Vila' || type === 'Hotel' || amenities.pool;
+    const hasSeaView = actualAmenities.beachfront || title.toLowerCase().includes('more') || title.toLowerCase().includes('horizon') || description.toLowerCase().includes('pogled na more') || description.toLowerCase().includes('pogledom na more');
 
-    const hasBbq = type === 'Vila' || amenities.pool;
+    const hasGarden = type === 'Vila' || type === 'Hotel' || !!actualAmenities.pool;
+
+    const hasBbq = type === 'Vila' || !!actualAmenities.pool;
 
     const hasSafe = type === 'Hotel' || type === 'Vila' || price > 100;
 
-    
+    const isAmenityActive = (itemId) => {
+      if (actualAmenities[itemId] !== undefined) {
+        return !!actualAmenities[itemId];
+      }
+      if (itemId === 'wifi') return !!property.wifi;
+      if (itemId === 'airConditioning') return !!property.airConditioning;
+      if (itemId === 'parking') return !!property.parking;
+      if (itemId === 'pool') return !!property.pool;
+      if (itemId === 'beachfront') return !!property.beachfront;
+      if (itemId === 'pets') return !!property.pets;
+      if (itemId === 'seaview') return hasSeaView;
+      if (itemId === 'garden') return hasGarden;
+      if (itemId === 'bbq') return hasBbq;
+      if (itemId === 'safe') return hasSafe;
+      return false;
+    };
 
-    return [
+    const activeList = [];
+    AMENITY_CATEGORIES.forEach(category => {
+      category.items.forEach(item => {
+        if (isAmenityActive(item.id)) {
+          activeList.push({
+            id: item.id,
+            label: item.label,
+            icon: item.icon
+          });
+        }
+      });
+    });
 
-      { id: 'wifi', label: 'Besplatan Wi-Fi', active: !!amenities.wifi, icon: '📶' },
+    return activeList;
 
-      { id: 'ac', label: 'Klima uređaj', active: !!amenities.airConditioning, icon: '❄️' },
-
-      { id: 'parking', label: 'Besplatan parking', active: !!amenities.parking, icon: '🚗' },
-
-      { id: 'pool', label: 'Bazen', active: !!amenities.pool, icon: '🏊' },
-
-      { id: 'seaview', label: 'Pogled na more', active: hasSeaView, icon: '🌊' },
-
-      { id: 'terrace', label: 'Terasa / Balkon', active: true, icon: '🌅' },
-
-      { id: 'kitchen', label: 'Kuhinja / Posuđe', active: true, icon: '🍳' },
-
-      { id: 'tv', label: 'LCD TV', active: true, icon: '📺' },
-
-      { id: 'garden', label: 'Dvorište / Vrt', active: hasGarden, icon: '🌳' },
-
-      { id: 'bbq', label: 'Roštilj', active: hasBbq, icon: '🍖' },
-
-      { id: 'safe', label: 'Sef u sobi', active: hasSafe, icon: '🔒' },
-
-      { id: 'pets', label: 'Ljubimci dozvoljeni', active: !!amenities.pets, icon: '🐾' }
-
-    ];
-
-  }, [amenities, title, description, type, price]);
+  }, [amenities, property.wifi, property.airConditioning, property.parking, property.pool, property.beachfront, property.pets, title, description, type, price]);
 
 
 
@@ -1457,7 +1532,7 @@ export default function PropertyDetails({
 
                     key={amenity.id} 
 
-                    className={`rich-amenity-card ${amenity.active ? 'active' : 'inactive'}`}
+                    className="rich-amenity-card active"
 
                   >
 

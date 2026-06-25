@@ -563,6 +563,32 @@ async function initializeSchema() {
     console.warn("Nije uspelo automatsko dodavanje kolone isApproved u properties:", err.message);
   }
 
+  // Add amenities column to properties table if it doesn't exist and migrate
+  try {
+    const columns = await dbHelper.all("PRAGMA table_info(properties)");
+    const hasAmenities = columns.some(c => c.name === 'amenities');
+    if (!hasAmenities) {
+      await dbHelper.run("ALTER TABLE properties ADD COLUMN amenities TEXT");
+      console.log("Dodata kolona 'amenities' u tabelu properties. Započinjem migraciju...");
+
+      const rows = await dbHelper.all("SELECT id, wifi, pool, beachfront, parking, airConditioning, pets FROM properties");
+      for (const row of rows) {
+        const amenitiesObj = {
+          wifi: !!row.wifi,
+          pool: !!row.pool,
+          beachfront: !!row.beachfront,
+          parking: !!row.parking,
+          airConditioning: !!row.airConditioning,
+          pets: !!row.pets
+        };
+        await dbHelper.run("UPDATE properties SET amenities = ? WHERE id = ?", [JSON.stringify(amenitiesObj), row.id]);
+      }
+      console.log(`Završena migracija pogodnosti za ${rows.length} smeštaja.`);
+    }
+  } catch (err) {
+    console.warn("Nije uspelo automatsko dodavanje/migracija kolone amenities u properties:", err.message);
+  }
+
   // Add monthlyPrices column to rooms table if it doesn't exist
   try {
     const columns = await dbHelper.all("PRAGMA table_info(rooms)");
@@ -638,7 +664,16 @@ async function seedDatabase() {
       ];
 
       for (const p of seedProperties) {
-        await dbHelper.run('INSERT OR REPLACE INTO properties (id, title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', p);
+        const amenitiesObj = {
+          wifi: !!p[11],
+          pool: !!p[12],
+          beachfront: !!p[13],
+          parking: !!p[14],
+          airConditioning: !!p[15],
+          pets: !!p[16]
+        };
+        const extendedSeed = [...p, JSON.stringify(amenitiesObj)];
+        await dbHelper.run('INSERT OR REPLACE INTO properties (id, title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets, amenities) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', extendedSeed);
       }
 
       // 3. Seed Reviews
@@ -984,14 +1019,23 @@ app.get('/api/properties', async (req, res) => {
 
     // Group reviews and rooms by propertyId
     const populated = properties.map(p => {
-      p.amenities = {
-        wifi: !!p.wifi,
-        pool: !!p.pool,
-        beachfront: !!p.beachfront,
-        parking: !!p.parking,
-        airConditioning: !!p.airConditioning,
-        pets: !!p.pets
-      };
+      if (p.amenities) {
+        try {
+          p.amenities = JSON.parse(p.amenities);
+        } catch (e) {
+          p.amenities = {};
+        }
+      } else {
+        p.amenities = {};
+      }
+      // Fallback/sync standard values
+      p.amenities.wifi = p.amenities.wifi !== undefined ? !!p.amenities.wifi : !!p.wifi;
+      p.amenities.pool = p.amenities.pool !== undefined ? !!p.amenities.pool : !!p.pool;
+      p.amenities.beachfront = p.amenities.beachfront !== undefined ? !!p.amenities.beachfront : !!p.beachfront;
+      p.amenities.parking = p.amenities.parking !== undefined ? !!p.amenities.parking : !!p.parking;
+      p.amenities.airConditioning = p.amenities.airConditioning !== undefined ? !!p.amenities.airConditioning : !!p.airConditioning;
+      p.amenities.pets = p.amenities.pets !== undefined ? !!p.amenities.pets : !!p.pets;
+
       p.reviews = reviews.filter(r => r.propertyId === p.id);
       p.rooms = rooms.filter(r => r.propertyId === p.id);
       return p;
@@ -1011,8 +1055,8 @@ app.post('/api/properties', requireHostOrAdmin, async (req, res) => {
   
   try {
     const result = await dbHelper.run(
-      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets, icalUrl, monthlyPrices, ownerEmail, ownerPhone, isApproved)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (title, type, location, price, rating, distanceToBeach, image, guests, bedrooms, description, wifi, pool, beachfront, parking, airConditioning, pets, icalUrl, monthlyPrices, ownerEmail, ownerPhone, isApproved, amenities)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title, type, location, price, rating || 5.0, distanceToBeach, image, guests, bedrooms, description,
         amenities.wifi ? 1 : 0, amenities.pool ? 1 : 0, amenities.beachfront ? 1 : 0, amenities.parking ? 1 : 0, amenities.airConditioning ? 1 : 0, amenities.pets ? 1 : 0,
@@ -1020,7 +1064,8 @@ app.post('/api/properties', requireHostOrAdmin, async (req, res) => {
         monthlyPrices ? (typeof monthlyPrices === 'object' ? JSON.stringify(monthlyPrices) : monthlyPrices) : null,
         resolvedOwnerEmail,
         resolvedOwnerPhone,
-        isApprovedVal
+        isApprovedVal,
+        JSON.stringify(amenities || {})
       ]
     );
     

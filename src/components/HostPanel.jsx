@@ -7,6 +7,79 @@ const PRESET_IMAGES = [
   { id: 'traditional-1', url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80', label: 'Kamena kuća Lefkada' }
 ];
 
+const AMENITY_CATEGORIES = [
+  {
+    title: "Osnovni sadržaji",
+    icon: "🏠",
+    items: [
+      { id: 'airConditioning', label: 'Klima uređaj' },
+      { id: 'wifi', label: 'Besplatan Wi-Fi' },
+      { id: 'tv', label: 'TV' },
+      { id: 'fridge', label: 'Frižider' },
+      { id: 'hairdryer', label: 'Fen za kosu' },
+      { id: 'bathroom', label: 'Kupatilo' },
+      { id: 'bathtub', label: 'Kada' },
+      { id: 'shower', label: 'Tuš kabina' },
+      { id: 'safe', label: 'Sigurnosni sef' },
+      { id: 'mosquito_nets', label: 'Mreže za komarce' },
+      { id: 'balcony', label: 'Balkon' },
+      { id: 'extra_balcony', label: 'Dodatni balkon' },
+      { id: 'washing_machine', label: 'Mašina za veš' },
+      { id: 'coffee_maker', label: 'Aparat za kafu / kuvalo' },
+      { id: 'oven', label: 'Šporet sa rernom' },
+      { id: 'iron', label: 'Pegla' }
+    ]
+  },
+  {
+    title: "Spoljašnjost i parking",
+    icon: "🌳",
+    items: [
+      { id: 'parking', label: 'Privatni parking' },
+      { id: 'guaranteed_parking', label: 'Garantovan parking' },
+      { id: 'garden', label: 'Uređeno dvorište' },
+      { id: 'shade', label: 'Hlad u dvorištu' },
+      { id: 'bbq', label: 'Zajednički roštilj' },
+      { id: 'outdoor_shower', label: 'Spoljni tuš' },
+      { id: 'playground', label: 'Igralište za decu' },
+      { id: 'elevator', label: 'Lift' }
+    ]
+  },
+  {
+    title: "Bazen i plaža",
+    icon: "🏖️",
+    items: [
+      { id: 'pool', label: 'Bazen' },
+      { id: 'kids_pool', label: 'Dečji bazen' },
+      { id: 'pool_loungers', label: 'Ležaljke pored bazena' },
+      { id: 'seaview', label: 'Pogled na more' },
+      { id: 'beachfront', label: 'Na samoj plaži' },
+      { id: 'sandy_beach', label: 'Peščana plaža kod smeštaja' },
+      { id: 'free_beach_sets', label: 'Besplatne ležaljke na plaži' },
+      { id: 'beach_towels', label: 'Peškiri za plažu' },
+      { id: 'jacuzzi', label: 'Spoljni đakuzi' }
+    ]
+  },
+  {
+    title: "Usluge i pravila",
+    icon: "🛎️",
+    items: [
+      { id: 'pets', label: 'Dozvoljeni ljubimci' },
+      { id: 'pets_negotiable', label: 'Ljubimci uz prethodan dogovor' },
+      { id: 'small_pets', label: 'Dozvoljeni mali ljubimci' },
+      { id: 'breakfast', label: 'Doručak' },
+      { id: 'restaurant', label: 'Restoran u objektu' },
+      { id: 'reception', label: 'Recepcija' },
+      { id: 'quiet_location', label: 'Mirna lokacija' },
+      { id: 'outside_town', label: 'Izvan mesta' },
+      { id: 'babycot', label: 'Dečji krevetac na zahtev' },
+      { id: 'free_babycot', label: 'Besplatan krevetac' },
+      { id: 'wifi_common', label: 'WiFi u zajedničkim prostorijama' },
+      { id: 'value_for_money', label: 'Odličan odnos cene i kvaliteta' },
+      { id: 'disabled_access', label: 'Pristup za osobe sa invaliditetom' }
+    ]
+  }
+];
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 const getUniqueId = () => Date.now();
 
@@ -302,7 +375,48 @@ export default function HostPanel({
       beachfront: false,
       parking: true,
       airConditioning: true,
-      pets: false
+      pets: false,
+      seaview: false,
+      babycot: false,
+      private_parking: false,
+      pets_negotiable: false,
+      garden: false,
+      restaurant: false,
+      quiet_location: false,
+      safe: false,
+      bbq: false,
+      sandy_beach: false,
+      outside_town: false,
+      tv: false,
+      mosquito_nets: false,
+      hairdryer: false,
+      playground: false,
+      breakfast: false,
+      shower: false,
+      shade: false,
+      wifi_common: false,
+      guaranteed_parking: false,
+      small_pets: false,
+      kids_pool: false,
+      pool_loungers: false,
+      bathroom: false,
+      bathtub: false,
+      value_for_money: false,
+      extra_balcony: false,
+      outdoor_shower: false,
+      reception: false,
+      fridge: false,
+      balcony: false,
+      washing_machine: false,
+      coffee_maker: false,
+      oven: false,
+      iron: false,
+      elevator: false,
+      disabled_access: false,
+      free_babycot: false,
+      free_beach_sets: false,
+      beach_towels: false,
+      jacuzzi: false
     }
   });
   const [submitted, setSubmitted] = useState(false);
@@ -622,7 +736,22 @@ export default function HostPanel({
   const toggleAmenityInline = async (propertyId, amenityKey, currentAmenities) => {
     const updated = { ...currentAmenities, [amenityKey]: !currentAmenities[amenityKey] };
     const jsonStr = JSON.stringify(updated).replace(/'/g, "''");
-    const query = `UPDATE properties SET amenities = '${jsonStr}' WHERE id = ${propertyId};`;
+    
+    // Maintain database column consistency
+    let colUpdate = '';
+    const columnMap = {
+      wifi: 'wifi',
+      pool: 'pool',
+      beachfront: 'beachfront',
+      parking: 'parking',
+      airConditioning: 'airConditioning',
+      pets: 'pets'
+    };
+    if (columnMap[amenityKey]) {
+      colUpdate = `, ${columnMap[amenityKey]} = ${updated[amenityKey] ? 1 : 0}`;
+    }
+
+    const query = `UPDATE properties SET amenities = '${jsonStr}'${colUpdate} WHERE id = ${propertyId};`;
     try {
       const response = await fetch(`${API_URL}/api/admin/query`, {
         method: 'POST',
@@ -655,6 +784,7 @@ export default function HostPanel({
     const ownerPhoneEsc = (editingProperty.ownerPhone || '').replace(/'/g, "''");
     const monthlyPricesStr = JSON.stringify(editingProperty.monthlyPrices || {}).replace(/'/g, "''");
     
+    const a = editingProperty.amenities || {};
     const query = `UPDATE properties SET 
       title = '${titleEsc}', 
       location = '${editingProperty.location}', 
@@ -666,6 +796,12 @@ export default function HostPanel({
       description = '${descEsc}', 
       image = '${editingProperty.image}', 
       amenities = '${amenitiesStr}',
+      wifi = ${a.wifi ? 1 : 0},
+      pool = ${a.pool ? 1 : 0},
+      beachfront = ${a.beachfront ? 1 : 0},
+      parking = ${a.parking ? 1 : 0},
+      airConditioning = ${a.airConditioning ? 1 : 0},
+      pets = ${a.pets ? 1 : 0},
       icalUrl = '${icalUrlEsc}',
       ownerEmail = '${ownerEmailEsc}',
       ownerPhone = '${ownerPhoneEsc}',
@@ -1089,7 +1225,48 @@ export default function HostPanel({
           beachfront: false,
           parking: true,
           airConditioning: true,
-          pets: false
+          pets: false,
+          seaview: false,
+          babycot: false,
+          private_parking: false,
+          pets_negotiable: false,
+          garden: false,
+          restaurant: false,
+          quiet_location: false,
+          safe: false,
+          bbq: false,
+          sandy_beach: false,
+          outside_town: false,
+          tv: false,
+          mosquito_nets: false,
+          hairdryer: false,
+          playground: false,
+          breakfast: false,
+          shower: false,
+          shade: false,
+          wifi_common: false,
+          guaranteed_parking: false,
+          small_pets: false,
+          kids_pool: false,
+          pool_loungers: false,
+          bathroom: false,
+          bathtub: false,
+          value_for_money: false,
+          extra_balcony: false,
+          outdoor_shower: false,
+          reception: false,
+          fridge: false,
+          balcony: false,
+          washing_machine: false,
+          coffee_maker: false,
+          oven: false,
+          iron: false,
+          elevator: false,
+          disabled_access: false,
+          free_babycot: false,
+          free_beach_sets: false,
+          beach_towels: false,
+          jacuzzi: false
         }
       });
     }, 2500);
@@ -2645,61 +2822,27 @@ export default function HostPanel({
 
                         <div className="form-field" style={{ marginTop: '1.5rem' }}>
                           <label style={{ fontWeight: '700', marginBottom: '0.6rem', display: 'block' }}>Pogodnosti i oprema smeštaja</label>
-                          <div className="checkbox-grid-host">
-                            <label className="checkbox-container">
-                              <input 
-                                type="checkbox" 
-                                checked={formData.amenities.wifi} 
-                                onChange={() => toggleAmenity('wifi')}
-                              />
-                              <span className="checkbox-checkmark"></span>
-                              ⚡ Besplatan Wi-Fi
-                            </label>
-                            <label className="checkbox-container">
-                              <input 
-                                type="checkbox" 
-                                checked={formData.amenities.pool} 
-                                onChange={() => toggleAmenity('pool')}
-                              />
-                              <span className="checkbox-checkmark"></span>
-                              🏊 Privatni Bazen
-                            </label>
-                            <label className="checkbox-container">
-                              <input 
-                                type="checkbox" 
-                                checked={formData.amenities.beachfront} 
-                                onChange={() => toggleAmenity('beachfront')}
-                              />
-                              <span className="checkbox-checkmark"></span>
-                              🏖️ Pored same plaže
-                            </label>
-                            <label className="checkbox-container">
-                              <input 
-                                type="checkbox" 
-                                checked={formData.amenities.parking} 
-                                onChange={() => toggleAmenity('parking')}
-                              />
-                              <span className="checkbox-checkmark"></span>
-                              🚗 Privatni parking
-                            </label>
-                            <label className="checkbox-container">
-                              <input 
-                                type="checkbox" 
-                                checked={formData.amenities.airConditioning} 
-                                onChange={() => toggleAmenity('airConditioning')}
-                              />
-                              <span className="checkbox-checkmark"></span>
-                              ❄️ Klima uređaj
-                            </label>
-                            <label className="checkbox-container">
-                              <input 
-                                type="checkbox" 
-                                checked={formData.amenities.pets} 
-                                onChange={() => toggleAmenity('pets')}
-                              />
-                              <span className="checkbox-checkmark"></span>
-                              🐾 Dozvoljeni ljubimci
-                            </label>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
+                            {AMENITY_CATEGORIES.map((cat, idx) => (
+                              <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <h4 style={{ color: 'var(--primary)', margin: '0 0 0.8rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.4rem' }}>
+                                  <span>{cat.icon}</span> {cat.title}
+                                </h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                  {cat.items.map(item => (
+                                    <label key={item.id} className="checkbox-container" style={{ fontSize: '0.85rem' }}>
+                                      <input 
+                                        type="checkbox" 
+                                        checked={!!formData.amenities[item.id]} 
+                                        onChange={() => toggleAmenity(item.id)}
+                                      />
+                                      <span className="checkbox-checkmark"></span>
+                                      {item.label}
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -4293,24 +4436,33 @@ export default function HostPanel({
               </div>
 
               <div className="form-field">
-                <label>Pravila & Sadržaji</label>
-                <div className="checkbox-grid-host" style={{ gridTemplateColumns: 'repeat(3, 1fr)', padding: '0.8rem' }}>
-                  {Object.keys(editingProperty.amenities || {}).map(key => (
-                    <label key={key} className="checkbox-container">
-                      <input 
-                        type="checkbox" 
-                        checked={editingProperty.amenities[key]} 
-                        onChange={() => setEditingProperty(p => ({
-                          ...p,
-                          amenities: {
-                            ...p.amenities,
-                            [key]: !p.amenities[key]
-                          }
-                        }))}
-                      />
-                      <span className="checkbox-checkmark"></span>
-                      {key === 'wifi' ? '⚡ Wi-Fi' : key === 'pool' ? '🏊 Bazen' : key === 'beachfront' ? '🏖️ Plaža' : key === 'parking' ? '🚗 Parking' : key === 'airConditioning' ? '❄️ Klima' : '🐾 Ljubimci'}
-                    </label>
+                <label style={{ fontWeight: '700', marginBottom: '0.6rem', display: 'block' }}>Pravila & Sadržaji</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', width: '100%' }}>
+                  {AMENITY_CATEGORIES.map((cat, idx) => (
+                    <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <h4 style={{ color: 'var(--primary)', margin: '0 0 0.8rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.4rem' }}>
+                        <span>{cat.icon}</span> {cat.title}
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        {cat.items.map(item => (
+                          <label key={item.id} className="checkbox-container" style={{ fontSize: '0.85rem' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={!!editingProperty.amenities?.[item.id]} 
+                              onChange={() => setEditingProperty(p => ({
+                                ...p,
+                                amenities: {
+                                  ...p.amenities,
+                                  [item.id]: !p.amenities?.[item.id]
+                                }
+                              }))}
+                            />
+                            <span className="checkbox-checkmark"></span>
+                            {item.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
