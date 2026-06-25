@@ -1965,56 +1965,6 @@ export default function PropertyDetails({
 
               </div>
 
-
-
-              {/* Host Trust & Response Badge */}
-
-              <div className="host-trust-card">
-
-                <div className="host-trust-header">
-
-                  <div className="host-trust-avatar-wrapper">
-
-                    <span className="host-trust-icon">👤</span>
-
-                  </div>
-
-                  <div className="host-trust-info">
-
-                    <span className="host-trust-label">Domaćin AURA</span>
-
-                    <span className="host-trust-badge-status">
-
-                      {rating >= 4.8 ? '🏆 Top Domaćin' : '⭐ Pouzdan Domaćin'}
-
-                    </span>
-
-                  </div>
-
-                </div>
-
-                <div className="host-trust-body">
-
-                  <div className="host-trust-metric">
-
-                    <span className="host-metric-icon">⚡</span>
-
-                    <span className="host-metric-text">Odgovara za &lt;30 min</span>
-
-                  </div>
-
-                  <div className="host-trust-metric">
-
-                    <span className="host-metric-icon">🔒</span>
-
-                    <span className="host-metric-text">Sigurna rezervacija bez provizije</span>
-
-                  </div>
-
-                </div>
-
-              </div>
-
               
 
               {inquirySubmitted ? (
