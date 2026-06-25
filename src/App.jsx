@@ -668,12 +668,14 @@ export default function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const welcomeName = currentUser ? (currentUser.name || 'goste') : 'goste';
+      const greetingText = currentUser && currentUser.name
+        ? `Ćao, ${currentUser.name}! ⛵ Gde planirate letovanje ove godine i za koliko osoba tražite smeštaj?`
+        : `Ćao! ⛵ Gde planirate letovanje ove godine i za koliko osoba tražite smeštaj?`;
       setChatMessages([
         {
           id: 1,
           sender: 'ai',
-          text: `Ćao, ${welcomeName}! ⛵ Gde planirate letovanje ove godine i za koliko osoba tražite smeštaj?`,
+          text: greetingText,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           recommendedPropertyIds: []
         }
