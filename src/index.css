@@ -150,9 +150,9 @@ button {
 }
 
 .forum-search-input {
-  background: var(--bg-input) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text-main) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
   padding: 0.8rem 1.2rem;
   border-radius: var(--radius-md);
   font-family: var(--font-body);
@@ -161,10 +161,11 @@ button {
 
 .forum-search-input:focus {
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.25);
 }
 
 .forum-search-input::placeholder {
-  color: var(--text-muted);
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1 !important;
 }
