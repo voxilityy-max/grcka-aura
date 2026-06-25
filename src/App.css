@@ -2333,14 +2333,28 @@
 
 .blog-card:hover {
   transform: translateY(-5px);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--accent-light);
+  box-shadow: 0 12px 30px rgba(0, 242, 254, 0.1);
+  border-color: var(--primary-light);
 }
 
 .blog-card-img {
   width: 100%;
-  height: 180px;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.blog-card:hover .blog-card-img {
+  transform: scale(1.08);
+}
+
+.blog-card-bookmark-btn:hover {
+  transform: scale(1.15) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.blog-card-like-btn:hover {
+  transform: scale(1.05);
 }
 
 .blog-card-content {
